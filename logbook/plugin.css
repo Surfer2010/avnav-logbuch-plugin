@@ -1,0 +1,53 @@
+#logbookOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logbookBox {
+  background: #202020;
+  color: white;
+  padding: 18px;
+  border-radius: 8px;
+  width: 360px;
+  max-width: 90vw;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.logbookBox h2 {
+  margin-top: 0;
+}
+
+.logbookGroup {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.logbookGroup button,
+.logbookActions button,
+.logbookOpenButton {
+  padding: 8px 12px;
+  font-size: 15px;
+}
+
+#logbookText {
+  width: 100%;
+  height: 90px;
+  margin: 10px 0;
+  box-sizing: border-box;
+}
+
+.logbookActions {
+  display: flex;
+  gap: 8px;
+}
+
+#logbookStatus {
+  margin-top: 10px;
+  font-size: 14px;
+}
