@@ -5,6 +5,7 @@
 # - create timestamped logbook entries
 # - attach current AVNav navigation data
 # - store robust local JSONL files
+# - validate runtime states for motor, sail and anchor
 # - keep optional InfluxDB output prepared
 
 from __future__ import absolute_import
@@ -26,15 +27,54 @@ class Plugin(object):
     LOG_STATUS = 'logbook.status'
     LOG_COUNT = 'logbook.count'
     LAST_EVENT = 'logbook.lastEvent'
+    MOTOR_STATE = 'logbook.motor'
+    SAIL_STATE = 'logbook.sail'
+    ANCHOR_STATE = 'logbook.anchor'
+
+    START_EVENTS = {
+        'motor_on': 'motor',
+        'sail_set': 'sail',
+        'anchor_down': 'anchor',
+    }
+
+    END_EVENTS = {
+        'motor_off': 'motor',
+        'sail_down': 'sail',
+        'anchor_up': 'anchor',
+    }
+
+    STATE_LABELS = {
+        'motor': {
+            'on': 'Motor läuft',
+            'off': 'Motor aus',
+            'start_event': 'motor_on',
+            'end_event': 'motor_off',
+        },
+        'sail': {
+            'on': 'Segel gesetzt',
+            'off': 'Segel eingeholt',
+            'start_event': 'sail_set',
+            'end_event': 'sail_down',
+        },
+        'anchor': {
+            'on': 'Anker ab',
+            'off': 'Anker auf',
+            'start_event': 'anchor_down',
+            'end_event': 'anchor_up',
+        },
+    }
 
     @classmethod
     def pluginInfo(cls):
         return {
-            'description': 'Digitales Logbuch mit Zeitstempel, GPS, SOG, COG, Heading und Freitext.',
+            'description': 'Digitales Logbuch mit Statusprüfung, Zeitstempel, GPS, SOG, COG, Heading und Freitext.',
             'data': [
                 {'path': cls.LOG_STATUS, 'description': 'Logbook plugin status'},
                 {'path': cls.LOG_COUNT, 'description': 'Number of logbook entries in current runtime'},
                 {'path': cls.LAST_EVENT, 'description': 'Last logbook event type'},
+                {'path': cls.MOTOR_STATE, 'description': 'Current motor state'},
+                {'path': cls.SAIL_STATE, 'description': 'Current sail state'},
+                {'path': cls.ANCHOR_STATE, 'description': 'Current anchor state'},
             ]
         }
 
@@ -43,10 +83,19 @@ class Plugin(object):
         self.lock = threading.Lock()
         self.count = 0
 
+        # Runtime state.
+        # False bedeutet: aus / eingeholt / oben.
+        # True bedeutet: an / gesetzt / unten.
+        self.state = {
+            'motor': False,
+            'sail': False,
+            'anchor': False,
+        }
+
         self.base_dir = self._get_base_dir()
         self.log_dir = self._get_config('logDir', os.path.join(self.base_dir, 'logbook'))
 
-        # Testwerte sind hilfreich im Proxmox/LXC ohne echtes GPS.
+        # Testwerte für LXC ohne echtes GPS.
         self.test_lat = self._get_config('testLat', '')
         self.test_lon = self._get_config('testLon', '')
         self.test_sog = self._get_config('testSog', '')
@@ -93,10 +142,13 @@ class Plugin(object):
             if not os.path.isdir(self.log_dir):
                 os.makedirs(self.log_dir)
 
+            self._rebuild_state_from_log()
+
             self.api.log('Logbook plugin started, log_dir=%s' % self.log_dir)
             self.api.setStatus('Logbook', 'running')
             self.api.addData(self.LOG_STATUS, 'running')
             self.api.addData(self.LOG_COUNT, self.count)
+            self._publish_state()
 
         except Exception as e:
             self.api.error('Logbook plugin startup error: %s' % str(e))
@@ -147,42 +199,12 @@ class Plugin(object):
         return None
 
     def _get_navigation_data(self):
-        lat = self._get_single_value([
-            'gps.lat',
-            'gps.latitude',
-            'nav.gps.lat',
-            'navigation.position.latitude'
-        ])
+        lat = self._get_single_value(['gps.lat', 'gps.latitude', 'nav.gps.lat', 'navigation.position.latitude'])
+        lon = self._get_single_value(['gps.lon', 'gps.longitude', 'nav.gps.lon', 'navigation.position.longitude'])
+        sog = self._get_single_value(['gps.speed', 'nav.gps.speed', 'navigation.speedOverGround', 'navigation.speedThroughWater'])
+        cog = self._get_single_value(['gps.track', 'nav.gps.track', 'navigation.courseOverGroundTrue', 'navigation.courseOverGroundMagnetic'])
+        heading = self._get_single_value(['gps.heading', 'nav.gps.heading', 'navigation.headingTrue', 'navigation.headingMagnetic'])
 
-        lon = self._get_single_value([
-            'gps.lon',
-            'gps.longitude',
-            'nav.gps.lon',
-            'navigation.position.longitude'
-        ])
-
-        sog = self._get_single_value([
-            'gps.speed',
-            'nav.gps.speed',
-            'navigation.speedOverGround',
-            'navigation.speedThroughWater'
-        ])
-
-        cog = self._get_single_value([
-            'gps.track',
-            'nav.gps.track',
-            'navigation.courseOverGroundTrue',
-            'navigation.courseOverGroundMagnetic'
-        ])
-
-        heading = self._get_single_value([
-            'gps.heading',
-            'nav.gps.heading',
-            'navigation.headingTrue',
-            'navigation.headingMagnetic'
-        ])
-
-        # Fallback für LXC-Test ohne GPS.
         if lat is None:
             lat = self._to_float(self.test_lat)
         if lon is None:
@@ -232,6 +254,7 @@ class Plugin(object):
             'sog': nav.get('sog'),
             'cog': nav.get('cog'),
             'heading': nav.get('heading'),
+            'state': dict(self.state),
             'source': 'avnav-logbook-plugin'
         }
 
@@ -247,6 +270,89 @@ class Plugin(object):
             f.write('\n')
 
         return path
+
+    def _read_today_entries(self):
+        path = self._today_file()
+        entries = []
+
+        if not os.path.exists(path):
+            return entries
+
+        with open(path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+
+                try:
+                    entries.append(json.loads(line))
+                except Exception:
+                    pass
+
+        return entries
+
+    def _rebuild_state_from_log(self):
+        # Beim Neustart wird der aktuelle Status aus der heutigen JSONL-Datei rekonstruiert.
+        self.state = {
+            'motor': False,
+            'sail': False,
+            'anchor': False,
+        }
+
+        entries = self._read_today_entries()
+        self.count = len(entries)
+
+        for entry in entries:
+            event_type = entry.get('event_type')
+
+            if event_type in self.START_EVENTS:
+                self.state[self.START_EVENTS[event_type]] = True
+
+            if event_type in self.END_EVENTS:
+                self.state[self.END_EVENTS[event_type]] = False
+
+    def _publish_state(self):
+        try:
+            self.api.addData(self.MOTOR_STATE, 'on' if self.state['motor'] else 'off')
+            self.api.addData(self.SAIL_STATE, 'on' if self.state['sail'] else 'off')
+            self.api.addData(self.ANCHOR_STATE, 'on' if self.state['anchor'] else 'off')
+        except Exception:
+            pass
+
+    def _validate_event(self, event_type):
+        # Manuelle Einträge verändern keinen Zustand und sind immer erlaubt.
+        if event_type == 'manual':
+            return True, ''
+
+        # Start-Events dürfen nur ausgeführt werden, wenn der Zustand noch aus ist.
+        if event_type in self.START_EVENTS:
+            state_name = self.START_EVENTS[event_type]
+
+            if self.state.get(state_name):
+                return False, '%s ist bereits aktiv.' % self.STATE_LABELS[state_name]['on']
+
+            return True, ''
+
+        # End-Events dürfen nur ausgeführt werden, wenn der Zustand vorher aktiv ist.
+        if event_type in self.END_EVENTS:
+            state_name = self.END_EVENTS[event_type]
+
+            if not self.state.get(state_name):
+                return False, '%s ist bereits inaktiv.' % self.STATE_LABELS[state_name]['off']
+
+            return True, ''
+
+        # Unbekannte Eventtypen verhindern wir bewusst.
+        return False, 'Unbekannter Eventtyp: %s' % event_type
+
+    def _apply_event_to_state(self, event_type):
+        if event_type in self.START_EVENTS:
+            self.state[self.START_EVENTS[event_type]] = True
+
+        if event_type in self.END_EVENTS:
+            self.state[self.END_EVENTS[event_type]] = False
+
+        self._publish_state()
 
     def _write_influx(self, entry):
         if not self.influx_enabled:
@@ -291,9 +397,22 @@ class Plugin(object):
             return False, str(e)
 
     def _save_entry(self, event_type, text, lat=None, lon=None):
+        valid, message = self._validate_event(event_type)
+
+        if not valid:
+            return {
+                'status': 'ERROR',
+                'message': message,
+                'event_type': event_type,
+                'state': dict(self.state)
+            }
+
         entry = self._build_entry(event_type, text, lat, lon)
 
         with self.lock:
+            self._apply_event_to_state(event_type)
+            entry['state'] = dict(self.state)
+
             path = self._append_jsonl(entry)
             self.count += 1
 
@@ -309,6 +428,7 @@ class Plugin(object):
             'status': 'OK',
             'entry': entry,
             'file': path,
+            'state': dict(self.state),
             'influx': {
                 'enabled': self.influx_enabled,
                 'ok': influx_ok,
@@ -328,23 +448,12 @@ class Plugin(object):
         return value
 
     def _list_entries(self, limit):
-        path = self._today_file()
-        entries = []
-
-        if os.path.exists(path):
-            with open(path, 'r') as f:
-                lines = f.readlines()[-limit:]
-
-            for line in lines:
-                try:
-                    entries.append(json.loads(line))
-                except Exception:
-                    pass
-
+        entries = self._read_today_entries()
         return {
             'status': 'OK',
-            'file': path,
-            'entries': entries
+            'file': self._today_file(),
+            'entries': entries[-limit:],
+            'state': dict(self.state)
         }
 
     def handleApiRequest(self, url, handler, args):
@@ -363,6 +472,7 @@ class Plugin(object):
                     'count': self.count,
                     'logDir': self.log_dir,
                     'influxEnabled': self.influx_enabled,
+                    'state': dict(self.state),
                     'testLat': self.test_lat,
                     'testLon': self.test_lon
                 }
