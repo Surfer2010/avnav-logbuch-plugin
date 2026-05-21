@@ -3,10 +3,12 @@ console.log("logbook plugin loaded");
 /*
  * AVNav Logbook Frontend
  *
- * Layout:
- * - Links: Quick-Buttons
- * - Rechts: Freitext oben, letzte Einträge darunter
- * - Icons werden aus /icons/*.svg geladen
+ * Funktionen:
+ * - AVNav Widget mit Logbuch-Button
+ * - Overlay mit Quick-Buttons
+ * - Freitextfeld
+ * - letzte Einträge
+ * - sichtbare Warnungen bei ungültigen Aktionen
  */
 
 var logbookWidget = {
@@ -56,6 +58,17 @@ function stopKeyboardEvent(ev) {
 
 function iconPath(name) {
     return AVNAV_BASE_URL + "/icons/" + name + ".png";
+}
+
+function setLogbookStatus(message, level) {
+    var status = document.getElementById("logbookStatus");
+
+    if (!status) {
+        return;
+    }
+
+    status.className = "logbookStatus logbookStatus-" + (level || "info");
+    status.innerText = message || "";
 }
 
 function openLogbookOverlay() {
@@ -108,7 +121,7 @@ function openLogbookOverlay() {
                         '</button>' +
                     '</div>' +
 
-                    '<div id="logbookStatus" class="logbookStatus">Bereit</div>' +
+                    '<div id="logbookStatus" class="logbookStatus logbookStatus-info">Bereit</div>' +
 
                 '</div>' +
 
@@ -203,13 +216,9 @@ function logbookButton(type, label, iconName, extraClass) {
 
 function saveLogbookEntry(type) {
     var textField = document.getElementById("logbookText");
-    var status = document.getElementById("logbookStatus");
-
     var text = textField ? (textField.value || "") : "";
 
-    if (status) {
-        status.innerText = "Speichere...";
-    }
+    setLogbookStatus("Speichere...", "info");
 
     var url =
         AVNAV_BASE_URL +
@@ -224,9 +233,7 @@ function saveLogbookEntry(type) {
         })
         .then(function(data) {
             if (data.status === "OK") {
-                if (status) {
-                    status.innerText = "Gespeichert: " + readableEventType(type);
-                }
+                setLogbookStatus("Gespeichert: " + readableEventType(type), "success");
 
                 if (textField) {
                     textField.value = "";
@@ -236,17 +243,18 @@ function saveLogbookEntry(type) {
                 loadLogbookEntries();
 
                 console.log("logbook saved", data);
-            } else {
-                if (status) {
-                    status.innerText = "Fehler: " + (data.message || "unbekannt");
-                }
-                console.error("logbook save error", data);
+                return;
             }
+
+            /*
+             * Server liefert ERROR bei ungültigen Zuständen:
+             * z. B. Motor an, obwohl Motor bereits läuft.
+             */
+            setLogbookStatus(data.message || "Aktion nicht möglich", "warning");
+            console.warn("logbook warning", data);
         })
         .catch(function(err) {
-            if (status) {
-                status.innerText = "Fehler beim Speichern";
-            }
+            setLogbookStatus("Fehler beim Speichern", "error");
             console.error("logbook request error", err);
         });
 }
