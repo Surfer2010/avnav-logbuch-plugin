@@ -3,129 +3,61 @@ console.log("logbook plugin loaded");
 /*
  * AVNav Logbook Frontend
  *
- * Diese Datei registriert ein AVNav-Widget.
- * Das Widget zeigt einen Button "Logbuch".
- * Beim Klick öffnet sich ein Overlay mit:
- * - Quick-Buttons für Motor, Segel und Anker
- * - Freitextfeld für Anmerkungen
- * - Anzeige der letzten Logbucheinträge
- *
- * Die eigentliche Speicherung passiert serverseitig in plugin.py.
- * Dieses Frontend ruft dafür die API-Endpunkte des Plugins auf:
- *
- *   AVNAV_BASE_URL + "/api/add"
- *   AVNAV_BASE_URL + "/api/list"
- *
- * AVNAV_BASE_URL wird von AVNav automatisch gesetzt.
- * Bei deinem User-Plugin ist das z. B.:
- *
- *   /plugins/user-logbook
+ * Dieses Widget zeigt einen einfachen Button.
+ * Der Klick wird nicht über das AVNav-Template-Event-System gebunden,
+ * sondern robust über einen globalen document-Click-Handler.
  */
 
 var logbookWidget = {
-    /*
-     * Eindeutiger Widget-Name innerhalb von AVNav.
-     * Dieser Name erscheint beim Hinzufügen des Widgets.
-     */
     name: "logbook_EntryWidget",
 
-    /*
-     * storeKeys liest Werte aus dem AVNav-internen Datenspeicher.
-     * Diese Werte werden an renderHtml(props) übergeben.
-     *
-     * gps.lat / gps.lon werden hier nicht direkt gespeichert.
-     * Die finale Position wird serverseitig in plugin.py gelesen.
-     * Trotzdem sind die Werte hier nützlich, um später im Widget
-     * eine aktuelle Position anzeigen zu können.
-     */
     storeKeys: {
         lat: "nav.gps.lat",
         lon: "nav.gps.lon"
     },
 
-    /*
-     * Beschriftung des Widgets in AVNav.
-     */
     caption: "Logbuch",
 
-    /*
-     * initFunction wird von AVNav einmal pro Widget-Instanz aufgerufen.
-     * Hier registrieren wir Event-Handler für Klicks.
-     */
-    initFunction: function(context) {
-
-        /*
-         * Dieser Event-Handler wird vom Widget-Button aufgerufen.
-         * Er öffnet das Overlay.
-         */
-        context.eventHandler.openLogbook = function(ev) {
-
-            /*
-             * AVNav nutzt eigene Klick- und Touch-Logik.
-             * Deshalb verhindern wir Standardverhalten und Event-Bubbling.
-             */
-            if (ev) {
-                ev.preventDefault();
-                ev.stopPropagation();
-            }
-
-            openLogbookOverlay();
-        };
-    },
-
-    /*
-     * renderHtml erzeugt den sichtbaren Inhalt des Widgets.
-     *
-     * Wichtig:
-     * AVNav-Widget-Events werden über avnav.api.templateReplace
-     * mit dem registrierten Event-Handler verbunden.
-     */
     renderHtml: function(props) {
-
-        var template =
+        return (
             '<div class="widgetData logbookWidgetData">' +
-                '<button type="button" class="logbookOpenButton" onclick="${openLogbook}">' +
+                '<button type="button" class="logbookOpenButton" data-logbook-open="1">' +
                     'Logbuch' +
                 '</button>' +
-            '</div>';
-
-        return avnav.api.templateReplace(template, {
-            openLogbook: this.eventHandler.openLogbook
-        });
+            '</div>'
+        );
     }
 };
 
-/*
- * Widget bei AVNav registrieren.
- * Erst dadurch kann es im Layout hinzugefügt werden.
- */
 avnav.api.registerWidget(logbookWidget);
 
 /*
- * Öffnet das Logbuch-Overlay.
+ * Globaler Klick-Handler.
+ * Dadurch funktioniert der Button auch dann, wenn AVNav das Widget neu rendert.
  */
-function openLogbookOverlay() {
+document.addEventListener("click", function(ev) {
+    var target = ev.target;
 
-    /*
-     * Falls bereits ein Overlay offen ist, wird es zuerst entfernt.
-     * Damit vermeiden wir doppelte Dialoge.
-     */
+    if (!target) {
+        return;
+    }
+
+    if (target.getAttribute("data-logbook-open") === "1") {
+        ev.preventDefault();
+        ev.stopPropagation();
+        openLogbookOverlay();
+    }
+}, true);
+
+function openLogbookOverlay() {
     var existing = document.getElementById("logbookOverlay");
     if (existing) {
         existing.remove();
     }
 
-    /*
-     * Overlay-Container erzeugen.
-     * Das eigentliche Styling kommt aus plugin.css.
-     */
     var overlay = document.createElement("div");
     overlay.id = "logbookOverlay";
 
-    /*
-     * HTML des Popups.
-     * Keine Template-Strings, damit die Datei auch in älteren Browsern robust läuft.
-     */
     overlay.innerHTML =
         '<div class="logbookBox">' +
 
@@ -169,10 +101,6 @@ function openLogbookOverlay() {
 
     document.body.appendChild(overlay);
 
-    /*
-     * Klick auf dunklen Hintergrund schließt das Overlay.
-     * Klicks innerhalb der Box sollen es nicht schließen.
-     */
     overlay.addEventListener("click", function(e) {
         if (e.target === overlay) {
             overlay.remove();
@@ -186,32 +114,20 @@ function openLogbookOverlay() {
         });
     }
 
-    /*
-     * Quick-Buttons verbinden.
-     * Jeder Button trägt seinen Ereignistyp in data-type.
-     */
     overlay.querySelectorAll("button[data-type]").forEach(function(btn) {
         btn.addEventListener("click", function(e) {
             e.preventDefault();
             e.stopPropagation();
-
             saveLogbookEntry(btn.getAttribute("data-type"));
         });
     });
 
-    /*
-     * Manueller Eintrag ohne Quick-Button.
-     */
     document.getElementById("logbookSaveManual").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
-
         saveLogbookEntry("manual");
     });
 
-    /*
-     * Schließen-Buttons.
-     */
     document.getElementById("logbookClose").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -224,33 +140,19 @@ function openLogbookOverlay() {
         overlay.remove();
     });
 
-    /*
-     * Beim Öffnen sofort die letzten Einträge laden.
-     */
     loadLogbookEntries();
 }
 
-/*
- * Speichert einen Logbucheintrag über die Plugin-API.
- */
 function saveLogbookEntry(type) {
-
     var textField = document.getElementById("logbookText");
     var status = document.getElementById("logbookStatus");
 
-    var text = "";
-    if (textField) {
-        text = textField.value || "";
-    }
+    var text = textField ? (textField.value || "") : "";
 
     if (status) {
         status.innerText = "Speichere...";
     }
 
-    /*
-     * plugin.py akzeptiert type und text als Query-Parameter.
-     * Die GPS-Position wird serverseitig aus AVNav gelesen.
-     */
     var url =
         AVNAV_BASE_URL +
         "/api/add?type=" +
@@ -263,25 +165,16 @@ function saveLogbookEntry(type) {
             return response.json();
         })
         .then(function(data) {
-
             if (data.status === "OK") {
                 if (status) {
                     status.innerText = "Gespeichert: " + readableEventType(type);
                 }
 
-                /*
-                 * Nach erfolgreichem Speichern wird das Textfeld geleert.
-                 * Dadurch ist klar, dass der Eintrag übernommen wurde.
-                 */
                 if (textField) {
                     textField.value = "";
                 }
 
-                /*
-                 * Historie aktualisieren.
-                 */
                 loadLogbookEntries();
-
                 console.log("logbook saved", data);
             } else {
                 if (status) {
@@ -298,11 +191,7 @@ function saveLogbookEntry(type) {
         });
 }
 
-/*
- * Lädt die letzten Einträge aus der JSONL-Datei über plugin.py.
- */
 function loadLogbookEntries() {
-
     var target = document.getElementById("logbookEntries");
     if (!target) {
         return;
@@ -315,7 +204,6 @@ function loadLogbookEntries() {
             return response.json();
         })
         .then(function(data) {
-
             if (data.status !== "OK") {
                 target.innerHTML = "Einträge konnten nicht geladen werden.";
                 return;
@@ -329,11 +217,7 @@ function loadLogbookEntries() {
         });
 }
 
-/*
- * Rendert die letzten Logbucheinträge in das Overlay.
- */
 function renderLogbookEntries(entries) {
-
     var target = document.getElementById("logbookEntries");
     if (!target) {
         return;
@@ -344,12 +228,9 @@ function renderLogbookEntries(entries) {
         return;
     }
 
-    /*
-     * Neueste Einträge zuerst anzeigen.
-     */
     var html = "";
-    entries.slice().reverse().forEach(function(entry) {
 
+    entries.slice().reverse().forEach(function(entry) {
         var time = entry.timestamp || "";
         var type = readableEventType(entry.event_type || "manual");
         var text = escapeHtml(entry.text || "");
@@ -373,11 +254,7 @@ function renderLogbookEntries(entries) {
     target.innerHTML = html;
 }
 
-/*
- * Übersetzt interne Event-Typen in lesbare deutsche Bezeichnungen.
- */
 function readableEventType(type) {
-
     var labels = {
         motor_on: "Motor an",
         motor_off: "Motor aus",
@@ -391,12 +268,7 @@ function readableEventType(type) {
     return labels[type] || type || "Unbekannt";
 }
 
-/*
- * Kleine HTML-Escaping-Funktion.
- * Wichtig, damit Freitext nicht als HTML ausgeführt wird.
- */
 function escapeHtml(value) {
-
     return String(value)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
