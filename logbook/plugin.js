@@ -3,9 +3,10 @@ console.log("logbook plugin loaded");
 /*
  * AVNav Logbook Frontend
  *
- * Dieses Widget zeigt einen einfachen Button.
- * Der Klick wird nicht über das AVNav-Template-Event-System gebunden,
- * sondern robust über einen globalen document-Click-Handler.
+ * Wichtig:
+ * AVNav nutzt globale Tastatur- und Touch-Handler.
+ * Deshalb stoppen wir im Overlay alle relevanten Events,
+ * damit Texteingaben nicht die AVNav-Oberfläche steuern.
  */
 
 var logbookWidget = {
@@ -32,8 +33,7 @@ var logbookWidget = {
 avnav.api.registerWidget(logbookWidget);
 
 /*
- * Globaler Klick-Handler.
- * Dadurch funktioniert der Button auch dann, wenn AVNav das Widget neu rendert.
+ * Globaler Klick-Handler für den Logbuch-Button.
  */
 document.addEventListener("click", function(ev) {
     var target = ev.target;
@@ -49,6 +49,25 @@ document.addEventListener("click", function(ev) {
     }
 }, true);
 
+/*
+ * Stoppt Events innerhalb des Overlays.
+ *
+ * Hintergrund:
+ * Ohne diese Sperre können Tastatureingaben im Textfeld gleichzeitig
+ * AVNav-Shortcuts auslösen. Das führt dazu, dass einzelne Buchstaben
+ * nicht im Textfeld erscheinen oder die AVNav-Seite wechselt.
+ */
+function stopOverlayEvent(ev) {
+    if (!ev) {
+        return;
+    }
+
+    ev.stopPropagation();
+}
+
+/*
+ * Öffnet das Logbuch-Overlay.
+ */
 function openLogbookOverlay() {
     var existing = document.getElementById("logbookOverlay");
     if (existing) {
@@ -85,7 +104,7 @@ function openLogbookOverlay() {
             '</div>' +
 
             '<div class="logbookSectionTitle">Anmerkung</div>' +
-            '<textarea id="logbookText" placeholder="Freitext / Bemerkung"></textarea>' +
+            '<textarea id="logbookText" placeholder="Freitext / Bemerkung" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>' +
 
             '<div class="logbookActions">' +
                 '<button type="button" id="logbookSaveManual">Anmerkung speichern</button>' +
@@ -101,48 +120,91 @@ function openLogbookOverlay() {
 
     document.body.appendChild(overlay);
 
+    /*
+     * Alle wichtigen Events im Overlay abfangen.
+     * Capture=true sorgt dafür, dass wir sie möglichst früh stoppen.
+     */
+    [
+        "keydown",
+        "keypress",
+        "keyup",
+        "input",
+        "beforeinput",
+        "compositionstart",
+        "compositionupdate",
+        "compositionend",
+        "click",
+        "dblclick",
+        "mousedown",
+        "mouseup",
+        "touchstart",
+        "touchend",
+        "pointerdown",
+        "pointerup",
+        "wheel"
+    ].forEach(function(eventName) {
+        overlay.addEventListener(eventName, stopOverlayEvent, true);
+    });
+
+    /*
+     * Klick auf dunklen Hintergrund schließt das Overlay.
+     * Weil wir stopPropagation nutzen, prüfen wir direkt auf target === overlay.
+     */
     overlay.addEventListener("click", function(e) {
         if (e.target === overlay) {
+            e.preventDefault();
             overlay.remove();
         }
     });
 
-    var box = overlay.querySelector(".logbookBox");
-    if (box) {
-        box.addEventListener("click", function(e) {
-            e.stopPropagation();
-        });
+    /*
+     * Textfeld explizit fokussieren.
+     * Dadurch landet die Tastatur-Eingabe direkt im Feld.
+     */
+    var textField = document.getElementById("logbookText");
+    if (textField) {
+        setTimeout(function() {
+            textField.focus();
+        }, 100);
     }
 
+    /*
+     * Quick-Buttons verbinden.
+     */
     overlay.querySelectorAll("button[data-type]").forEach(function(btn) {
         btn.addEventListener("click", function(e) {
             e.preventDefault();
-            e.stopPropagation();
             saveLogbookEntry(btn.getAttribute("data-type"));
         });
     });
 
+    /*
+     * Manueller Eintrag.
+     */
     document.getElementById("logbookSaveManual").addEventListener("click", function(e) {
         e.preventDefault();
-        e.stopPropagation();
         saveLogbookEntry("manual");
     });
 
+    /*
+     * Schließen-Buttons.
+     */
     document.getElementById("logbookClose").addEventListener("click", function(e) {
         e.preventDefault();
-        e.stopPropagation();
         overlay.remove();
     });
 
     document.getElementById("logbookCloseTop").addEventListener("click", function(e) {
         e.preventDefault();
-        e.stopPropagation();
         overlay.remove();
     });
 
     loadLogbookEntries();
 }
 
+/*
+ * Speichert einen Logbucheintrag über plugin.py.
+ */
 function saveLogbookEntry(type) {
     var textField = document.getElementById("logbookText");
     var status = document.getElementById("logbookStatus");
@@ -172,9 +234,11 @@ function saveLogbookEntry(type) {
 
                 if (textField) {
                     textField.value = "";
+                    textField.focus();
                 }
 
                 loadLogbookEntries();
+
                 console.log("logbook saved", data);
             } else {
                 if (status) {
@@ -191,6 +255,9 @@ function saveLogbookEntry(type) {
         });
 }
 
+/*
+ * Lädt die letzten Einträge.
+ */
 function loadLogbookEntries() {
     var target = document.getElementById("logbookEntries");
     if (!target) {
@@ -217,6 +284,9 @@ function loadLogbookEntries() {
         });
 }
 
+/*
+ * Rendert Historie.
+ */
 function renderLogbookEntries(entries) {
     var target = document.getElementById("logbookEntries");
     if (!target) {
@@ -254,6 +324,9 @@ function renderLogbookEntries(entries) {
     target.innerHTML = html;
 }
 
+/*
+ * Interne Eventnamen lesbar machen.
+ */
 function readableEventType(type) {
     var labels = {
         motor_on: "Motor an",
@@ -268,6 +341,9 @@ function readableEventType(type) {
     return labels[type] || type || "Unbekannt";
 }
 
+/*
+ * Freitext sicher als HTML darstellen.
+ */
 function escapeHtml(value) {
     return String(value)
         .replace(/&/g, "&amp;")
