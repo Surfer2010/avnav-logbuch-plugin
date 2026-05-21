@@ -3,10 +3,12 @@ console.log("logbook plugin loaded");
 /*
  * AVNav Logbook Frontend
  *
- * Wichtig:
- * AVNav nutzt globale Tastatur- und Touch-Handler.
- * Deshalb stoppen wir im Overlay alle relevanten Events,
- * damit Texteingaben nicht die AVNav-Oberfläche steuern.
+ * Ziele:
+ * - Logbuch-Button als AVNav-Widget anzeigen
+ * - Overlay mit Quick-Buttons öffnen
+ * - Freitext zuverlässig eingeben
+ * - AVNav-Tastaturshortcuts während der Texteingabe unterdrücken
+ * - Einträge über plugin.py speichern
  */
 
 var logbookWidget = {
@@ -33,7 +35,7 @@ var logbookWidget = {
 avnav.api.registerWidget(logbookWidget);
 
 /*
- * Globaler Klick-Handler für den Logbuch-Button.
+ * Öffnet das Overlay über den Widget-Button.
  */
 document.addEventListener("click", function(ev) {
     var target = ev.target;
@@ -50,14 +52,13 @@ document.addEventListener("click", function(ev) {
 }, true);
 
 /*
- * Stoppt Events innerhalb des Overlays.
+ * Stoppt nur Tastatur- und Eingabe-Events.
  *
- * Hintergrund:
- * Ohne diese Sperre können Tastatureingaben im Textfeld gleichzeitig
- * AVNav-Shortcuts auslösen. Das führt dazu, dass einzelne Buchstaben
- * nicht im Textfeld erscheinen oder die AVNav-Seite wechselt.
+ * Wichtig:
+ * Klick-Events dürfen hier NICHT gestoppt werden,
+ * sonst funktionieren die Buttons im Overlay nicht mehr.
  */
-function stopOverlayEvent(ev) {
+function stopKeyboardEvent(ev) {
     if (!ev) {
         return;
     }
@@ -121,8 +122,8 @@ function openLogbookOverlay() {
     document.body.appendChild(overlay);
 
     /*
-     * Alle wichtigen Events im Overlay abfangen.
-     * Capture=true sorgt dafür, dass wir sie möglichst früh stoppen.
+     * Nur Tastatur-/Texteingabe-Events abfangen.
+     * So bleiben normale Button-Klicks funktionsfähig.
      */
     [
         "keydown",
@@ -132,34 +133,36 @@ function openLogbookOverlay() {
         "beforeinput",
         "compositionstart",
         "compositionupdate",
-        "compositionend",
-        "click",
-        "dblclick",
-        "mousedown",
-        "mouseup",
-        "touchstart",
-        "touchend",
-        "pointerdown",
-        "pointerup",
-        "wheel"
+        "compositionend"
     ].forEach(function(eventName) {
-        overlay.addEventListener(eventName, stopOverlayEvent, true);
+        overlay.addEventListener(eventName, stopKeyboardEvent, true);
     });
 
     /*
-     * Klick auf dunklen Hintergrund schließt das Overlay.
-     * Weil wir stopPropagation nutzen, prüfen wir direkt auf target === overlay.
+     * Klick auf Hintergrund schließt das Overlay.
      */
     overlay.addEventListener("click", function(e) {
         if (e.target === overlay) {
             e.preventDefault();
+            e.stopPropagation();
             overlay.remove();
         }
-    });
+    }, false);
 
     /*
-     * Textfeld explizit fokussieren.
-     * Dadurch landet die Tastatur-Eingabe direkt im Feld.
+     * Klicks innerhalb der Box sollen AVNav nicht erreichen,
+     * aber sie müssen zuerst bei den Buttons ankommen.
+     * Deshalb Bubble-Phase, nicht Capture-Phase.
+     */
+    var box = overlay.querySelector(".logbookBox");
+    if (box) {
+        box.addEventListener("click", function(e) {
+            e.stopPropagation();
+        }, false);
+    }
+
+    /*
+     * Textfeld fokussieren.
      */
     var textField = document.getElementById("logbookText");
     if (textField) {
@@ -174,30 +177,34 @@ function openLogbookOverlay() {
     overlay.querySelectorAll("button[data-type]").forEach(function(btn) {
         btn.addEventListener("click", function(e) {
             e.preventDefault();
+            e.stopPropagation();
             saveLogbookEntry(btn.getAttribute("data-type"));
-        });
+        }, false);
     });
 
     /*
-     * Manueller Eintrag.
+     * Manueller Freitexteintrag.
      */
     document.getElementById("logbookSaveManual").addEventListener("click", function(e) {
         e.preventDefault();
+        e.stopPropagation();
         saveLogbookEntry("manual");
-    });
+    }, false);
 
     /*
      * Schließen-Buttons.
      */
     document.getElementById("logbookClose").addEventListener("click", function(e) {
         e.preventDefault();
+        e.stopPropagation();
         overlay.remove();
-    });
+    }, false);
 
     document.getElementById("logbookCloseTop").addEventListener("click", function(e) {
         e.preventDefault();
+        e.stopPropagation();
         overlay.remove();
-    });
+    }, false);
 
     loadLogbookEntries();
 }
