@@ -1,0 +1,117 @@
+{
+  "entry_count": 20,
+  "totals_seconds": {
+    "motor": 5.0,
+    "sail": 3.0,
+    "anchor": 3.0
+  },
+  "totals": {
+    "motor": "00:00:05",
+    "sail": "00:00:03",
+    "anchor": "00:00:03"
+  },
+  "open_intervals": {},
+  "intervals": [
+    {
+      "type": "motor",
+      "status": "closed",
+      "start": "2026-05-21T19:10:45Z",
+      "end": "2026-05-21T19:10:49Z",
+      "duration_seconds": 4.0,
+      "duration": "00:00:04",
+      "start_lat": null,
+      "start_lon": null,
+      "end_lat": null,
+      "end_lon": null
+    },
+    {
+      "type": "sail",
+      "status": "closed",
+      "start": "2026-05-21T19:10:51Z",
+      "end": "2026-05-21T19:10:52Z",
+      "duration_seconds": 1.0,
+      "duration": "00:00:01",
+      "start_lat": null,
+      "start_lon": null,
+      "end_lat": null,
+      "end_lon": null
+    },
+    {
+      "type": "motor",
+      "status": "closed",
+      "start": "2026-05-21T19:29:47Z",
+      "end": "2026-05-21T19:29:48Z",
+      "duration_seconds": 1.0,
+      "duration": "00:00:01",
+      "start_lat": null,
+      "start_lon": null,
+      "end_lat": null,
+      "end_lon": null
+    },
+    {
+      "type": "sail",
+      "status": "closed",
+      "start": "2026-05-21T19:29:50Z",
+      "end": "2026-05-21T19:29:52Z",
+      "duration_seconds": 2.0,
+      "duration": "00:00:02",
+      "start_lat": null,
+      "start_lon": null,
+      "end_lat": null,
+      "end_lon": null
+    },
+    {
+      "type": "anchor",
+      "status": "closed",
+      "start": "2026-05-21T19:29:55Z",
+      "end": "2026-05-21T19:29:57Z",
+      "duration_seconds": 2.0,
+      "duration": "00:00:02",
+      "start_lat": null,
+      "start_lon": null,
+      "end_lat": null,
+      "end_lon": null
+    },
+    {
+      "type": "motor",
+      "status": "closed",
+      "start": "2026-05-21T20:00:37Z",
+      "end": "2026-05-21T20:00:37Z",
+      "duration_seconds": 0.0,
+      "duration": "00:00:00",
+      "start_lat": null,
+      "start_lon": null,
+      "end_lat": null,
+      "end_lon": null
+    },
+    {
+      "type": "sail",
+      "status": "closed",
+      "start": "2026-05-21T20:00:39Z",
+      "end": "2026-05-21T20:00:39Z",
+      "duration_seconds": 0.0,
+      "duration": "00:00:00",
+      "start_lat": null,
+      "start_lon": null,
+      "end_lat": null,
+      "end_lon": null
+    },
+    {
+      "type": "anchor",
+      "status": "closed",
+      "start": "2026-05-21T20:00:40Z",
+      "end": "2026-05-21T20:00:41Z",
+      "duration_seconds": 1.0,
+      "duration": "00:00:01",
+      "start_lat": null,
+      "start_lon": null,
+      "end_lat": null,
+      "end_lon": null
+    },
+    {
+      "type": "sail",
+      "status": "warning_end_without_start",
+      "end": "2026-05-21T20:12:43Z"
+    }
+  ]
+}
