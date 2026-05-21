@@ -1,354 +1,324 @@
-/*
- * AVNav Logbook Plugin CSS
- *
- * Fokus:
- * - gute Touch-Bedienung
- * - dunkles nautisches Theme
- * - responsive Layout
- * - klare visuelle Trennung
- */
-
-/*
- * Halbtransparenter Hintergrund hinter dem Popup.
- */
 #logbookOverlay {
     position: fixed;
     inset: 0;
-
     background: rgba(0, 0, 0, 0.72);
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     z-index: 999999;
 }
 
-/*
- * Hauptdialog.
- */
 .logbookBox {
-
-    width: min(92vw, 520px);
-    max-height: 88vh;
-
-    overflow-y: auto;
-
-    background: #1f252b;
-
+    width: min(96vw, 820px);
+    max-height: 92vh;
+    overflow: hidden;
+    background: #111923;
     color: #f2f2f2;
-
+    border: 1px solid rgba(130, 180, 255, 0.18);
     border-radius: 14px;
-
     padding: 18px;
-
     box-shadow:
-        0 0 30px rgba(0,0,0,0.5),
-        0 0 2px rgba(255,255,255,0.2);
-
+        0 0 30px rgba(0,0,0,0.55),
+        0 0 2px rgba(255,255,255,0.25);
     font-family: sans-serif;
 }
 
-/*
- * Headerbereich.
- */
 .logbookHeader {
-
     display: flex;
-
     align-items: center;
     justify-content: space-between;
-
-    margin-bottom: 16px;
+    margin-bottom: 14px;
 }
 
 .logbookHeader h2 {
-
     margin: 0;
-
-    font-size: 1.4rem;
-    font-weight: 600;
+    font-size: 1.45rem;
+    font-weight: 700;
 }
 
-/*
- * Schließen-Button oben rechts.
- */
 .logbookCloseButton {
-
-    width: 42px;
-    height: 42px;
-
+    width: 44px;
+    height: 44px;
     border: none;
     border-radius: 10px;
-
-    font-size: 1.5rem;
-
-    background: #2f3942;
+    font-size: 1.8rem;
+    background: #263241;
     color: white;
-
     cursor: pointer;
 }
 
-/*
- * Bereichsüberschrift.
- */
+.logbookMainLayout {
+    display: grid;
+    grid-template-columns: 0.78fr 1.22fr;
+    gap: 18px;
+    max-height: calc(92vh - 84px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+}
+
+.logbookInputPane {
+    min-width: 0;
+    overflow-y: auto;
+    padding: 14px 16px 14px 14px;
+    border-right: 1px solid rgba(255,255,255,0.16);
+}
+
+.logbookHistoryPane {
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 14px 14px 10px;
+}
+
 .logbookSectionTitle {
-
-    margin-top: 14px;
+    margin-top: 8px;
     margin-bottom: 8px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #93bdff;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
 
+.logbookHistoryTitle {
+    margin-top: 0;
+}
+
+.logbookGroup {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.logbookToggleButton {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    max-height: 128px;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 12px;
     font-size: 0.95rem;
     font-weight: 700;
-
-    color: #9cc7ff;
-
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-/*
- * Button-Reihen.
- */
-.logbookGroup {
-
-    display: flex;
-    gap: 10px;
-
-    margin-bottom: 10px;
-}
-
-/*
- * Alle Standardbuttons.
- */
-.logbookGroup button,
-.logbookActions button,
-.logbookOpenButton {
-
-    flex: 1;
-
-    min-height: 54px;
-
-    border: none;
-    border-radius: 10px;
-
-    font-size: 1rem;
-    font-weight: 600;
-
+    line-height: 1.15;
     cursor: pointer;
-
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
     transition:
-        background 0.15s ease,
+        filter 0.15s ease,
         transform 0.1s ease;
 }
 
-/*
- * Touch-Feedback.
- */
-.logbookGroup button:active,
+.logbookToggleButton:active,
 .logbookActions button:active,
 .logbookOpenButton:active {
-
     transform: scale(0.97);
 }
 
-/*
- * Motorbuttons.
- */
-button[data-type="motor_on"] {
-
-    background: #2f8f46;
-    color: white;
+.logbookButtonIcon {
+    width: 72%;
+    height: 72%;
+    object-fit: contain;
+    display: block;
 }
 
-button[data-type="motor_off"] {
-
-    background: #a33b3b;
+.logbookButtonLabel {
+    display: block;
     color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.55);
 }
 
-/*
- * Segelbuttons.
- */
-button[data-type="sail_set"] {
-
-    background: #2563eb;
-    color: white;
+.logbookMotorOn {
+    background: linear-gradient(145deg, #70a83f, #326f28);
 }
 
-button[data-type="sail_down"] {
-
-    background: #475569;
-    color: white;
+.logbookMotorOff {
+    background: linear-gradient(145deg, #2f6f2a, #163f17);
 }
 
-/*
- * Ankerbuttons.
- */
-button[data-type="anchor_down"] {
-
-    background: #d97706;
-    color: white;
+.logbookSailOn {
+    background: linear-gradient(145deg, #347be8, #174a9e);
 }
 
-button[data-type="anchor_up"] {
-
-    background: #6b7280;
-    color: white;
+.logbookSailOff {
+    background: linear-gradient(145deg, #1f5ba8, #112f67);
 }
 
-/*
- * Widget-Button direkt in AVNav.
- */
+.logbookAnchorOn {
+    background: linear-gradient(145deg, #e07a10, #a04606);
+}
+
+.logbookAnchorOff {
+    background: linear-gradient(145deg, #a9520a, #6e2f05);
+}
+
 .logbookOpenButton {
-
     width: 100%;
-
-    background: #2563eb;
-    color: white;
-
-    padding: 12px;
-}
-
-/*
- * Textfeld.
- */
-#logbookText {
-
-    width: 100%;
-    min-height: 110px;
-
-    resize: vertical;
-
+    min-height: 58px;
     border: none;
     border-radius: 10px;
-
-    padding: 12px;
-
-    box-sizing: border-box;
-
-    background: #2f3942;
-    color: white;
-
-    font-size: 1rem;
-
-    margin-bottom: 12px;
-}
-
-/*
- * Untere Aktionen.
- */
-.logbookActions {
-
-    display: flex;
-    gap: 10px;
-
-    margin-bottom: 12px;
-}
-
-/*
- * Manueller Speichern-Button.
- */
-#logbookSaveManual {
-
     background: #2563eb;
     color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 12px;
 }
 
-/*
- * Schließen unten.
- */
-#logbookClose {
+#logbookText {
+    width: 100%;
+    min-height: 118px;
+    resize: vertical;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 10px;
+    padding: 12px;
+    box-sizing: border-box;
+    background: #202a36;
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 18px;
+}
 
-    background: #4b5563;
+.logbookActions {
+    display: grid;
+    grid-template-columns: 1.3fr 0.9fr;
+    gap: 12px;
+    margin-top: 18px;
+    margin-bottom: 12px;
+}
+
+.logbookActions button {
+    min-height: 54px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     color: white;
 }
 
-/*
- * Statusanzeige.
- */
-.logbookStatus {
-
-    min-height: 22px;
-
-    margin-bottom: 14px;
-
-    font-size: 0.95rem;
-
-    color: #cbd5e1;
+#logbookSaveManual {
+    background: linear-gradient(145deg, #3b82f6, #1d4ed8);
 }
 
-/*
- * Liste der letzten Einträge.
- */
-.logbookEntries {
+#logbookClose {
+    background: linear-gradient(145deg, #4b5563, #263241);
+}
 
+.logbookActionIcon {
+    font-size: 1.35rem;
+}
+
+.logbookStatus {
+    min-height: 48px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    color: #86efac;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.logbookStatus:before {
+    content: "✓";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    width: 22px;
+    height: 22px;
+    border-radius: 99px;
+    border: 2px solid #86efac;
+    font-size: 0.85rem;
+}
+
+.logbookEntries {
     display: flex;
     flex-direction: column;
-
-    gap: 10px;
+    gap: 2px;
+    overflow-y: auto;
+    padding-right: 6px;
+    padding-bottom: 4px;
 }
 
-/*
- * Einzelner Historieneintrag.
- */
 .logbookEntry {
-
-    padding: 10px;
-
-    border-radius: 10px;
-
-    background: #2b333b;
-
-    border-left: 4px solid #2563eb;
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.08);
 }
 
-/*
- * Meta-Infos:
- * Zeit / Eventtyp / Position
- */
-.logbookEntryMeta {
-
-    font-size: 0.8rem;
-
-    color: #9fb3c8;
-
-    margin-bottom: 4px;
+.logbookEntryIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 7px;
+    background: rgba(255,255,255,0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/*
- * Freitext.
- */
-.logbookEntryText {
+.logbookEntryIcon img {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+}
 
-    font-size: 0.95rem;
-
+.logbookEntryTitle {
+    font-size: 1rem;
+    font-weight: 800;
     color: #f8fafc;
-
-    word-break: break-word;
 }
 
-/*
- * Kleine Displays / Smartphones.
- */
-@media (max-width: 600px) {
+.logbookEntryMeta {
+    font-size: 0.82rem;
+    color: #a8b4c4;
+    line-height: 1.25;
+}
 
-    .logbookGroup,
-    .logbookActions {
+.logbookEntryText {
+    font-size: 0.88rem;
+    color: #d8e0eb;
+    word-break: break-word;
+    margin-top: 2px;
+}
 
-        flex-direction: column;
-    }
-
-    .logbookGroup button,
-    .logbookActions button {
-
-        width: 100%;
-    }
-
+@media (max-width: 860px) {
     .logbookBox {
-
         width: 96vw;
         max-height: 94vh;
+        overflow-y: auto;
+    }
 
-        padding: 14px;
+    .logbookMainLayout {
+        display: block;
+        max-height: none;
+    }
+
+    .logbookInputPane {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.16);
+    }
+
+    .logbookHistoryPane {
+        padding-left: 14px;
+    }
+
+    .logbookEntries {
+        max-height: 300px;
     }
 }

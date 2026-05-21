@@ -3,12 +3,10 @@ console.log("logbook plugin loaded");
 /*
  * AVNav Logbook Frontend
  *
- * Ziele:
- * - Logbuch-Button als AVNav-Widget anzeigen
- * - Overlay mit Quick-Buttons öffnen
- * - Freitext zuverlässig eingeben
- * - AVNav-Tastaturshortcuts während der Texteingabe unterdrücken
- * - Einträge über plugin.py speichern
+ * Layout:
+ * - Links: Quick-Buttons
+ * - Rechts: Freitext oben, letzte Einträge darunter
+ * - Icons werden aus /icons/*.svg geladen
  */
 
 var logbookWidget = {
@@ -34,9 +32,6 @@ var logbookWidget = {
 
 avnav.api.registerWidget(logbookWidget);
 
-/*
- * Öffnet das Overlay über den Widget-Button.
- */
 document.addEventListener("click", function(ev) {
     var target = ev.target;
 
@@ -51,13 +46,6 @@ document.addEventListener("click", function(ev) {
     }
 }, true);
 
-/*
- * Stoppt nur Tastatur- und Eingabe-Events.
- *
- * Wichtig:
- * Klick-Events dürfen hier NICHT gestoppt werden,
- * sonst funktionieren die Buttons im Overlay nicht mehr.
- */
 function stopKeyboardEvent(ev) {
     if (!ev) {
         return;
@@ -66,9 +54,10 @@ function stopKeyboardEvent(ev) {
     ev.stopPropagation();
 }
 
-/*
- * Öffnet das Logbuch-Overlay.
- */
+function iconPath(name) {
+    return AVNAV_BASE_URL + "/icons/" + name + ".png";
+}
+
 function openLogbookOverlay() {
     var existing = document.getElementById("logbookOverlay");
     if (existing) {
@@ -86,45 +75,59 @@ function openLogbookOverlay() {
                 '<button type="button" id="logbookCloseTop" class="logbookCloseButton">×</button>' +
             '</div>' +
 
-            '<div class="logbookSectionTitle">Motor</div>' +
-            '<div class="logbookGroup">' +
-                '<button type="button" data-type="motor_on">Motor an</button>' +
-                '<button type="button" data-type="motor_off">Motor aus</button>' +
+            '<div class="logbookMainLayout">' +
+
+                '<div class="logbookInputPane">' +
+
+                    '<div class="logbookSectionTitle">Motor</div>' +
+                    '<div class="logbookGroup">' +
+                        logbookButton("motor_on", "Motor an", "motor-on", "logbookMotorOn") +
+                        logbookButton("motor_off", "Motor aus", "motor-off", "logbookMotorOff") +
+                    '</div>' +
+
+                    '<div class="logbookSectionTitle">Segel</div>' +
+                    '<div class="logbookGroup">' +
+                        logbookButton("sail_set", "Segel setzen", "sail-set", "logbookSailOn") +
+                        logbookButton("sail_down", "Segel einholen", "sail-down", "logbookSailOff") +
+                    '</div>' +
+
+                    '<div class="logbookSectionTitle">Anker</div>' +
+                    '<div class="logbookGroup">' +
+                        logbookButton("anchor_down", "Anker ab", "anchor-down", "logbookAnchorOn") +
+                        logbookButton("anchor_up", "Anker auf", "anchor-up", "logbookAnchorOff") +
+                    '</div>' +
+
+                    '<div class="logbookActions">' +
+                        '<button type="button" id="logbookSaveManual">' +
+                            '<span class="logbookActionIcon">✎</span>' +
+                            '<span>Anmerkung speichern</span>' +
+                        '</button>' +
+                        '<button type="button" id="logbookClose">' +
+                            '<span class="logbookActionIcon">×</span>' +
+                            '<span>Schließen</span>' +
+                        '</button>' +
+                    '</div>' +
+
+                    '<div id="logbookStatus" class="logbookStatus">Bereit</div>' +
+
+                '</div>' +
+
+                '<div class="logbookHistoryPane">' +
+
+                    '<div class="logbookSectionTitle logbookHistoryTitle">Anmerkung / Freitext</div>' +
+                    '<textarea id="logbookText" placeholder="Freitext / Bemerkung eingeben..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>' +
+
+                    '<div class="logbookSectionTitle">Letzte Einträge</div>' +
+                    '<div id="logbookEntries" class="logbookEntries">Lade Einträge...</div>' +
+
+                '</div>' +
+
             '</div>' +
-
-            '<div class="logbookSectionTitle">Segel</div>' +
-            '<div class="logbookGroup">' +
-                '<button type="button" data-type="sail_set">Segel setzen</button>' +
-                '<button type="button" data-type="sail_down">Segel einholen</button>' +
-            '</div>' +
-
-            '<div class="logbookSectionTitle">Anker</div>' +
-            '<div class="logbookGroup">' +
-                '<button type="button" data-type="anchor_down">Anker ab</button>' +
-                '<button type="button" data-type="anchor_up">Anker auf</button>' +
-            '</div>' +
-
-            '<div class="logbookSectionTitle">Anmerkung</div>' +
-            '<textarea id="logbookText" placeholder="Freitext / Bemerkung" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>' +
-
-            '<div class="logbookActions">' +
-                '<button type="button" id="logbookSaveManual">Anmerkung speichern</button>' +
-                '<button type="button" id="logbookClose">Schließen</button>' +
-            '</div>' +
-
-            '<div id="logbookStatus" class="logbookStatus">Bereit</div>' +
-
-            '<div class="logbookSectionTitle">Letzte Einträge</div>' +
-            '<div id="logbookEntries" class="logbookEntries">Lade Einträge...</div>' +
 
         '</div>';
 
     document.body.appendChild(overlay);
 
-    /*
-     * Nur Tastatur-/Texteingabe-Events abfangen.
-     * So bleiben normale Button-Klicks funktionsfähig.
-     */
     [
         "keydown",
         "keypress",
@@ -138,9 +141,6 @@ function openLogbookOverlay() {
         overlay.addEventListener(eventName, stopKeyboardEvent, true);
     });
 
-    /*
-     * Klick auf Hintergrund schließt das Overlay.
-     */
     overlay.addEventListener("click", function(e) {
         if (e.target === overlay) {
             e.preventDefault();
@@ -149,11 +149,6 @@ function openLogbookOverlay() {
         }
     }, false);
 
-    /*
-     * Klicks innerhalb der Box sollen AVNav nicht erreichen,
-     * aber sie müssen zuerst bei den Buttons ankommen.
-     * Deshalb Bubble-Phase, nicht Capture-Phase.
-     */
     var box = overlay.querySelector(".logbookBox");
     if (box) {
         box.addEventListener("click", function(e) {
@@ -161,9 +156,6 @@ function openLogbookOverlay() {
         }, false);
     }
 
-    /*
-     * Textfeld fokussieren.
-     */
     var textField = document.getElementById("logbookText");
     if (textField) {
         setTimeout(function() {
@@ -171,9 +163,6 @@ function openLogbookOverlay() {
         }, 100);
     }
 
-    /*
-     * Quick-Buttons verbinden.
-     */
     overlay.querySelectorAll("button[data-type]").forEach(function(btn) {
         btn.addEventListener("click", function(e) {
             e.preventDefault();
@@ -182,18 +171,12 @@ function openLogbookOverlay() {
         }, false);
     });
 
-    /*
-     * Manueller Freitexteintrag.
-     */
     document.getElementById("logbookSaveManual").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         saveLogbookEntry("manual");
     }, false);
 
-    /*
-     * Schließen-Buttons.
-     */
     document.getElementById("logbookClose").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -209,9 +192,15 @@ function openLogbookOverlay() {
     loadLogbookEntries();
 }
 
-/*
- * Speichert einen Logbucheintrag über plugin.py.
- */
+function logbookButton(type, label, iconName, extraClass) {
+    return (
+        '<button type="button" class="logbookToggleButton ' + extraClass + '" data-type="' + type + '">' +
+            '<img class="logbookButtonIcon" src="' + iconPath(iconName) + '" alt="">' +
+            '<span class="logbookButtonLabel">' + escapeHtml(label) + '</span>' +
+        '</button>'
+    );
+}
+
 function saveLogbookEntry(type) {
     var textField = document.getElementById("logbookText");
     var status = document.getElementById("logbookStatus");
@@ -262,9 +251,6 @@ function saveLogbookEntry(type) {
         });
 }
 
-/*
- * Lädt die letzten Einträge.
- */
 function loadLogbookEntries() {
     var target = document.getElementById("logbookEntries");
     if (!target) {
@@ -273,7 +259,7 @@ function loadLogbookEntries() {
 
     target.innerHTML = "Lade Einträge...";
 
-    fetch(AVNAV_BASE_URL + "/api/list?limit=10")
+    fetch(AVNAV_BASE_URL + "/api/list?limit=12")
         .then(function(response) {
             return response.json();
         })
@@ -291,9 +277,6 @@ function loadLogbookEntries() {
         });
 }
 
-/*
- * Rendert Historie.
- */
 function renderLogbookEntries(entries) {
     var target = document.getElementById("logbookEntries");
     if (!target) {
@@ -311,6 +294,7 @@ function renderLogbookEntries(entries) {
         var time = entry.timestamp || "";
         var type = readableEventType(entry.event_type || "manual");
         var text = escapeHtml(entry.text || "");
+        var icon = iconForEvent(entry.event_type || "manual");
         var position = "";
 
         if (entry.lat !== null && entry.lat !== undefined && entry.lon !== null && entry.lon !== undefined) {
@@ -319,11 +303,13 @@ function renderLogbookEntries(entries) {
 
         html +=
             '<div class="logbookEntry">' +
-                '<div class="logbookEntryMeta">' +
-                    escapeHtml(time) + ' · ' + escapeHtml(type) + escapeHtml(position) +
+                '<div class="logbookEntryIcon">' +
+                    '<img src="' + iconPath(icon) + '" alt="">' +
                 '</div>' +
-                '<div class="logbookEntryText">' +
-                    (text || "&nbsp;") +
+                '<div class="logbookEntryContent">' +
+                    '<div class="logbookEntryTitle">' + escapeHtml(type) + '</div>' +
+                    '<div class="logbookEntryMeta">' + escapeHtml(time) + escapeHtml(position) + '</div>' +
+                    '<div class="logbookEntryText">' + (text || "&nbsp;") + '</div>' +
                 '</div>' +
             '</div>';
     });
@@ -331,9 +317,20 @@ function renderLogbookEntries(entries) {
     target.innerHTML = html;
 }
 
-/*
- * Interne Eventnamen lesbar machen.
- */
+function iconForEvent(type) {
+    var icons = {
+        motor_on: "motor-on",
+        motor_off: "motor-off",
+        sail_set: "sail-set",
+        sail_down: "sail-down",
+        anchor_down: "anchor-down",
+        anchor_up: "anchor-up",
+        manual: "manual"
+    };
+
+    return icons[type] || "manual";
+}
+
 function readableEventType(type) {
     var labels = {
         motor_on: "Motor an",
@@ -348,9 +345,6 @@ function readableEventType(type) {
     return labels[type] || type || "Unbekannt";
 }
 
-/*
- * Freitext sicher als HTML darstellen.
- */
 function escapeHtml(value) {
     return String(value)
         .replace(/&/g, "&amp;")
