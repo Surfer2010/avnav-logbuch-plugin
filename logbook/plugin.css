@@ -47,7 +47,7 @@
 
 .logbookStatus {
     min-height: 34px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: 8px;
     background: rgba(255,255,255,0.03);
@@ -200,9 +200,17 @@
     padding: 12px;
 }
 
+.logbookTextRow {
+    display: grid;
+    grid-template-columns: 1fr 46px;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: stretch;
+}
+
 #logbookText {
     width: 100%;
-    min-height: 96px;
+    min-height: 108px;
     resize: vertical;
     border: 1px solid rgba(255,255,255,0.25);
     border-radius: 9px;
@@ -211,40 +219,32 @@
     background: #202a36;
     color: white;
     font-size: 0.95rem;
-    margin-bottom: 10px;
 }
 
-.logbookActions {
-    display: grid;
-    grid-template-columns: 1.3fr 0.9fr;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.logbookActions button {
-    min-height: 44px;
+.logbookVerticalSave {
     border: 1px solid rgba(255,255,255,0.14);
     border-radius: 9px;
-    font-size: 0.88rem;
-    font-weight: 700;
+    background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+    color: white;
     cursor: pointer;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
-    color: white;
+
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+
+    font-size: 0.86rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+
+    min-height: 108px;
+    padding: 4px;
 }
 
-#logbookSaveManual {
-    background: linear-gradient(145deg, #3b82f6, #1d4ed8);
-}
-
-#logbookClose {
-    background: linear-gradient(145deg, #4b5563, #263241);
-}
-
-.logbookActionIcon {
-    font-size: 1.15rem;
+.logbookVerticalSave:active {
+    transform: rotate(180deg) scale(0.97);
 }
 
 .logbookEntries {

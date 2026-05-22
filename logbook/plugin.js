@@ -110,25 +110,23 @@ function openLogbookOverlay() {
                         logbookButton("anchor_up", "Anker auf", "anchor-up", "logbookAnchorOff") +
                     '</div>' +
 
-                    '<div class="logbookActions">' +
-                        '<button type="button" id="logbookSaveManual">' +
-                            '<span class="logbookActionIcon">✎</span>' +
-                            '<span>Anmerkung speichern</span>' +
-                        '</button>' +
-                        '<button type="button" id="logbookClose">' +
-                            '<span class="logbookActionIcon">×</span>' +
-                            '<span>Schließen</span>' +
-                        '</button>' +
-                    '</div>' +
-
-                    '<div id="logbookStatus" class="logbookStatus logbookStatus-info">Bereit</div>' +
-
                 '</div>' +
 
                 '<div class="logbookHistoryPane">' +
 
+                    '<div id="logbookStatus" class="logbookStatus logbookStatus-info">Bereit</div>' +
+
                     '<div class="logbookSectionTitle logbookHistoryTitle">Anmerkung / Freitext</div>' +
-                    '<textarea id="logbookText" placeholder="Freitext / Bemerkung eingeben..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>' +
+
+                    '<div class="logbookTextRow">' +
+
+                        '<textarea id="logbookText" placeholder="Freitext / Bemerkung eingeben..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>' +
+
+                        '<button type="button" id="logbookSaveManual" class="logbookVerticalSave">' +
+                            '<span>Speichern</span>' +
+                        '</button>' +
+
+                    '</div>' +
 
                     '<div class="logbookSectionTitle">Letzte Einträge</div>' +
                     '<div id="logbookEntries" class="logbookEntries">Lade Einträge...</div>' +
@@ -189,13 +187,6 @@ function openLogbookOverlay() {
         e.stopPropagation();
         saveLogbookEntry("manual");
     }, false);
-
-    document.getElementById("logbookClose").addEventListener("click", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        overlay.remove();
-    }, false);
-
     document.getElementById("logbookCloseTop").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
