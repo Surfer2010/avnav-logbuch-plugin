@@ -10,7 +10,7 @@
 
 .logbookBox {
     width: min(97vw, 900px);
-    max-height: 96vh;
+    max-height: 80vh;
     overflow: hidden;
     background: #111923;
     color: #f2f2f2;
@@ -85,7 +85,9 @@
     display: grid;
     grid-template-columns: 0.78fr 1.22fr;
     gap: 14px;
-    max-height: calc(96vh - 82px);
+    max-height: calc(80vh - 82px);
+    min-height: 0;
+    overflow: hidden;
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 10px;
 }
@@ -99,6 +101,7 @@
 
 .logbookHistoryPane {
     min-width: 0;
+    min-height: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -252,6 +255,8 @@
     flex-direction: column;
     gap: 7px;
     overflow-y: auto;
+    min-height: 0;
+    flex: 1 1 auto;
     padding-right: 5px;
     padding-bottom: 4px;
 }
@@ -305,7 +310,7 @@
 @media (max-width: 860px) {
     .logbookBox {
         width: 97vw;
-        max-height: 96vh;
+        max-height: 80vh;
         overflow-y: auto;
     }
 
