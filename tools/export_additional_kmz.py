@@ -396,7 +396,7 @@ def build_kml(date_dash, intervals, anchors, notes, points):
       <color>ff00aaff</color>
       <scale>1.2</scale>
       <Icon>
-        <href>http://maps.google.com/mapfiles/kml/shapes/anchor.png</href>
+        <href>icons/anchor.png</href>
       </Icon>
     </IconStyle>
   </Style>
@@ -406,7 +406,7 @@ def build_kml(date_dash, intervals, anchors, notes, points):
       <color>ffffffff</color>
       <scale>1.0</scale>
       <Icon>
-        <href>http://maps.google.com/mapfiles/kml/shapes/info-i.png</href>
+        <href>icons/note.png</href>
       </Icon>
     </IconStyle>
   </Style>
@@ -439,9 +439,20 @@ def build_kml(date_dash, intervals, anchors, notes, points):
 def write_kmz(output_file, kml_content):
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
+    icons_dir = Path(__file__).parent / "kmz-icons"
+
     # mode="w" überschreibt vorhandene KMZ-Dateien ohne Rückfrage.
     with zipfile.ZipFile(output_file, "w", zipfile.ZIP_DEFLATED) as kmz:
         kmz.writestr("doc.kml", kml_content)
+
+        anchor_icon = icons_dir / "anchor.png"
+        note_icon = icons_dir / "note.png"
+
+        if anchor_icon.exists():
+            kmz.write(anchor_icon, "icons/anchor.png")
+
+        if note_icon.exists():
+            kmz.write(note_icon, "icons/note.png")
 
 
 def main():
