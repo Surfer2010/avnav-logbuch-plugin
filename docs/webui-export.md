@@ -143,3 +143,75 @@ Export läuft...
 Export fertig
 Export fehlgeschlagen
 
+
+## Törn Start / Törn Ende
+
+Das Logbuch-Overlay enthält zusätzlich kleine Buttons:
+
+```text
+Törn Start
+Törn Ende
+
+Diese erzeugen normale Logbuch-Events:
+
+trip_start
+trip_end
+
+Die Events verändern keinen Motor-/Segel-/Ankerstatus.
+
+Sie werden mit Zeitstempel und aktueller Position gespeichert und erscheinen später als Marker in Tages- und Törn-KMZ-Dateien.
+
+## Törn Start / Törn Ende
+
+Das Logbuch-Overlay enthält zusätzlich kleine Buttons:
+
+```text
+Törn Start
+Törn Ende
+
+Diese erzeugen normale Logbuch-Events:
+
+trip_start
+trip_end
+
+Die Events verändern keinen Motor-/Segel-/Ankerstatus.
+
+Sie werden mit Zeitstempel und aktueller Position gespeichert und erscheinen später als Marker in Tages- und Törn-KMZ-Dateien.
+
+## Törn Export Auswahl
+
+Der Button heißt:
+
+```text
+Törn Export
+
+Beim Klick fragt das Overlay:
+
+1 = letzte 7 Tage
+2 = seit letztem Törn Start
+Export seit letztem Törn Start
+
+Bei Auswahl 2 sucht das Plugin den letzten gespeicherten Logbucheintrag:
+
+trip_start
+
+Danach wird gesucht, ob nach diesem Start ein Eintrag existiert:
+
+trip_end
+
+Verhalten:
+
+trip_start vorhanden, trip_end vorhanden:
+→ Export von Törn Start bis Törn Ende
+
+trip_start vorhanden, trip_end fehlt:
+→ Export von Törn Start bis heute
+
+kein trip_start vorhanden:
+→ Fehlermeldung
+
+API:
+
+curl "http://localhost:8080/plugins/user-logbook/api/exportCurrentTripKmz"
+
+Die erzeugte KMZ wird wie alle Overlays nach AVNAV_DATA_DIR/overlays/ geschrieben und vorhandene Dateien werden überschrieben.

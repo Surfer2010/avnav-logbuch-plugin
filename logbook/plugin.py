@@ -330,8 +330,8 @@ class Plugin(object):
             pass
 
     def _validate_event(self, event_type):
-        # Manuelle Einträge verändern keinen Zustand und sind immer erlaubt.
-        if event_type == 'manual':
+        # Manuelle Einträge und Törn-Marker verändern keinen Zustand und sind immer erlaubt.
+        if event_type in ('manual', 'trip_start', 'trip_end'):
             return True, ''
 
         # Start-Events dürfen nur ausgeführt werden, wenn der Zustand noch aus ist.
@@ -609,6 +609,125 @@ class Plugin(object):
             'job': job
         }
 
+    def _parse_logbook_timestamp(self, value):
+        try:
+            if not value:
+                return None
+
+            return datetime.datetime.strptime(
+                str(value).replace('Z', ''),
+                '%Y-%m-%dT%H:%M:%S'
+            )
+        except Exception:
+            return None
+
+    def _read_trip_marker_events(self):
+        markers = []
+
+        try:
+            files = []
+
+            if os.path.isdir(self.log_dir):
+                for name in os.listdir(self.log_dir):
+                    if name.endswith('.jsonl'):
+                        files.append(os.path.join(self.log_dir, name))
+
+            files.sort()
+
+            for path in files:
+                try:
+                    with open(path, 'r') as f:
+                        for line in f:
+                            line = line.strip()
+
+                            if not line:
+                                continue
+
+                            try:
+                                entry = json.loads(line)
+                            except Exception:
+                                continue
+
+                            event_type = entry.get('event_type')
+
+                            if event_type not in ('trip_start', 'trip_end'):
+                                continue
+
+                            timestamp = self._parse_logbook_timestamp(
+                                entry.get('timestamp')
+                            )
+
+                            if timestamp is None:
+                                continue
+
+                            markers.append({
+                                'timestamp': timestamp,
+                                'timestampText': entry.get('timestamp'),
+                                'event_type': event_type,
+                                'entry': entry,
+                                'file': path
+                            })
+
+                except Exception:
+                    pass
+
+            markers.sort(key=lambda item: item['timestamp'])
+            return markers
+
+        except Exception:
+            return []
+
+    def _find_current_trip_range(self):
+        markers = self._read_trip_marker_events()
+
+        last_start = None
+
+        for marker in markers:
+            if marker.get('event_type') == 'trip_start':
+                last_start = marker
+
+        if last_start is None:
+            return None, None, 'Kein Törn Start gefunden.'
+
+        end_marker = None
+
+        for marker in markers:
+            if (
+                marker.get('event_type') == 'trip_end'
+                and marker.get('timestamp') >= last_start.get('timestamp')
+            ):
+                end_marker = marker
+                break
+
+        from_date = last_start['timestamp'].strftime('%Y-%m-%d')
+
+        if end_marker is not None:
+            to_date = end_marker['timestamp'].strftime('%Y-%m-%d')
+            message = 'Törn Start bis Törn Ende.'
+        else:
+            to_date = datetime.datetime.utcnow().strftime('%Y-%m-%d')
+            message = 'Törn Start bis heute.'
+
+        return from_date, to_date, message
+
+    def _export_current_trip_kmz_async(self):
+        from_date, to_date, message = self._find_current_trip_range()
+
+        if not from_date or not to_date:
+            return {
+                'status': 'ERROR',
+                'message': message
+            }
+
+        result = self._export_trip_kmz_async(from_date, to_date)
+
+        if result.get('status') == 'OK':
+            result['message'] = message
+            result['from'] = from_date
+            result['to'] = to_date
+
+        return result
+
     def _export_status(self, job_id=None):
         if job_id:
             job = self.export_jobs.get(job_id)
@@ -692,6 +811,9 @@ class Plugin(object):
                     }
 
                 return self._export_trip_kmz_async(from_date, to_date)
+
+            if url in ('exportCurrentTripKmz', 'api/exportCurrentTripKmz'):
+                return self._export_current_trip_kmz_async()
 
             if url in ('exportStatus', 'api/exportStatus'):
                 job_id = self._get_arg(args, 'job', self._get_arg(args, 'jobId', None))

@@ -399,7 +399,7 @@ def build_intervals(entries):
         #
         # Freitextnotizen separat sammeln.
         #
-        if event_type == "manual":
+        if event_type in ("manual", "trip_start", "trip_end"):
 
             if (
                 entry.get("lat") is not None
@@ -908,7 +908,14 @@ def build_kml(date_dash, intervals, anchors, notes, track_points):
         if note.get("lat") is None or note.get("lon") is None:
             continue
 
-        title = f"Logbuchnotiz {index}"
+        event_type = note.get("event_type")
+
+        if event_type == "trip_start":
+            title = "Törn Start"
+        elif event_type == "trip_end":
+            title = "Törn Ende"
+        else:
+            title = f"Logbuchnotiz {index}"
 
         note_placemarks.append(
             kml_point_placemark(

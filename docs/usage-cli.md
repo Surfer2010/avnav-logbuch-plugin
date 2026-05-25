@@ -168,3 +168,44 @@ Die Exporte laufen asynchron über die Plugin-API und schreiben nach:
 
 AVNAV_DATA_DIR/overlays/
 
+
+Törn Start / Törn Ende im Overlay
+
+Im Logbuch-Overlay gibt es kleine Buttons:
+
+Törn Start
+Törn Ende
+
+Sie speichern die Events:
+
+trip_start
+trip_end
+
+Diese Marker werden in KMZ-Exporten berücksichtigt.
+
+Törn Start / Törn Ende im Overlay
+
+Im Logbuch-Overlay gibt es kleine Buttons:
+
+Törn Start
+Törn Ende
+
+Sie speichern die Events:
+
+trip_start
+trip_end
+
+Diese Marker werden in KMZ-Exporten berücksichtigt.
+
+Törn Export im Overlay
+
+Der Button:
+
+Törn Export
+
+fragt nach:
+
+1 = letzte 7 Tage
+2 = seit letztem Törn Start
+
+Für seit letztem Törn Start wird der letzte trip_start gesucht. Falls danach ein trip_end existiert, endet der Export dort. Andernfalls endet er heute.

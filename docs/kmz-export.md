@@ -98,3 +98,47 @@ Ankerpunkte und Logbuchnotizen enthalten TimeStamp:
 </TimeStamp>
 
 Google Earth kann diese Informationen für die Zeitleiste nutzen.
+
+Törn-Marker
+
+Folgende Events werden als Marker in der KMZ dargestellt:
+
+trip_start
+trip_end
+
+Sie dienen zur Markierung von Törnbeginn und Törnende.
+
+Sie verändern keine Statuslogik.
+
+Törn-Marker
+
+Folgende Events werden als Marker in der KMZ dargestellt:
+
+trip_start
+trip_end
+
+Sie dienen zur Markierung von Törnbeginn und Törnende.
+
+Sie verändern keine Statuslogik.
+
+Törn Start als Exportgrenze
+
+Die Events:
+
+trip_start
+trip_end
+
+werden nicht nur als Marker gespeichert, sondern können auch als Grenzen für den Törnexport genutzt werden.
+
+Der API-Endpunkt:
+
+/api/exportCurrentTripKmz
+
+exportiert den Zeitraum:
+
+letzter trip_start → nächster trip_end
+
+oder, falls kein Törn Ende vorhanden ist:
+
+letzter trip_start → heute
+

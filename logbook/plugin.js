@@ -123,7 +123,15 @@ function openLogbookOverlay() {
                         '</button>' +
 
                         '<button type="button" id="logbookExportTrip" class="logbookMiniButton">' +
-                            'Törn 7 Tage' +
+                            'Törn Export' +
+                        '</button>' +
+
+                        '<button type="button" id="logbookTripStart" class="logbookMiniButton">' +
+                            'Törn Start' +
+                        '</button>' +
+
+                        '<button type="button" id="logbookTripEnd" class="logbookMiniButton">' +
+                            'Törn Ende' +
                         '</button>' +
 
                     '</div>' +
@@ -215,6 +223,18 @@ function openLogbookOverlay() {
         e.preventDefault();
         e.stopPropagation();
         exportTripKmz();
+    }, false);
+
+    document.getElementById("logbookTripStart").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        saveLogbookEntry("trip_start");
+    }, false);
+
+    document.getElementById("logbookTripEnd").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        saveLogbookEntry("trip_end");
     }, false);
 
     loadLogbookEntries();
@@ -400,7 +420,33 @@ function exportTodayKmz() {
 }
 
 function exportTripKmz() {
-    setLogbookStatus("Törn Export startet...", "info");
+    var choice = window.prompt(
+        "Törn Export:\n\n1 = letzte 7 Tage\n2 = seit letztem Törn Start",
+        "2"
+    );
+
+    if (choice === null) {
+        setLogbookStatus("Törn Export abgebrochen", "info");
+        return;
+    }
+
+    choice = String(choice).trim();
+
+    if (choice === "1") {
+        exportTripKmzLastSevenDays();
+        return;
+    }
+
+    if (choice === "2") {
+        exportTripKmzSinceTripStart();
+        return;
+    }
+
+    setLogbookStatus("Ungültige Auswahl", "error");
+}
+
+function exportTripKmzLastSevenDays() {
+    setLogbookStatus("Törn Export 7 Tage startet...", "info");
 
     var now = new Date();
     var toDate = now.toISOString().slice(0, 10);
@@ -414,13 +460,26 @@ function exportTripKmz() {
         "&to=" +
         encodeURIComponent(toDate);
 
+    startExportRequest(url, "Törn Exportfehler");
+}
+
+function exportTripKmzSinceTripStart() {
+    setLogbookStatus("Törn Export seit Start startet...", "info");
+
+    startExportRequest(
+        AVNAV_BASE_URL + "/api/exportCurrentTripKmz",
+        "Törn Exportfehler"
+    );
+}
+
+function startExportRequest(url, errorMessage) {
     fetch(url)
         .then(function(response) {
             return response.json();
         })
         .then(function(data) {
             if (data.status !== "OK") {
-                setLogbookStatus("Törn Exportfehler", "error");
+                setLogbookStatus(data.message || errorMessage, "error");
                 return;
             }
 
@@ -428,7 +487,7 @@ function exportTripKmz() {
         })
         .catch(function(err) {
             console.error(err);
-            setLogbookStatus("Törn Exportfehler", "error");
+            setLogbookStatus(errorMessage, "error");
         });
 }
 

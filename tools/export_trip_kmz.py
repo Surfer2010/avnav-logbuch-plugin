@@ -212,7 +212,14 @@ def build_day_folder(date_dash, entries, track_points):
         if note.get("lat") is None or note.get("lon") is None:
             continue
 
-        title = f"{date_dash} Logbuchnotiz {index}"
+        event_type = note.get("event_type")
+
+        if event_type == "trip_start":
+            title = f"{date_dash} Törn Start"
+        elif event_type == "trip_end":
+            title = f"{date_dash} Törn Ende"
+        else:
+            title = f"{date_dash} Logbuchnotiz {index}"
 
         note_placemarks.append(
             day_export.kml_point_placemark(
