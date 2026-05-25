@@ -39,3 +39,70 @@ Segel-Koordinaten: 4
 Ankerpunkte: 1
 Logbuchnotizen: 1
 
+
+## Törn-KMZ Export
+
+Direkt:
+
+```bash
+python3 tools/export_trip_kmz.py \
+  --from-date 2026-05-21 \
+  --to-date 2026-05-24 \
+  --avnav-data /home/pi/avnav/data
+
+Über Menü:
+
+python3 tools/logbook_manager.py
+
+Dann Option:
+
+3
+
+
+## Törn-KMZ Export
+
+Direkt:
+
+```bash
+python3 tools/export_trip_kmz.py \
+  --from-date 2026-05-21 \
+  --to-date 2026-05-24 \
+  --avnav-data /home/pi/avnav/data
+
+Über Menü:
+
+python3 tools/logbook_manager.py
+
+Dann Option:
+
+3
+
+
+## Törn-KMZ Export
+
+Direkt:
+
+```bash
+python3 tools/export_trip_kmz.py \
+  --from-date 2026-05-21 \
+  --to-date 2026-05-24 \
+  --avnav-data /home/pi/avnav/data
+
+Über Menü:
+
+python3 tools/logbook_manager.py
+
+Dann Option:
+
+3
+
+
+## Törn-KMZ Export
+
+Direkt:
+
+
+## Törn-KMZ Export
+
+Direkt:
+

@@ -1,0 +1,6 @@
+{"timestamp":"2026-06-01T10:00:00Z","event_type":"motor_on","text":"","lat":54.000000,"lon":10.000000,"state":{"motor":true,"sail":false,"anchor":false},"source":"test"}
+{"timestamp":"2026-06-01T10:20:00Z","event_type":"motor_off","text":"","lat":54.000000,"lon":10.040000,"state":{"motor":false,"sail":false,"anchor":false},"source":"test"}
+{"timestamp":"2026-06-01T10:25:00Z","event_type":"sail_set","text":"","lat":54.010000,"lon":10.050000,"state":{"motor":false,"sail":true,"anchor":false},"source":"test"}
+{"timestamp":"2026-06-01T10:40:00Z","event_type":"sail_down","text":"","lat":54.040000,"lon":10.080000,"state":{"motor":false,"sail":false,"anchor":false},"source":"test"}
+{"timestamp":"2026-06-01T10:45:00Z","event_type":"anchor_down","text":"Testankerplatz","lat":54.050000,"lon":10.090000,"state":{"motor":false,"sail":false,"anchor":true},"source":"test"}
+{"timestamp":"2026-06-01T10:50:00Z","event_type":"manual","text":"Testnotiz am Ankerplatz","lat":54.050100,"lon":10.090100,"state":{"motor":false,"sail":false,"anchor":true},"source":"test"}

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="avnav-test">
+  <trk>
+    <name>avnav-track-2026-06-01</name>
+    <trkseg>
+      <trkpt lat="54.000000000" lon="10.000000000"><time>2026-06-01T10:00:00Z</time><course>90.0</course><speed>2.0</speed></trkpt>
+      <trkpt lat="54.000000000" lon="10.010000000"><time>2026-06-01T10:05:00Z</time><course>90.0</course><speed>2.2</speed></trkpt>
+      <trkpt lat="54.000000000" lon="10.020000000"><time>2026-06-01T10:10:00Z</time><course>90.0</course><speed>2.4</speed></trkpt>
+      <trkpt lat="54.000000000" lon="10.030000000"><time>2026-06-01T10:15:00Z</time><course>90.0</course><speed>2.6</speed></trkpt>
+      <trkpt lat="54.000000000" lon="10.040000000"><time>2026-06-01T10:20:00Z</time><course>90.0</course><speed>2.8</speed></trkpt>
+
+      <trkpt lat="54.010000000" lon="10.050000000"><time>2026-06-01T10:25:00Z</time><course>45.0</course><speed>4.0</speed></trkpt>
+      <trkpt lat="54.020000000" lon="10.060000000"><time>2026-06-01T10:30:00Z</time><course>45.0</course><speed>4.2</speed></trkpt>
+      <trkpt lat="54.030000000" lon="10.070000000"><time>2026-06-01T10:35:00Z</time><course>45.0</course><speed>4.4</speed></trkpt>
+      <trkpt lat="54.040000000" lon="10.080000000"><time>2026-06-01T10:40:00Z</time><course>45.0</course><speed>4.6</speed></trkpt>
+
+      <trkpt lat="54.050000000" lon="10.090000000"><time>2026-06-01T10:45:00Z</time><course>10.0</course><speed>0.0</speed></trkpt>
+      <trkpt lat="54.050100000" lon="10.090100000"><time>2026-06-01T10:50:00Z</time><course>10.0</course><speed>0.0</speed></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

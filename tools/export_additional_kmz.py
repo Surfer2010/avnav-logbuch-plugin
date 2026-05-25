@@ -1,80 +1,143 @@
 #!/usr/bin/env python3
 """
-Export additional KMZ overlay for AVNav / Google Earth.
+AVNav Logbook → KMZ Export
 
-Creates one daily KMZ file:
+Erzeugt eine Google-Earth-/KML-kompatible KMZ-Datei
+aus:
 
-    YYYYMMDD_logbuch.kmz
+- AVNav GPX Tagestrack
+- AVNav Logbook JSONL
 
-Input:
-- AVNav GPX track file:
-    tracks/YYYY-MM-DD.gpx
+Funktionen:
+- Motorstrecken
+- Segelstrecken
+- Ankerpunkte
+- Logbuchnotizen
+- Tagesstatistiken
+- Dauerberechnung
+- eingebettete Icons
+- automatische Wiederherstellung offener Zustände
 
-- Logbook JSONL file, preferred:
-    logbook/YYYYMMDD_logbuch.jsonl
-
-- Legacy fallback:
-    logbook/logbook-YYYY-MM-DD.jsonl
-
-If no --date is supplied, the script asks interactively.
-
-Existing KMZ output is overwritten without asking.
+Ausgabe:
+YYYYMMDD_logbuch.kmz
 """
 
 import argparse
 import html
 import json
 import zipfile
+
 from datetime import datetime
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
 
+# Mapping:
+# Welches Event startet welchen Zustand?
 START_EVENTS = {
     "motor_on": "motor",
     "sail_set": "sail",
     "anchor_down": "anchor",
 }
 
+# Mapping:
+# Welches Event beendet welchen Zustand?
 END_EVENTS = {
     "motor_off": "motor",
     "sail_down": "sail",
     "anchor_up": "anchor",
 }
 
+# Benutzerfreundliche Namen.
+LABELS = {
+    "motor": "Motor",
+    "sail": "Segel",
+    "anchor": "Anker",
+}
+
 
 def normalize_date(value):
-    """Accept YYYY-MM-DD or YYYYMMDD and return both formats."""
+    """
+    Akzeptiert:
+    - YYYY-MM-DD
+    - YYYYMMDD
+
+    und liefert beide Formate zurück.
+    """
+
     value = (value or "").strip()
 
     if not value:
-        today = datetime.utcnow()
-        return today.strftime("%Y-%m-%d"), today.strftime("%Y%m%d")
+        dt = datetime.utcnow()
 
-    if len(value) == 8 and value.isdigit():
+    elif len(value) == 8 and value.isdigit():
         dt = datetime.strptime(value, "%Y%m%d")
-        return dt.strftime("%Y-%m-%d"), dt.strftime("%Y%m%d")
 
-    dt = datetime.strptime(value, "%Y-%m-%d")
-    return dt.strftime("%Y-%m-%d"), dt.strftime("%Y%m%d")
+    else:
+        dt = datetime.strptime(value, "%Y-%m-%d")
+
+    return (
+        dt.strftime("%Y-%m-%d"),
+        dt.strftime("%Y%m%d"),
+    )
 
 
 def parse_time(value):
+    """
+    ISO8601 → datetime
+
+    Beispiel:
+    2026-05-24T07:45:58Z
+    """
+
     if not value:
         return None
-    try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return None
+
+    return datetime.fromisoformat(
+        value.replace("Z", "+00:00")
+    )
 
 
 def escape(value):
+    """
+    HTML Escaping für sichere KML-Ausgabe.
+    """
+
     return html.escape(str(value), quote=True)
 
 
+def hms(seconds):
+    """
+    Sekunden → HH:MM:SS
+    """
+
+    seconds = int(max(0, seconds))
+
+    return (
+        f"{seconds // 3600:02d}:"
+        f"{(seconds % 3600) // 60:02d}:"
+        f"{seconds % 60:02d}"
+    )
+
+
 def find_logbook_file(logbook_dir, date_dash, date_compact):
-    preferred = logbook_dir / f"{date_compact}_logbuch.jsonl"
-    legacy = logbook_dir / f"logbook-{date_dash}.jsonl"
+    """
+    Sucht bevorzugt:
+        YYYYMMDD_logbuch.jsonl
+
+    und unterstützt zusätzlich:
+        logbook-YYYY-MM-DD.jsonl
+    """
+
+    preferred = (
+        logbook_dir /
+        f"{date_compact}_logbuch.jsonl"
+    )
+
+    legacy = (
+        logbook_dir /
+        f"logbook-{date_dash}.jsonl"
+    )
 
     if preferred.exists():
         return preferred
@@ -83,17 +146,26 @@ def find_logbook_file(logbook_dir, date_dash, date_compact):
         return legacy
 
     raise FileNotFoundError(
-        "No logbook file found. Tried:\n"
+        f"No logbook file found:\n"
         f"  {preferred}\n"
         f"  {legacy}"
     )
 
 
 def read_logbook(path):
+    """
+    Lädt JSONL-Logbuchdatei.
+
+    Jede Zeile:
+        ein JSON-Eintrag
+    """
+
     entries = []
 
     with path.open("r", encoding="utf-8") as handle:
+
         for line_number, line in enumerate(handle, start=1):
+
             line = line.strip()
 
             if not line:
@@ -101,77 +173,124 @@ def read_logbook(path):
 
             try:
                 entry = json.loads(line)
-            except json.JSONDecodeError:
-                print(f"WARNING: invalid JSON in {path}:{line_number}")
-                continue
 
-            timestamp = parse_time(entry.get("timestamp"))
+                entry["_timestamp"] = parse_time(
+                    entry.get("timestamp")
+                )
 
-            if timestamp is None:
-                print(f"WARNING: invalid timestamp in {path}:{line_number}")
-                continue
+                entries.append(entry)
 
-            entry["_timestamp"] = timestamp
-            entries.append(entry)
+            except Exception as error:
+                print(
+                    f"WARNING: invalid logbook line "
+                    f"{path}:{line_number}: {error}"
+                )
 
-    entries.sort(key=lambda item: item["_timestamp"])
+    entries.sort(
+        key=lambda item: item["_timestamp"]
+    )
+
     return entries
 
 
 def read_gpx_points(path):
-    points = []
+    """
+    Liest GPX Trackpunkte.
+
+    Benötigt:
+    - Zeit
+    - Lat
+    - Lon
+    """
 
     if not path.exists():
-        raise FileNotFoundError(f"GPX file not found: {path}")
+        raise FileNotFoundError(
+            f"GPX file not found: {path}"
+        )
+
+    points = []
 
     tree = ET.parse(path)
     root = tree.getroot()
 
-    namespace = {"gpx": "http://www.topografix.com/GPX/1/1"}
+    namespace = {
+        "gpx": "http://www.topografix.com/GPX/1/1"
+    }
 
     for trkpt in root.findall(".//gpx:trkpt", namespace):
-        lat = trkpt.attrib.get("lat")
-        lon = trkpt.attrib.get("lon")
-        time_node = trkpt.find("gpx:time", namespace)
-        course_node = trkpt.find("gpx:course", namespace)
-        speed_node = trkpt.find("gpx:speed", namespace)
 
-        if lat is None or lon is None or time_node is None or not time_node.text:
-            continue
+        time_node = trkpt.find(
+            "gpx:time",
+            namespace
+        )
 
-        timestamp = parse_time(time_node.text)
+        course_node = trkpt.find(
+            "gpx:course",
+            namespace
+        )
 
-        if timestamp is None:
+        speed_node = trkpt.find(
+            "gpx:speed",
+            namespace
+        )
+
+        if time_node is None or not time_node.text:
             continue
 
         points.append({
-            "timestamp": timestamp,
+            "timestamp": parse_time(time_node.text),
             "time": time_node.text,
-            "lat": float(lat),
-            "lon": float(lon),
-            "course": float(course_node.text) if course_node is not None and course_node.text else None,
-            "speed": float(speed_node.text) if speed_node is not None and speed_node.text else None,
+            "lat": float(trkpt.attrib["lat"]),
+            "lon": float(trkpt.attrib["lon"]),
+            "course": (
+                float(course_node.text)
+                if course_node is not None
+                and course_node.text
+                else None
+            ),
+            "speed": (
+                float(speed_node.text)
+                if speed_node is not None
+                and speed_node.text
+                else None
+            ),
         })
 
-    points.sort(key=lambda item: item["timestamp"])
+    points.sort(
+        key=lambda item: item["timestamp"]
+    )
+
     return points
 
 
 def build_intervals(entries):
+    """
+    Erzeugt:
+    - Motorintervalle
+    - Segelintervalle
+    - Ankerintervalle
+
+    Unterstützt:
+    Wiederherstellung offener Zustände
+    aus gespeicherten state-Feldern.
+    """
+
+    # Aktuell offene Zustände.
     open_states = {
         "motor": None,
         "sail": None,
         "anchor": None,
     }
 
-    # Merkt sich den ersten Eintrag des Tages, bei dem laut gespeichertem
-    # state-Feld ein Zustand bereits aktiv war.
+    # Falls Tagesfile mit bereits aktivem
+    # Zustand startet:
     #
     # Beispiel:
-    # Das Boot lag zu Tagesbeginn bereits vor Anker.
-    # Dann kann im Tagesfile zuerst "anchor_up" kommen, ohne dass vorher
-    # "anchor_down" im gleichen Tagesfile steht.
-    # In diesem Fall erzeugen wir einen synthetischen Startpunkt.
+    # anchor=true beim ersten Eintrag.
+    #
+    # Dann kann später anchor_up kommen,
+    # obwohl anchor_down nicht im
+    # Tagesfile enthalten ist.
     first_active_state_entry = {
         "motor": None,
         "sail": None,
@@ -183,53 +302,112 @@ def build_intervals(entries):
     notes = []
     warnings = []
 
+    #
+    # Ersten gespeicherten Zustand merken.
+    #
     for entry in entries:
+
         state = entry.get("state") or {}
 
         for state_name in first_active_state_entry:
-            if first_active_state_entry[state_name] is None and state.get(state_name) is True:
+
+            if (
+                first_active_state_entry[state_name]
+                is None
+                and state.get(state_name) is True
+            ):
                 first_active_state_entry[state_name] = entry
 
+    #
+    # Hauptverarbeitung.
+    #
     for entry in entries:
+
         event_type = entry.get("event_type")
 
+        #
+        # Freitextnotizen separat sammeln.
+        #
         if event_type == "manual":
-            if entry.get("lat") is not None and entry.get("lon") is not None:
+
+            if (
+                entry.get("lat") is not None
+                and entry.get("lon") is not None
+            ):
                 notes.append(entry)
+
             continue
 
+        #
+        # Start-Events.
+        #
         if event_type in START_EVENTS:
+
             state_name = START_EVENTS[event_type]
 
             if state_name == "anchor":
                 anchors.append(entry)
 
             if open_states[state_name] is not None:
+
                 warnings.append(
-                    f"WARNING: {state_name} already open at {entry.get('timestamp')}"
+                    f"WARNING: {state_name} already open at "
+                    f"{entry.get('timestamp')}"
                 )
 
             open_states[state_name] = entry
 
+        #
+        # Ende-Events.
+        #
         elif event_type in END_EVENTS:
+
             state_name = END_EVENTS[event_type]
+
             start_entry = open_states[state_name]
 
+            #
+            # Kein Start vorhanden?
+            #
             if start_entry is None:
-                synthetic_start = first_active_state_entry.get(state_name)
 
-                if synthetic_start is not None and synthetic_start["_timestamp"] <= entry["_timestamp"]:
+                synthetic_start = (
+                    first_active_state_entry.get(state_name)
+                )
+
+                #
+                # Zustand aus state-Feld ableiten.
+                #
+                if (
+                    synthetic_start is not None
+                    and synthetic_start["_timestamp"]
+                    <= entry["_timestamp"]
+                ):
+
                     warnings.append(
-                        f"INFO: {state_name} start inferred from saved state at "
+                        f"INFO: {state_name} start inferred "
+                        f"from saved state at "
                         f"{synthetic_start.get('timestamp')}"
                     )
 
                     start_entry = synthetic_start
+
                 else:
+
                     warnings.append(
-                        f"WARNING: {state_name} end without start at {entry.get('timestamp')}"
+                        f"WARNING: {state_name} end without start "
+                        f"at {entry.get('timestamp')}"
                     )
+
                     continue
+
+            #
+            # Dauer berechnen.
+            #
+            duration_seconds = (
+                entry["_timestamp"]
+                - start_entry["_timestamp"]
+            ).total_seconds()
 
             intervals.append({
                 "type": state_name,
@@ -237,51 +415,251 @@ def build_intervals(entries):
                 "end": entry,
                 "start_time": start_entry["_timestamp"],
                 "end_time": entry["_timestamp"],
+                "duration_seconds": duration_seconds,
+                "duration": hms(duration_seconds),
             })
 
             open_states[state_name] = None
 
+    #
+    # Noch offene Zustände melden.
+    #
     for state_name, start_entry in open_states.items():
+
         if start_entry is not None:
+
             warnings.append(
-                f"WARNING: {state_name} still open since {start_entry.get('timestamp')}"
+                f"WARNING: {state_name} still open since "
+                f"{start_entry.get('timestamp')}"
             )
 
-    return intervals, anchors, notes, warnings
+    return (
+        intervals,
+        anchors,
+        notes,
+        warnings,
+    )
 
 
-def filter_points(points, start_time, end_time):
-    return [point for point in points if start_time <= point["timestamp"] <= end_time]
+#
+# GPX-Punkte eines Intervalls sammeln.
+#
+# Beispiel:
+#   motor_on → motor_off
+#
+# Ergebnis:
+#   Liste aller Trackpunkte innerhalb
+#   dieses Zeitfensters.
+#
+def collect_interval_points(interval, track_points):
+
+    result = []
+
+    start_time = interval["start_time"]
+    end_time = interval["end_time"]
+
+    for point in track_points:
+
+        timestamp = point["timestamp"]
+
+        #
+        # Ungültige Punkte ignorieren.
+        #
+        if timestamp is None:
+            continue
+
+        #
+        # Punkt liegt innerhalb
+        # des Intervalls.
+        #
+        if start_time <= timestamp <= end_time:
+            result.append(point)
+
+    return result
 
 
+#
+# Tagesstatistik erzeugen.
+#
+# Verwendet für:
+#   - KML Dokumentbeschreibung
+#   - spätere Törnstatistiken
+#   - Overlay-Auswertungen
+#
+def build_daily_stats(intervals, anchors, notes):
+
+    stats = {
+        "motor_seconds": 0,
+        "sail_seconds": 0,
+        "anchor_seconds": 0,
+        "motor_count": 0,
+        "sail_count": 0,
+        "anchor_count": len(anchors),
+        "note_count": len(notes),
+    }
+
+    for interval in intervals:
+
+        state_type = interval["type"]
+
+        duration = interval["duration_seconds"]
+
+        #
+        # Motorzeit summieren.
+        #
+        if state_type == "motor":
+
+            stats["motor_seconds"] += duration
+            stats["motor_count"] += 1
+
+        #
+        # Segelzeit summieren.
+        #
+        elif state_type == "sail":
+
+            stats["sail_seconds"] += duration
+            stats["sail_count"] += 1
+
+        #
+        # Ankerzeit summieren.
+        #
+        elif state_type == "anchor":
+
+            stats["anchor_seconds"] += duration
+
+    return stats
+
+
+#
+# HTML/KML Beschreibung für
+# das Hauptdokument erzeugen.
+#
+# Wird später in Google Earth
+# direkt im linken Informationsfenster
+# angezeigt.
+#
+def create_document_description(date_dash, stats):
+
+    return f"""
+<![CDATA[
+
+<h1>Logbuch {escape(date_dash)}</h1>
+
+<table border="1" cellpadding="4" cellspacing="0">
+
+<tr>
+<td><b>Motorzeit</b></td>
+<td>{hms(stats["motor_seconds"])}</td>
+</tr>
+
+<tr>
+<td><b>Segelzeit</b></td>
+<td>{hms(stats["sail_seconds"])}</td>
+</tr>
+
+<tr>
+<td><b>Ankerzeit</b></td>
+<td>{hms(stats["anchor_seconds"])}</td>
+</tr>
+
+<tr>
+<td><b>Motorstrecken</b></td>
+<td>{stats["motor_count"]}</td>
+</tr>
+
+<tr>
+<td><b>Segelstrecken</b></td>
+<td>{stats["sail_count"]}</td>
+</tr>
+
+<tr>
+<td><b>Ankerpunkte</b></td>
+<td>{stats["anchor_count"]}</td>
+</tr>
+
+<tr>
+<td><b>Logbuchnotizen</b></td>
+<td>{stats["note_count"]}</td>
+</tr>
+
+</table>
+
+]]>
+"""
+
+
+
+
+#
+# Koordinatenblock für KML erzeugen.
+#
+# Wichtig:
+# KML nutzt Reihenfolge:
+#   lon,lat,height
+#
+# Nicht:
+#   lat,lon
+#
 def kml_coordinates(points):
-    return "\n".join(f'{point["lon"]:.9f},{point["lat"]:.9f},0' for point in points)
+
+    lines = []
+
+    for point in points:
+
+        lines.append(
+            f'{point["lon"]:.9f},'
+            f'{point["lat"]:.9f},0'
+        )
+
+    return "\n".join(lines)
 
 
-def kml_placemark_line(name, description, style_id, points):
+#
+# KML Placemark für eine Linie erzeugen.
+#
+# Wird genutzt für:
+#   - Motorstrecken
+#   - Segelstrecken
+#
+def kml_line_placemark(name, description, style_id, points):
+
     if not points:
         return ""
+
+    coordinates = kml_coordinates(points)
 
     return f"""
     <Placemark>
       <name>{escape(name)}</name>
-      <description><![CDATA[{description}]]></description>
+      <description><![CDATA[
+{description}
+      ]]></description>
       <styleUrl>#{style_id}</styleUrl>
       <LineString>
         <tessellate>1</tessellate>
         <coordinates>
-{kml_coordinates(points)}
+{coordinates}
         </coordinates>
       </LineString>
     </Placemark>
 """
 
 
-def kml_placemark_point(name, description, style_id, lat, lon):
+#
+# KML Placemark für einen Punkt erzeugen.
+#
+# Wird genutzt für:
+#   - Ankerpunkte
+#   - Logbuchnotizen
+#
+def kml_point_placemark(name, description, style_id, lat, lon):
+
     return f"""
     <Placemark>
       <name>{escape(name)}</name>
-      <description><![CDATA[{description}]]></description>
+      <description><![CDATA[
+{description}
+      ]]></description>
       <styleUrl>#{style_id}</styleUrl>
       <Point>
         <coordinates>{float(lon):.9f},{float(lat):.9f},0</coordinates>
@@ -290,92 +668,189 @@ def kml_placemark_point(name, description, style_id, lat, lon):
 """
 
 
-def build_kml(date_dash, intervals, anchors, notes, points):
-    motor_lines = []
-    sail_lines = []
-    anchor_points = []
-    note_points = []
+#
+# Beschreibung für ein Fahrintervall.
+#
+# Enthält:
+#   - Startzeit
+#   - Endzeit
+#   - Dauer
+#   - Startposition
+#   - Endposition
+#
+def create_interval_description(interval):
+
+    start = interval["start"]
+    end = interval["end"]
+
+    return f"""
+<h2>{escape(LABELS.get(interval["type"], interval["type"]))}</h2>
+
+<table border="1" cellpadding="4" cellspacing="0">
+<tr>
+<td><b>Start</b></td>
+<td>{escape(start.get("timestamp"))}</td>
+</tr>
+<tr>
+<td><b>Ende</b></td>
+<td>{escape(end.get("timestamp"))}</td>
+</tr>
+<tr>
+<td><b>Dauer</b></td>
+<td>{escape(interval.get("duration"))}</td>
+</tr>
+<tr>
+<td><b>Startposition</b></td>
+<td>{escape(start.get("lat"))}, {escape(start.get("lon"))}</td>
+</tr>
+<tr>
+<td><b>Endposition</b></td>
+<td>{escape(end.get("lat"))}, {escape(end.get("lon"))}</td>
+</tr>
+</table>
+"""
+
+
+#
+# Beschreibung für Marker.
+#
+# Wird für Anker und Notizen genutzt.
+#
+def create_point_description(title, entry):
+
+    text = entry.get("text") or ""
+
+    html_text = ""
+
+    if text:
+        html_text = f"<p>{escape(text)}</p>"
+
+    return f"""
+<h2>{escape(title)}</h2>
+
+<table border="1" cellpadding="4" cellspacing="0">
+<tr>
+<td><b>Zeit</b></td>
+<td>{escape(entry.get("timestamp"))}</td>
+</tr>
+<tr>
+<td><b>Position</b></td>
+<td>{escape(entry.get("lat"))}, {escape(entry.get("lon"))}</td>
+</tr>
+</table>
+
+{html_text}
+"""
+
+
+
+
+#
+# Vollständiges KML-Dokument erzeugen.
+#
+def build_kml(date_dash, intervals, anchors, notes, track_points):
+
+    stats = build_daily_stats(intervals, anchors, notes)
+
+    motor_placemarks = []
+    sail_placemarks = []
+    anchor_placemarks = []
+    note_placemarks = []
 
     motor_index = 1
     sail_index = 1
 
+    #
+    # Motor- und Segelstrecken erzeugen.
+    #
     for interval in intervals:
-        interval_type = interval["type"]
 
-        if interval_type not in ("motor", "sail"):
+        points = collect_interval_points(interval, track_points)
+
+        if not points:
             continue
 
-        segment_points = filter_points(points, interval["start_time"], interval["end_time"])
+        description = create_interval_description(interval)
 
-        if not segment_points:
-            continue
+        if interval["type"] == "motor":
 
-        if interval_type == "motor":
-            name = f"Motor {motor_index}"
-            style = "motorLine"
+            motor_placemarks.append(
+                kml_line_placemark(
+                    f"Motor {motor_index}",
+                    description,
+                    "motorLine",
+                    points,
+                )
+            )
+
             motor_index += 1
-        else:
-            name = f"Segel {sail_index}"
-            style = "sailLine"
+
+        elif interval["type"] == "sail":
+
+            sail_placemarks.append(
+                kml_line_placemark(
+                    f"Segel {sail_index}",
+                    description,
+                    "sailLine",
+                    points,
+                )
+            )
+
             sail_index += 1
 
-        description = (
-            f"<h2>{escape(name)}</h2>"
-            f"<p><b>Start:</b> {escape(interval['start'].get('timestamp'))}<br>"
-            f"<b>Ende:</b> {escape(interval['end'].get('timestamp'))}</p>"
-        )
-
-        line = kml_placemark_line(name, description, style, segment_points)
-
-        if interval_type == "motor":
-            motor_lines.append(line)
-        else:
-            sail_lines.append(line)
-
+    #
+    # Ankerpunkte erzeugen.
+    #
     for index, anchor in enumerate(anchors, start=1):
-        lat = anchor.get("lat")
-        lon = anchor.get("lon")
 
-        if lat is None or lon is None:
+        if anchor.get("lat") is None or anchor.get("lon") is None:
             continue
 
-        text = anchor.get("text") or ""
-        timestamp = anchor.get("timestamp") or ""
+        title = f"Anker {index}"
 
-        description = (
-            f"<h2>Anker {index}</h2>"
-            f"<p><b>Zeit:</b> {escape(timestamp)}</p>"
+        anchor_placemarks.append(
+            kml_point_placemark(
+                title,
+                create_point_description(title, anchor),
+                "anchorPoint",
+                anchor.get("lat"),
+                anchor.get("lon"),
+            )
         )
 
-        if text:
-            description += f"<p>{escape(text)}</p>"
-
-        anchor_points.append(kml_placemark_point(f"Anker {index}", description, "anchorPoint", lat, lon))
-
+    #
+    # Freitextnotizen erzeugen.
+    #
     for index, note in enumerate(notes, start=1):
-        lat = note.get("lat")
-        lon = note.get("lon")
 
-        if lat is None or lon is None:
+        if note.get("lat") is None or note.get("lon") is None:
             continue
 
-        text = note.get("text") or ""
-        timestamp = note.get("timestamp") or ""
+        title = f"Logbuchnotiz {index}"
 
-        description = (
-            f"<h2>Logbuchnotiz {index}</h2>"
-            f"<p><b>Zeit:</b> {escape(timestamp)}</p>"
+        note_placemarks.append(
+            kml_point_placemark(
+                title,
+                create_point_description(title, note),
+                "notePoint",
+                note.get("lat"),
+                note.get("lon"),
+            )
         )
 
-        if text:
-            description += f"<p>{escape(text)}</p>"
+    document_description = create_document_description(
+        date_dash,
+        stats,
+    )
 
-        note_points.append(kml_placemark_point(f"Logbuchnotiz {index}", description, "notePoint", lat, lon))
-
-    return f"""<?xml version="1.0" encoding="UTF-8"?>
+    return f'''<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
+
   <name>Logbuch {escape(date_dash)}</name>
+  <description>
+{document_description}
+  </description>
 
   <Style id="motorLine">
     <LineStyle>
@@ -393,7 +868,6 @@ def build_kml(date_dash, intervals, anchors, notes, points):
 
   <Style id="anchorPoint">
     <IconStyle>
-      <color>ff00aaff</color>
       <scale>1.2</scale>
       <Icon>
         <href>icons/anchor.png</href>
@@ -403,7 +877,6 @@ def build_kml(date_dash, intervals, anchors, notes, points):
 
   <Style id="notePoint">
     <IconStyle>
-      <color>ffffffff</color>
       <scale>1.0</scale>
       <Icon>
         <href>icons/note.png</href>
@@ -413,36 +886,55 @@ def build_kml(date_dash, intervals, anchors, notes, points):
 
   <Folder>
     <name>Motorstrecken</name>
-{''.join(motor_lines)}
+{''.join(motor_placemarks)}
   </Folder>
 
   <Folder>
     <name>Segelstrecken</name>
-{''.join(sail_lines)}
+{''.join(sail_placemarks)}
   </Folder>
 
   <Folder>
     <name>Ankerpunkte</name>
-{''.join(anchor_points)}
+{''.join(anchor_placemarks)}
   </Folder>
 
   <Folder>
     <name>Logbuchnotizen</name>
-{''.join(note_points)}
+{''.join(note_placemarks)}
   </Folder>
 
 </Document>
 </kml>
-"""
+'''
 
 
+#
+# KMZ-Datei schreiben.
+#
+# Eine KMZ ist eine ZIP-Datei mit:
+#   - doc.kml
+#   - optionalen Ressourcen
+#
 def write_kmz(output_file, kml_content):
-    output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    output_file.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
     icons_dir = Path(__file__).parent / "kmz-icons"
 
-    # mode="w" überschreibt vorhandene KMZ-Dateien ohne Rückfrage.
-    with zipfile.ZipFile(output_file, "w", zipfile.ZIP_DEFLATED) as kmz:
+    #
+    # mode="w" überschreibt vorhandene Dateien
+    # ohne Rückfrage.
+    #
+    with zipfile.ZipFile(
+        output_file,
+        "w",
+        zipfile.ZIP_DEFLATED,
+    ) as kmz:
+
         kmz.writestr("doc.kml", kml_content)
 
         anchor_icon = icons_dir / "anchor.png"
@@ -455,19 +947,49 @@ def write_kmz(output_file, kml_content):
             kmz.write(note_icon, "icons/note.png")
 
 
+#
+# Hauptfunktion.
+#
 def main():
-    parser = argparse.ArgumentParser(description="Export AVNav logbook KMZ")
-    parser.add_argument("--date", default="", help="Date as YYYY-MM-DD or YYYYMMDD")
-    parser.add_argument("--avnav-data", default="/home/pi/avnav/data", help="AVNav data directory")
-    parser.add_argument("--output", default="", help="Optional output KMZ file")
-    parser.add_argument("--dry-run", action="store_true", help="Do not write output file")
+
+    parser = argparse.ArgumentParser(
+        description="Export AVNav Logbook KMZ"
+    )
+
+    parser.add_argument(
+        "--date",
+        default="",
+        help="Datum als YYYY-MM-DD oder YYYYMMDD",
+    )
+
+    parser.add_argument(
+        "--avnav-data",
+        default="/home/pi/avnav/data",
+        help="AVNav Datenverzeichnis",
+    )
+
+    parser.add_argument(
+        "--output",
+        default="",
+        help="Optionaler KMZ-Ausgabepfad",
+    )
+
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Nicht schreiben, nur prüfen",
+    )
 
     args = parser.parse_args()
 
     if args.date:
         date_dash, date_compact = normalize_date(args.date)
     else:
-        user_input = input("Welcher Tag soll erzeugt werden? [YYYY-MM-DD oder YYYYMMDD, leer=heute]: ")
+        user_input = input(
+            "Welcher Tag soll erzeugt werden? "
+            "[YYYY-MM-DD oder YYYYMMDD, leer=heute]: "
+        )
+
         date_dash, date_compact = normalize_date(user_input)
 
     avnav_data = Path(args.avnav_data)
@@ -475,25 +997,42 @@ def main():
     logbook_dir = avnav_data / "logbook"
 
     gpx_file = tracks_dir / f"{date_dash}.gpx"
-    logbook_file = find_logbook_file(logbook_dir, date_dash, date_compact)
+
+    logbook_file = find_logbook_file(
+        logbook_dir,
+        date_dash,
+        date_compact,
+    )
 
     if args.output:
         output_file = Path(args.output)
     else:
-        output_file = tracks_dir / f"{date_compact}_logbuch.kmz"
+        output_file = (
+            tracks_dir /
+            f"{date_compact}_logbuch.kmz"
+        )
 
     entries = read_logbook(logbook_file)
-    points = read_gpx_points(gpx_file)
+    track_points = read_gpx_points(gpx_file)
 
-    intervals, anchors, notes, warnings = build_intervals(entries)
-    kml = build_kml(date_dash, intervals, anchors, notes, points)
+    intervals, anchors, notes, warnings = build_intervals(
+        entries
+    )
+
+    kml_content = build_kml(
+        date_dash,
+        intervals,
+        anchors,
+        notes,
+        track_points,
+    )
 
     print(f"Date: {date_dash}")
     print(f"Logbook file: {logbook_file}")
     print(f"GPX file: {gpx_file}")
     print(f"Output: {output_file}")
     print(f"Logbook entries: {len(entries)}")
-    print(f"Track points: {len(points)}")
+    print(f"Track points: {len(track_points)}")
     print(f"Intervals: {len(intervals)}")
     print(f"Anchor points: {len(anchors)}")
     print(f"Manual notes with position: {len(notes)}")
@@ -501,9 +1040,19 @@ def main():
     for warning in warnings:
         print(warning)
 
-    if not args.dry_run:
-        write_kmz(output_file, kml)
-        print("KMZ written. Existing file was overwritten if present.")
+    if args.dry_run:
+        print("Dry run. No KMZ written.")
+        return
+
+    write_kmz(
+        output_file,
+        kml_content,
+    )
+
+    print(
+        "KMZ written. Existing file was overwritten "
+        "if present."
+    )
 
 
 if __name__ == "__main__":

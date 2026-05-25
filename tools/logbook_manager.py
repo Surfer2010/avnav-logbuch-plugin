@@ -111,6 +111,28 @@ def export_kmz_today():
     ])
 
 
+
+def export_trip_kmz():
+    """
+    Multi-Day / Törn-KMZ erzeugen.
+    """
+
+    from_date = input("Startdatum [YYYY-MM-DD oder YYYYMMDD]: ").strip()
+    to_date = input("Enddatum [YYYY-MM-DD oder YYYYMMDD]: ").strip()
+    avnav_data = ask_avnav_data()
+
+    run([
+        "python3",
+        str(TOOLS_DIR / "export_trip_kmz.py"),
+        "--from-date",
+        from_date,
+        "--to-date",
+        to_date,
+        "--avnav-data",
+        avnav_data,
+    ])
+
+
 def create_testdata():
     """
     Reproduzierbare Testdaten erzeugen.
@@ -271,13 +293,14 @@ def menu():
         print("====================================")
         print("1  KMZ für Datum erzeugen")
         print("2  KMZ für heute erzeugen")
-        print("3  Testdaten erzeugen")
-        print("4  Testdaten exportieren und prüfen")
-        print("5  Logbuchdateien anzeigen")
-        print("6  Trackdateien anzeigen")
-        print("7  KMZ-Inhalt prüfen")
-        print("8  Live-Installation / Update Hinweise")
-        print("9  Beenden")
+        print("3  Törn-KMZ für Datumsbereich erzeugen")
+        print("4  Testdaten erzeugen")
+        print("5  Testdaten exportieren und prüfen")
+        print("6  Logbuchdateien anzeigen")
+        print("7  Trackdateien anzeigen")
+        print("8  KMZ-Inhalt prüfen")
+        print("9  Live-Installation / Update Hinweise")
+        print("0  Beenden")
         print()
 
         choice = input("Auswahl: ").strip()
@@ -287,18 +310,20 @@ def menu():
         elif choice == "2":
             export_kmz_today()
         elif choice == "3":
-            create_testdata()
+            export_trip_kmz()
         elif choice == "4":
-            run_testdata_export()
+            create_testdata()
         elif choice == "5":
-            list_logbook_files()
+            run_testdata_export()
         elif choice == "6":
-            list_track_files()
+            list_logbook_files()
         elif choice == "7":
-            inspect_kmz()
+            list_track_files()
         elif choice == "8":
-            show_install_hints()
+            inspect_kmz()
         elif choice == "9":
+            show_install_hints()
+        elif choice == "0":
             break
         else:
             print("Ungültige Auswahl.")
