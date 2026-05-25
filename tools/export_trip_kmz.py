@@ -97,6 +97,21 @@ def create_trip_description(start_dash, end_dash, stats):
 </tr>
 
 <tr>
+<td><b>Motordistanz gesamt</b></td>
+<td>{stats.get("motor_distance_nm", 0.0):.2f} sm</td>
+</tr>
+
+<tr>
+<td><b>Segeldistanz gesamt</b></td>
+<td>{stats.get("sail_distance_nm", 0.0):.2f} sm</td>
+</tr>
+
+<tr>
+<td><b>Gesamtdistanz</b></td>
+<td>{stats.get("total_distance_nm", 0.0):.2f} sm</td>
+</tr>
+
+<tr>
 <td><b>Motorstrecken</b></td>
 <td>{stats.get("motor_count", 0)}</td>
 </tr>
@@ -128,8 +143,6 @@ def build_day_folder(date_dash, entries, track_points):
     """
 
     intervals, anchors, notes, warnings = day_export.build_intervals(entries)
-    stats = day_export.build_daily_stats(intervals, anchors, notes)
-
     motor_placemarks = []
     sail_placemarks = []
     anchor_placemarks = []
@@ -144,6 +157,14 @@ def build_day_folder(date_dash, entries, track_points):
         if not points:
             continue
 
+        metrics = day_export.calculate_track_metrics(
+            points,
+            interval["duration_seconds"],
+        )
+
+        interval.update(metrics)
+        interval["track_point_count"] = len(points)
+
         description = day_export.create_interval_description(interval)
 
         if interval["type"] == "motor":
@@ -153,6 +174,7 @@ def build_day_folder(date_dash, entries, track_points):
                     description,
                     "motorLine",
                     points,
+                    interval,
                 )
             )
             motor_index += 1
@@ -164,6 +186,7 @@ def build_day_folder(date_dash, entries, track_points):
                     description,
                     "sailLine",
                     points,
+                    interval,
                 )
             )
             sail_index += 1
@@ -181,6 +204,7 @@ def build_day_folder(date_dash, entries, track_points):
                 "anchorPoint",
                 anchor.get("lat"),
                 anchor.get("lon"),
+                anchor.get("timestamp"),
             )
         )
 
@@ -197,8 +221,11 @@ def build_day_folder(date_dash, entries, track_points):
                 "notePoint",
                 note.get("lat"),
                 note.get("lon"),
+                note.get("timestamp"),
             )
         )
+
+    stats = day_export.build_daily_stats(intervals, anchors, notes)
 
     day_description = day_export.create_document_description(date_dash, stats)
 

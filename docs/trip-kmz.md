@@ -45,3 +45,19 @@ Tage ohne Logbuchdatei werden übersprungen.
 Tage ohne GPX-Datei werden übersprungen.
 vorhandene Ausgabe-KMZ wird überschrieben.
 Icons werden in die KMZ eingebettet.
+
+Distanz und Zeitleiste
+
+Der Törn-KMZ Export übernimmt die Distanzberechnung und TimeSpan/TimeStamp-Informationen aus dem Tagesexport.
+
+Pro Tag und für den gesamten Törn werden zusammengefasst:
+
+Motorzeit
+Segelzeit
+Motordistanz
+Segeldistanz
+Gesamtdistanz
+Ankerpunkte
+Logbuchnotizen
+
+Motor- und Segelabschnitte besitzen TimeSpan-Elemente und können in Google Earth zeitlich gefiltert oder abgespielt werden.

@@ -25,6 +25,7 @@ YYYYMMDD_logbuch.kmz
 import argparse
 import html
 import json
+import math
 import zipfile
 
 from datetime import datetime
@@ -120,6 +121,74 @@ def hms(seconds):
         f"{(seconds % 3600) // 60:02d}:"
         f"{seconds % 60:02d}"
     )
+
+
+#
+# Abstand zweier GPS-Punkte berechnen.
+#
+# Nutzt die Haversine-Formel.
+# Ergebnis: Meter.
+#
+def haversine_meters(lat1, lon1, lat2, lon2):
+
+    earth_radius_m = 6371000.0
+
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    a = (
+        math.sin(delta_phi / 2) ** 2
+        + math.cos(phi1)
+        * math.cos(phi2)
+        * math.sin(delta_lambda / 2) ** 2
+    )
+
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    return earth_radius_m * c
+
+
+#
+# Distanz und Durchschnittsgeschwindigkeit
+# für einen Trackabschnitt berechnen.
+#
+# Distanz:
+#   Summe aller Einzelabstände
+#
+# Durchschnitt:
+#   Distanz / Dauer
+#
+def calculate_track_metrics(points, duration_seconds):
+
+    distance_m = 0.0
+
+    for index in range(1, len(points)):
+
+        previous = points[index - 1]
+        current = points[index]
+
+        distance_m += haversine_meters(
+            previous["lat"],
+            previous["lon"],
+            current["lat"],
+            current["lon"],
+        )
+
+    distance_nm = distance_m / 1852.0
+
+    if duration_seconds > 0:
+        average_speed_kn = distance_nm / (duration_seconds / 3600.0)
+    else:
+        average_speed_kn = 0.0
+
+    return {
+        "distance_m": distance_m,
+        "distance_nm": distance_nm,
+        "average_speed_kn": average_speed_kn,
+    }
 
 
 def find_logbook_file(logbook_dir, date_dash, date_compact):
@@ -498,48 +567,40 @@ def build_daily_stats(intervals, anchors, notes):
         "sail_count": 0,
         "anchor_count": len(anchors),
         "note_count": len(notes),
+        "motor_distance_nm": 0.0,
+        "sail_distance_nm": 0.0,
     }
 
     for interval in intervals:
 
         state_type = interval["type"]
-
         duration = interval["duration_seconds"]
+        distance_nm = interval.get("distance_nm", 0.0)
 
-        #
-        # Motorzeit summieren.
-        #
         if state_type == "motor":
 
             stats["motor_seconds"] += duration
             stats["motor_count"] += 1
+            stats["motor_distance_nm"] += distance_nm
 
-        #
-        # Segelzeit summieren.
-        #
         elif state_type == "sail":
 
             stats["sail_seconds"] += duration
             stats["sail_count"] += 1
+            stats["sail_distance_nm"] += distance_nm
 
-        #
-        # Ankerzeit summieren.
-        #
         elif state_type == "anchor":
 
             stats["anchor_seconds"] += duration
 
+    stats["total_distance_nm"] = (
+        stats["motor_distance_nm"]
+        + stats["sail_distance_nm"]
+    )
+
     return stats
 
 
-#
-# HTML/KML Beschreibung für
-# das Hauptdokument erzeugen.
-#
-# Wird später in Google Earth
-# direkt im linken Informationsfenster
-# angezeigt.
-#
 def create_document_description(date_dash, stats):
 
     return f"""
@@ -562,6 +623,21 @@ def create_document_description(date_dash, stats):
 <tr>
 <td><b>Ankerzeit</b></td>
 <td>{hms(stats["anchor_seconds"])}</td>
+</tr>
+
+<tr>
+<td><b>Motordistanz</b></td>
+<td>{stats["motor_distance_nm"]:.2f} sm</td>
+</tr>
+
+<tr>
+<td><b>Segeldistanz</b></td>
+<td>{stats["sail_distance_nm"]:.2f} sm</td>
+</tr>
+
+<tr>
+<td><b>Gesamtdistanz</b></td>
+<td>{stats["total_distance_nm"]:.2f} sm</td>
 </tr>
 
 <tr>
@@ -590,18 +666,6 @@ def create_document_description(date_dash, stats):
 """
 
 
-
-
-#
-# Koordinatenblock für KML erzeugen.
-#
-# Wichtig:
-# KML nutzt Reihenfolge:
-#   lon,lat,height
-#
-# Nicht:
-#   lat,lon
-#
 def kml_coordinates(points):
 
     lines = []
@@ -623,12 +687,21 @@ def kml_coordinates(points):
 #   - Motorstrecken
 #   - Segelstrecken
 #
-def kml_line_placemark(name, description, style_id, points):
+def kml_line_placemark(name, description, style_id, points, interval=None):
 
     if not points:
         return ""
 
     coordinates = kml_coordinates(points)
+
+    timespan = ""
+
+    if interval is not None:
+        timespan = f"""
+      <TimeSpan>
+        <begin>{escape(interval["start"].get("timestamp"))}</begin>
+        <end>{escape(interval["end"].get("timestamp"))}</end>
+      </TimeSpan>"""
 
     return f"""
     <Placemark>
@@ -636,7 +709,7 @@ def kml_line_placemark(name, description, style_id, points):
       <description><![CDATA[
 {description}
       ]]></description>
-      <styleUrl>#{style_id}</styleUrl>
+      <styleUrl>#{style_id}</styleUrl>{timespan}
       <LineString>
         <tessellate>1</tessellate>
         <coordinates>
@@ -647,14 +720,15 @@ def kml_line_placemark(name, description, style_id, points):
 """
 
 
-#
-# KML Placemark für einen Punkt erzeugen.
-#
-# Wird genutzt für:
-#   - Ankerpunkte
-#   - Logbuchnotizen
-#
-def kml_point_placemark(name, description, style_id, lat, lon):
+def kml_point_placemark(name, description, style_id, lat, lon, timestamp=None):
+
+    timestamp_block = ""
+
+    if timestamp:
+        timestamp_block = f"""
+      <TimeStamp>
+        <when>{escape(timestamp)}</when>
+      </TimeStamp>"""
 
     return f"""
     <Placemark>
@@ -662,7 +736,7 @@ def kml_point_placemark(name, description, style_id, lat, lon):
       <description><![CDATA[
 {description}
       ]]></description>
-      <styleUrl>#{style_id}</styleUrl>
+      <styleUrl>#{style_id}</styleUrl>{timestamp_block}
       <Point>
         <coordinates>{float(lon):.9f},{float(lat):.9f},0</coordinates>
       </Point>
@@ -670,16 +744,6 @@ def kml_point_placemark(name, description, style_id, lat, lon):
 """
 
 
-#
-# Beschreibung für ein Fahrintervall.
-#
-# Enthält:
-#   - Startzeit
-#   - Endzeit
-#   - Dauer
-#   - Startposition
-#   - Endposition
-#
 def create_interval_description(interval):
 
     start = interval["start"]
@@ -702,6 +766,18 @@ def create_interval_description(interval):
 <td>{escape(interval.get("duration"))}</td>
 </tr>
 <tr>
+<td><b>Distanz</b></td>
+<td>{interval.get("distance_nm", 0.0):.2f} sm</td>
+</tr>
+<tr>
+<td><b>Durchschnitt</b></td>
+<td>{interval.get("average_speed_kn", 0.0):.2f} kn</td>
+</tr>
+<tr>
+<td><b>Trackpunkte</b></td>
+<td>{interval.get("track_point_count", 0)}</td>
+</tr>
+<tr>
 <td><b>Startposition</b></td>
 <td>{escape(start.get("lat"))}, {escape(start.get("lon"))}</td>
 </tr>
@@ -713,11 +789,6 @@ def create_interval_description(interval):
 """
 
 
-#
-# Beschreibung für Marker.
-#
-# Wird für Anker und Notizen genutzt.
-#
 def create_point_description(title, entry):
 
     text = entry.get("text") or ""
@@ -752,8 +823,6 @@ def create_point_description(title, entry):
 #
 def build_kml(date_dash, intervals, anchors, notes, track_points):
 
-    stats = build_daily_stats(intervals, anchors, notes)
-
     motor_placemarks = []
     sail_placemarks = []
     anchor_placemarks = []
@@ -772,6 +841,14 @@ def build_kml(date_dash, intervals, anchors, notes, track_points):
         if not points:
             continue
 
+        metrics = calculate_track_metrics(
+            points,
+            interval["duration_seconds"],
+        )
+
+        interval.update(metrics)
+        interval["track_point_count"] = len(points)
+
         description = create_interval_description(interval)
 
         if interval["type"] == "motor":
@@ -782,6 +859,7 @@ def build_kml(date_dash, intervals, anchors, notes, track_points):
                     description,
                     "motorLine",
                     points,
+                    interval,
                 )
             )
 
@@ -795,6 +873,7 @@ def build_kml(date_dash, intervals, anchors, notes, track_points):
                     description,
                     "sailLine",
                     points,
+                    interval,
                 )
             )
 
@@ -817,6 +896,7 @@ def build_kml(date_dash, intervals, anchors, notes, track_points):
                 "anchorPoint",
                 anchor.get("lat"),
                 anchor.get("lon"),
+                anchor.get("timestamp"),
             )
         )
 
@@ -837,8 +917,11 @@ def build_kml(date_dash, intervals, anchors, notes, track_points):
                 "notePoint",
                 note.get("lat"),
                 note.get("lon"),
+                note.get("timestamp"),
             )
         )
+
+    stats = build_daily_stats(intervals, anchors, notes)
 
     document_description = create_document_description(
         date_dash,
