@@ -144,3 +144,27 @@ Jobstatus:
 
 curl "http://localhost:8080/plugins/user-logbook/api/exportStatus"
 
+
+Overlay Export Buttons
+
+Im Logbuch-Overlay gibt es kleine Utility-Buttons:
+
+KMZ Heute
+Törn 7 Tage
+
+Die Exporte laufen asynchron über die Plugin-API und schreiben nach:
+
+AVNAV_DATA_DIR/overlays/
+
+
+Overlay Export Buttons
+
+Im Logbuch-Overlay gibt es kleine Utility-Buttons:
+
+KMZ Heute
+Törn 7 Tage
+
+Die Exporte laufen asynchron über die Plugin-API und schreiben nach:
+
+AVNAV_DATA_DIR/overlays/
+

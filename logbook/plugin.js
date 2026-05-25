@@ -116,6 +116,18 @@ function openLogbookOverlay() {
 
                     '<div id="logbookStatus" class="logbookStatus logbookStatus-info">Bereit</div>' +
 
+                    '<div class="logbookExportRow">' +
+
+                        '<button type="button" id="logbookExportToday" class="logbookMiniButton">' +
+                            'KMZ Heute' +
+                        '</button>' +
+
+                        '<button type="button" id="logbookExportTrip" class="logbookMiniButton">' +
+                            'Törn 7 Tage' +
+                        '</button>' +
+
+                    '</div>' +
+
                     '<div class="logbookSectionTitle logbookHistoryTitle">Anmerkung / Freitext</div>' +
 
                     '<div class="logbookTextRow">' +
@@ -191,6 +203,18 @@ function openLogbookOverlay() {
         e.preventDefault();
         e.stopPropagation();
         overlay.remove();
+    }, false);
+
+    document.getElementById("logbookExportToday").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        exportTodayKmz();
+    }, false);
+
+    document.getElementById("logbookExportTrip").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        exportTripKmz();
     }, false);
 
     loadLogbookEntries();
@@ -352,3 +376,115 @@ function escapeHtml(value) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
+
+
+function exportTodayKmz() {
+    setLogbookStatus("KMZ Export startet...", "info");
+
+    fetch(AVNAV_BASE_URL + "/api/exportKmz")
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.status !== "OK") {
+                setLogbookStatus("KMZ Exportfehler", "error");
+                return;
+            }
+
+            monitorExportJob(data.job.id);
+        })
+        .catch(function(err) {
+            console.error(err);
+            setLogbookStatus("KMZ Exportfehler", "error");
+        });
+}
+
+function exportTripKmz() {
+    setLogbookStatus("Törn Export startet...", "info");
+
+    var now = new Date();
+    var toDate = now.toISOString().slice(0, 10);
+    var from = new Date(now.getTime() - (6 * 24 * 60 * 60 * 1000));
+    var fromDate = from.toISOString().slice(0, 10);
+
+    var url =
+        AVNAV_BASE_URL +
+        "/api/exportTripKmz?from=" +
+        encodeURIComponent(fromDate) +
+        "&to=" +
+        encodeURIComponent(toDate);
+
+    fetch(url)
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.status !== "OK") {
+                setLogbookStatus("Törn Exportfehler", "error");
+                return;
+            }
+
+            monitorExportJob(data.job.id);
+        })
+        .catch(function(err) {
+            console.error(err);
+            setLogbookStatus("Törn Exportfehler", "error");
+        });
+}
+
+function monitorExportJob(jobId) {
+    var pollCount = 0;
+
+    var timer = setInterval(function() {
+        pollCount++;
+
+        fetch(
+            AVNAV_BASE_URL +
+            "/api/exportStatus?job=" +
+            encodeURIComponent(jobId)
+        )
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.status !== "OK") {
+                    clearInterval(timer);
+                    setLogbookStatus("Exportstatus Fehler", "error");
+                    return;
+                }
+
+                var job = data.job;
+
+                if (!job) {
+                    clearInterval(timer);
+                    setLogbookStatus("Job nicht gefunden", "error");
+                    return;
+                }
+
+                if (job.status === "RUNNING") {
+                    setLogbookStatus("Export läuft...", "info");
+                    return;
+                }
+
+                clearInterval(timer);
+
+                if (job.status === "OK") {
+                    setLogbookStatus("Export fertig", "success");
+                    return;
+                }
+
+                setLogbookStatus("Export fehlgeschlagen", "error");
+            })
+            .catch(function(err) {
+                console.error(err);
+                clearInterval(timer);
+                setLogbookStatus("Exportstatus Fehler", "error");
+            });
+
+        if (pollCount > 60) {
+            clearInterval(timer);
+            setLogbookStatus("Export Timeout", "error");
+        }
+    }, 1000);
+}
+

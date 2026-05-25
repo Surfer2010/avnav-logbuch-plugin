@@ -65,3 +65,81 @@ export_trip_kmz.py
 common.py
 kmz-icons/
 
+
+## Overlay-Buttons
+
+Das Logbuch-Overlay enthält kleine Export-Buttons:
+
+```text
+KMZ Heute
+Törn 7 Tage
+KMZ Heute
+
+Startet asynchron den Export für den aktuellen UTC-Tag.
+
+API:
+
+/api/exportKmz
+
+Ausgabe:
+
+AVNAV_DATA_DIR/overlays/YYYYMMDD_logbuch.kmz
+Törn 7 Tage
+
+Startet asynchron den Törnexport für die letzten 7 Tage.
+
+API:
+
+/api/exportTripKmz?from=YYYY-MM-DD&to=YYYY-MM-DD
+
+Ausgabe:
+
+AVNAV_DATA_DIR/overlays/YYYYMMDD-YYYYMMDD_toern_logbuch.kmz
+Statusanzeige
+
+Das Overlay zeigt kompakt:
+
+Export startet...
+Export läuft...
+Export fertig
+Export fehlgeschlagen
+
+
+## Overlay-Buttons
+
+Das Logbuch-Overlay enthält kleine Export-Buttons:
+
+```text
+KMZ Heute
+Törn 7 Tage
+KMZ Heute
+
+Startet asynchron den Export für den aktuellen UTC-Tag.
+
+API:
+
+/api/exportKmz
+
+Ausgabe:
+
+AVNAV_DATA_DIR/overlays/YYYYMMDD_logbuch.kmz
+Törn 7 Tage
+
+Startet asynchron den Törnexport für die letzten 7 Tage.
+
+API:
+
+/api/exportTripKmz?from=YYYY-MM-DD&to=YYYY-MM-DD
+
+Ausgabe:
+
+AVNAV_DATA_DIR/overlays/YYYYMMDD-YYYYMMDD_toern_logbuch.kmz
+Statusanzeige
+
+Das Overlay zeigt kompakt:
+
+Export startet...
+Export läuft...
+Export fertig
+Export fehlgeschlagen
+
