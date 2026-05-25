@@ -28,6 +28,8 @@ import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from common import detect_avnav_data_dir, get_logbook_dir, get_tracks_dir, print_detected_paths
+
 import export_additional_kmz as day_export
 
 
@@ -314,7 +316,7 @@ def main():
     parser = argparse.ArgumentParser(description="Export AVNav Törn KMZ")
     parser.add_argument("--from-date", required=True, help="Startdatum YYYY-MM-DD oder YYYYMMDD")
     parser.add_argument("--to-date", required=True, help="Enddatum YYYY-MM-DD oder YYYYMMDD")
-    parser.add_argument("--avnav-data", default="/home/pi/avnav/data", help="AVNav Datenverzeichnis")
+    parser.add_argument("--avnav-data", default="", help="AVNav Datenverzeichnis. Leer = automatisch erkennen.")
     parser.add_argument("--output", default="", help="Optionaler KMZ-Ausgabepfad")
     parser.add_argument("--dry-run", action="store_true", help="Nicht schreiben, nur prüfen")
 
@@ -326,14 +328,16 @@ def main():
     if end_date < start_date:
         raise SystemExit("Enddatum liegt vor Startdatum.")
 
-    avnav_data = Path(args.avnav_data)
-    tracks_dir = avnav_data / "tracks"
-    logbook_dir = avnav_data / "logbook"
+    avnav_data = detect_avnav_data_dir(args.avnav_data)
+    tracks_dir = get_tracks_dir(avnav_data)
+    logbook_dir = get_logbook_dir(avnav_data)
 
     start_dash = start_date.strftime("%Y-%m-%d")
     end_dash = end_date.strftime("%Y-%m-%d")
     start_compact = start_date.strftime("%Y%m%d")
     end_compact = end_date.strftime("%Y%m%d")
+
+    print_detected_paths(avnav_data)
 
     if args.output:
         output_file = Path(args.output)

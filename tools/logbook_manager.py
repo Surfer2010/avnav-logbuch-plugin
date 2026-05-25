@@ -20,11 +20,12 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from common import detect_avnav_data_dir, get_logbook_dir, get_tracks_dir, print_detected_paths
+
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 TOOLS_DIR = PROJECT_ROOT / "tools"
 
-DEFAULT_AVNAV_DATA = "/home/pi/avnav/data"
 TEST_AVNAV_DATA = PROJECT_ROOT / "testdata" / "avnav-data"
 
 
@@ -45,14 +46,17 @@ def ask_avnav_data():
     """
     AVNav-Datenverzeichnis abfragen.
 
-    Standard:
-    /home/pi/avnav/data
+    Leer bedeutet:
+    automatische Erkennung über common.py
     """
 
-    value = input(f"AVNav data directory [{DEFAULT_AVNAV_DATA}]: ").strip()
+    detected = detect_avnav_data_dir()
+    print_detected_paths(detected)
+
+    value = input(f"AVNav data directory [{detected}]: ").strip()
 
     if not value:
-        return DEFAULT_AVNAV_DATA
+        return str(detected)
 
     return value
 
@@ -232,7 +236,7 @@ def list_logbook_files():
     """
 
     avnav_data = ask_avnav_data()
-    logbook_dir = Path(avnav_data) / "logbook"
+    logbook_dir = get_logbook_dir(Path(avnav_data))
 
     run(["ls", "-lah", str(logbook_dir)])
 
@@ -243,7 +247,7 @@ def list_track_files():
     """
 
     avnav_data = ask_avnav_data()
-    tracks_dir = Path(avnav_data) / "tracks"
+    tracks_dir = get_tracks_dir(Path(avnav_data))
 
     run(["ls", "-lah", str(tracks_dir)])
 

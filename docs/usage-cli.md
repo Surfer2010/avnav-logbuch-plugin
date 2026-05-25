@@ -106,3 +106,26 @@ Direkt:
 
 Direkt:
 
+
+Automatische Pfaderkennung
+
+Alle Tools verwenden die zentrale Pfaderkennung aus:
+
+tools/common.py
+
+Reihenfolge:
+
+1. --avnav-data
+2. AVNAV_DATA_DIR
+3. /home/pi/avnav/data
+4. /var/lib/avnav
+
+Beispiel ohne expliziten Pfad:
+
+python3 tools/export_additional_kmz.py --date 2026-05-24
+
+Beispiel mit Umgebungsvariable:
+
+export AVNAV_DATA_DIR=/var/lib/avnav
+python3 tools/export_trip_kmz.py --from-date 2026-05-21 --to-date 2026-05-24
+

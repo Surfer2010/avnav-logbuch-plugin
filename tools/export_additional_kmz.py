@@ -29,6 +29,8 @@ import zipfile
 
 from datetime import datetime
 from pathlib import Path
+
+from common import detect_avnav_data_dir, get_logbook_dir, get_tracks_dir, print_detected_paths
 from xml.etree import ElementTree as ET
 
 
@@ -964,8 +966,8 @@ def main():
 
     parser.add_argument(
         "--avnav-data",
-        default="/home/pi/avnav/data",
-        help="AVNav Datenverzeichnis",
+        default="",
+        help="AVNav Datenverzeichnis. Leer = automatisch erkennen.",
     )
 
     parser.add_argument(
@@ -992,9 +994,9 @@ def main():
 
         date_dash, date_compact = normalize_date(user_input)
 
-    avnav_data = Path(args.avnav_data)
-    tracks_dir = avnav_data / "tracks"
-    logbook_dir = avnav_data / "logbook"
+    avnav_data = detect_avnav_data_dir(args.avnav_data)
+    tracks_dir = get_tracks_dir(avnav_data)
+    logbook_dir = get_logbook_dir(avnav_data)
 
     gpx_file = tracks_dir / f"{date_dash}.gpx"
 
@@ -1027,6 +1029,7 @@ def main():
         track_points,
     )
 
+    print_detected_paths(avnav_data)
     print(f"Date: {date_dash}")
     print(f"Logbook file: {logbook_file}")
     print(f"GPX file: {gpx_file}")
