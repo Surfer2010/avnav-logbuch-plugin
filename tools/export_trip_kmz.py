@@ -10,7 +10,7 @@ Input je Tag:
 - fallback: logbook/logbook-YYYY-MM-DD.jsonl
 
 Output:
-- tracks/YYYYMMDD-YYYYMMDD_toern_logbuch.kmz
+- overlays/YYYYMMDD-YYYYMMDD_toern_logbuch.kmz
 
 Die Datei enthält:
 - Tagesordner
@@ -28,7 +28,7 @@ import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from common import detect_avnav_data_dir, get_logbook_dir, get_tracks_dir, print_detected_paths
+from common import detect_avnav_data_dir, get_logbook_dir, get_tracks_dir, get_overlays_dir, print_detected_paths
 
 import export_additional_kmz as day_export
 
@@ -357,6 +357,7 @@ def main():
 
     avnav_data = detect_avnav_data_dir(args.avnav_data)
     tracks_dir = get_tracks_dir(avnav_data)
+    overlays_dir = get_overlays_dir(avnav_data)
     logbook_dir = get_logbook_dir(avnav_data)
 
     start_dash = start_date.strftime("%Y-%m-%d")
@@ -369,7 +370,7 @@ def main():
     if args.output:
         output_file = Path(args.output)
     else:
-        output_file = tracks_dir / f"{start_compact}-{end_compact}_toern_logbuch.kmz"
+        output_file = overlays_dir / f"{start_compact}-{end_compact}_toern_logbuch.kmz"
 
     day_folders = []
     total_stats = {}

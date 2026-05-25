@@ -129,3 +129,18 @@ Beispiel mit Umgebungsvariable:
 export AVNAV_DATA_DIR=/var/lib/avnav
 python3 tools/export_trip_kmz.py --from-date 2026-05-21 --to-date 2026-05-24
 
+
+WebUI/API Export
+
+Asynchroner Tagesexport:
+
+curl "http://localhost:8080/plugins/user-logbook/api/exportKmz?date=2026-05-24"
+
+Asynchroner Törnexport:
+
+curl "http://localhost:8080/plugins/user-logbook/api/exportTripKmz?from=2026-05-21&to=2026-05-24"
+
+Jobstatus:
+
+curl "http://localhost:8080/plugins/user-logbook/api/exportStatus"
+

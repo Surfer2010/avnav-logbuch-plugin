@@ -47,7 +47,7 @@ Legacy wird unterstützt:
 
 Track:
 
-/home/pi/avnav/data/tracks/YYYY-MM-DD.gpx
+/home/pi/avnav/data/overlays/YYYY-MM-DD.gpx
 Google Earth
 
 Die erzeugte KMZ kann in Google Earth geöffnet werden.

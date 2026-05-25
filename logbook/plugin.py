@@ -16,6 +16,8 @@ import time
 import datetime
 import threading
 import traceback
+import subprocess
+import uuid
 
 try:
     from avnav_api import AVNApi  # noqa: F401
@@ -83,6 +85,11 @@ class Plugin(object):
         self.lock = threading.Lock()
         self.count = 0
 
+        # Asynchrone Export-Jobs.
+        # Key: job_id
+        # Value: Statusinformationen zum laufenden oder abgeschlossenen Export.
+        self.export_jobs = {}
+
         # Runtime state.
         # False bedeutet: aus / eingeholt / oben.
         # True bedeutet: an / gesetzt / unten.
@@ -94,6 +101,9 @@ class Plugin(object):
 
         self.base_dir = self._get_base_dir()
         self.log_dir = self._get_config('logDir', os.path.join(self.base_dir, 'logbook'))
+
+        # Die Export-Tools werden durch tools/install_or_update.sh hier installiert.
+        self.tools_dir = self._get_config('toolsDir', os.path.join(self.base_dir, 'logbook-tools'))
 
         # Testwerte für LXC ohne echtes GPS.
         self.test_lat = self._get_config('testLat', '')
@@ -436,6 +446,192 @@ class Plugin(object):
             }
         }
 
+    def _compact_date(self, value):
+        # Akzeptiert YYYY-MM-DD oder YYYYMMDD und gibt YYYYMMDD zurück.
+        value = str(value or '').strip()
+
+        if value == '':
+            value = datetime.datetime.utcnow().strftime('%Y-%m-%d')
+
+        if len(value) == 8 and value.isdigit():
+            return value
+
+        return datetime.datetime.strptime(value, '%Y-%m-%d').strftime('%Y%m%d')
+
+    def _dash_date(self, value):
+        # Akzeptiert YYYY-MM-DD oder YYYYMMDD und gibt YYYY-MM-DD zurück.
+        value = str(value or '').strip()
+
+        if value == '':
+            value = datetime.datetime.utcnow().strftime('%Y-%m-%d')
+
+        if len(value) == 8 and value.isdigit():
+            return datetime.datetime.strptime(value, '%Y%m%d').strftime('%Y-%m-%d')
+
+        datetime.datetime.strptime(value, '%Y-%m-%d')
+        return value
+
+    def _start_export_job(self, job_type, command, output_file):
+        # Export-Jobs laufen bewusst asynchron, damit AVNav/WebUI nicht blockiert.
+        job_id = str(uuid.uuid4())
+
+        job = {
+            'id': job_id,
+            'type': job_type,
+            'status': 'RUNNING',
+            'started': self._now_utc(),
+            'finished': None,
+            'command': command,
+            'outputFile': output_file,
+            'returnCode': None,
+            'stdout': '',
+            'stderr': '',
+            'message': ''
+        }
+
+        self.export_jobs[job_id] = job
+
+        thread = threading.Thread(
+            target=self._run_export_job,
+            args=(job_id,),
+        )
+
+        thread.daemon = True
+        thread.start()
+
+        return job
+
+    def _run_export_job(self, job_id):
+        job = self.export_jobs.get(job_id)
+
+        if job is None:
+            return
+
+        try:
+            self.api.log('Logbook export job started: %s' % job_id)
+
+            proc = subprocess.Popen(
+                job['command'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=self.tools_dir,
+            )
+
+            stdout, stderr = proc.communicate()
+
+            job['returnCode'] = proc.returncode
+            job['stdout'] = stdout.decode('utf-8', 'replace')
+            job['stderr'] = stderr.decode('utf-8', 'replace')
+            job['finished'] = self._now_utc()
+
+            if proc.returncode == 0:
+                job['status'] = 'OK'
+                job['message'] = 'Export fertig.'
+            else:
+                job['status'] = 'ERROR'
+                job['message'] = 'Export fehlgeschlagen.'
+
+            self.api.log('Logbook export job finished: %s status=%s' % (job_id, job['status']))
+
+        except Exception as e:
+            job['status'] = 'ERROR'
+            job['message'] = str(e)
+            job['stderr'] = traceback.format_exc()
+            job['finished'] = self._now_utc()
+
+            try:
+                self.api.error('Logbook export job error: %s\n%s' % (str(e), traceback.format_exc()))
+            except Exception:
+                pass
+
+    def _export_kmz_async(self, date_value):
+        date_dash = self._dash_date(date_value)
+        date_compact = self._compact_date(date_value)
+
+        script = os.path.join(self.tools_dir, 'export_additional_kmz.py')
+        output_file = os.path.join(self.base_dir, 'overlays', '%s_logbuch.kmz' % date_compact)
+
+        if not os.path.exists(script):
+            return {
+                'status': 'ERROR',
+                'message': 'Export script not found: %s' % script
+            }
+
+        command = [
+            'python3',
+            script,
+            '--date',
+            date_dash,
+            '--avnav-data',
+            self.base_dir
+        ]
+
+        job = self._start_export_job('daily-kmz', command, output_file)
+
+        return {
+            'status': 'OK',
+            'message': 'KMZ export started.',
+            'job': job
+        }
+
+    def _export_trip_kmz_async(self, from_date, to_date):
+        from_dash = self._dash_date(from_date)
+        to_dash = self._dash_date(to_date)
+
+        from_compact = self._compact_date(from_date)
+        to_compact = self._compact_date(to_date)
+
+        script = os.path.join(self.tools_dir, 'export_trip_kmz.py')
+        output_file = os.path.join(self.base_dir, 'overlays', '%s-%s_toern_logbuch.kmz' % (from_compact, to_compact))
+
+        if not os.path.exists(script):
+            return {
+                'status': 'ERROR',
+                'message': 'Export script not found: %s' % script
+            }
+
+        command = [
+            'python3',
+            script,
+            '--from-date',
+            from_dash,
+            '--to-date',
+            to_dash,
+            '--avnav-data',
+            self.base_dir
+        ]
+
+        job = self._start_export_job('trip-kmz', command, output_file)
+
+        return {
+            'status': 'OK',
+            'message': 'Trip KMZ export started.',
+            'job': job
+        }
+
+    def _export_status(self, job_id=None):
+        if job_id:
+            job = self.export_jobs.get(job_id)
+
+            if job is None:
+                return {
+                    'status': 'ERROR',
+                    'message': 'unknown job id: %s' % job_id
+                }
+
+            return {
+                'status': 'OK',
+                'job': job
+            }
+
+        jobs = list(self.export_jobs.values())
+        jobs.sort(key=lambda item: item.get('started') or '', reverse=True)
+
+        return {
+            'status': 'OK',
+            'jobs': jobs[:20]
+        }
+
     def _get_arg(self, args, name, default=None):
         if args is None:
             return default
@@ -480,6 +676,27 @@ class Plugin(object):
             if url in ('list', 'api/list'):
                 limit = int(self._get_arg(args, 'limit', 50))
                 return self._list_entries(limit)
+
+            if url in ('exportKmz', 'api/exportKmz'):
+                date_value = self._get_arg(args, 'date', '')
+                return self._export_kmz_async(date_value)
+
+            if url in ('exportTripKmz', 'api/exportTripKmz'):
+                from_date = self._get_arg(args, 'from', self._get_arg(args, 'fromDate', ''))
+                to_date = self._get_arg(args, 'to', self._get_arg(args, 'toDate', ''))
+
+                if not from_date or not to_date:
+                    return {
+                        'status': 'ERROR',
+                        'message': 'from/to date required'
+                    }
+
+                return self._export_trip_kmz_async(from_date, to_date)
+
+            if url in ('exportStatus', 'api/exportStatus'):
+                job_id = self._get_arg(args, 'job', self._get_arg(args, 'jobId', None))
+                return self._export_status(job_id)
+
 
             return {
                 'status': 'ERROR',

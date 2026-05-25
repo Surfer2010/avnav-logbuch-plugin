@@ -137,7 +137,26 @@ echo "Installing from: ${SOURCE_DIR}"
 
 rm -rf "${TARGET_DIR}"
 mkdir -p "${TARGET_DIR}"
+
+# Overlay directory for generated KMZ/KML overlays.
+mkdir -p "${AVNAV_DATA_DIR}/overlays"
+chmod 755 "${AVNAV_DATA_DIR}/overlays"
 cp -a "${SOURCE_DIR}/." "${TARGET_DIR}/"
+
+# Install CLI/export tools outside the plugin directory.
+# The plugin uses these tools for asynchronous KMZ export jobs.
+TOOLS_SOURCE_DIR="$(dirname "${SOURCE_DIR}")/tools"
+TOOLS_TARGET_DIR="${AVNAV_DATA_DIR}/logbook-tools"
+
+if [ -d "${TOOLS_SOURCE_DIR}" ]; then
+    echo "Installing tools to: ${TOOLS_TARGET_DIR}"
+    rm -rf "${TOOLS_TARGET_DIR}"
+    mkdir -p "${TOOLS_TARGET_DIR}"
+    cp -a "${TOOLS_SOURCE_DIR}/." "${TOOLS_TARGET_DIR}/"
+    chmod -R 755 "${TOOLS_TARGET_DIR}"
+else
+    echo "WARNING: tools directory not found in downloaded ZIP."
+fi
 
 chmod -R 755 "${TARGET_DIR}"
 

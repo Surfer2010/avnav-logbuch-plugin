@@ -10,7 +10,7 @@ python3 tools/export_trip_kmz.py \
   --to-date 2026-05-24 \
   --avnav-data /home/pi/avnav/data
 Ausgabe
-/home/pi/avnav/data/tracks/20260521-20260524_toern_logbuch.kmz
+/home/pi/avnav/data/overlays/20260521-20260524_toern_logbuch.kmz
 Inhalt
 
 Die KMZ enthält:

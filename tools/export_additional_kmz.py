@@ -31,7 +31,7 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
-from common import detect_avnav_data_dir, get_logbook_dir, get_tracks_dir, print_detected_paths
+from common import detect_avnav_data_dir, get_logbook_dir, get_tracks_dir, get_overlays_dir, print_detected_paths
 from xml.etree import ElementTree as ET
 
 
@@ -1079,6 +1079,7 @@ def main():
 
     avnav_data = detect_avnav_data_dir(args.avnav_data)
     tracks_dir = get_tracks_dir(avnav_data)
+    overlays_dir = get_overlays_dir(avnav_data)
     logbook_dir = get_logbook_dir(avnav_data)
 
     gpx_file = tracks_dir / f"{date_dash}.gpx"
@@ -1093,7 +1094,7 @@ def main():
         output_file = Path(args.output)
     else:
         output_file = (
-            tracks_dir /
+            overlays_dir /
             f"{date_compact}_logbuch.kmz"
         )
 
