@@ -12,7 +12,7 @@ console.log("logbook plugin loaded");
  */
 
 var logbookWidget = {
-    name: "logbook_EntryWidget",
+    name: "logbuch_b_popup",
 
     storeKeys: {
         lat: "nav.gps.lat",
@@ -34,6 +34,97 @@ var logbookWidget = {
 
 avnav.api.registerWidget(logbookWidget);
 
+function logbookIconSvg(iconName) {
+    var icons = {
+        "motor-an":
+            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
+            '<path d="M18 28h6v-8h18v6h6c4 0 7 3 7 7v10c0 4-3 7-7 7h-6v5H24v-5h-6c-4 0-7-3-7-7V33c0-4 3-5 7-5z"/>' +
+            '<rect x="25" y="12" width="15" height="7" rx="2"/>' +
+            '<rect x="5" y="31" width="7" height="15" rx="2"/>' +
+            '<rect x="55" y="31" width="5" height="15" rx="2"/>' +
+            '</svg>',
+
+        "motor-aus":
+            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
+            '<path d="M18 28h6v-8h18v6h6c4 0 7 3 7 7v10c0 4-3 7-7 7h-6v5H24v-5h-6c-4 0-7-3-7-7V33c0-4 3-5 7-5z"/>' +
+            '<rect x="25" y="12" width="15" height="7" rx="2"/>' +
+            '<rect x="5" y="31" width="7" height="15" rx="2"/>' +
+            '<rect x="55" y="31" width="5" height="15" rx="2"/>' +
+            '<path d="M9 58 L58 9" class="logbookDirectStroke"/>' +
+            '</svg>',
+
+        "segel-hoch":
+            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
+            '<path d="M15 50h28c-2 5-7 7-14 7s-12-2-14-7z"/>' +
+            '<path d="M28 12v37h-15c3-14 8-26 15-37z"/>' +
+            '<path d="M31 16v33h15c-2-12-7-23-15-33z"/>' +
+            '<path d="M51 48V22" class="logbookDirectStroke"/>' +
+            '<path d="M42 31l9-9 9 9" class="logbookDirectStroke"/>' +
+            '</svg>',
+
+        "segel-runter":
+            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
+            '<path d="M14 50h29c-2 5-7 7-15 7s-12-2-14-7z"/>' +
+            '<path d="M26 31v18H13c2-7 6-13 13-18z"/>' +
+            '<path d="M51 20v26" class="logbookDirectStroke"/>' +
+            '<path d="M42 37l9 9 9-9" class="logbookDirectStroke"/>' +
+            '</svg>',
+
+        "anker-ab":
+            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
+            '<circle cx="25" cy="10" r="6" fill="none" class="logbookDirectStroke"/>' +
+            '<path d="M25 16v31" class="logbookDirectStroke"/>' +
+            '<path d="M16 25h18" class="logbookDirectStroke"/>' +
+            '<path d="M14 34c0 13 8 20 11 20s11-7 11-20" fill="none" class="logbookDirectStroke"/>' +
+            '<path d="M8 39l7-4 2 8" />' +
+            '<path d="M42 39l-7-4-2 8" />' +
+            '<path d="M51 23v28" class="logbookDirectStroke"/>' +
+            '<path d="M42 42l9 9 9-9" class="logbookDirectStroke"/>' +
+            '</svg>',
+
+        "anker-auf":
+            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
+            '<circle cx="25" cy="10" r="6" fill="none" class="logbookDirectStroke"/>' +
+            '<path d="M25 16v31" class="logbookDirectStroke"/>' +
+            '<path d="M16 25h18" class="logbookDirectStroke"/>' +
+            '<path d="M14 34c0 13 8 20 11 20s11-7 11-20" fill="none" class="logbookDirectStroke"/>' +
+            '<path d="M8 39l7-4 2 8" />' +
+            '<path d="M42 39l-7-4-2 8" />' +
+            '<path d="M51 51V23" class="logbookDirectStroke"/>' +
+            '<path d="M42 32l9-9 9 9" class="logbookDirectStroke"/>' +
+            '</svg>'
+    };
+
+    return icons[iconName] || "";
+}
+
+var logbookActionWidgets = [
+    { name: "logbuch_b_motor_an", caption: "Motor an", type: "motor_on", icon: "motor-on" },
+    { name: "logbuch_b_motor_aus", caption: "Motor aus", type: "motor_off", icon: "motor-off" },
+    { name: "logbuch_b_segel_hoch", caption: "Segel hoch", type: "sail_set", icon: "sail-set" },
+    { name: "logbuch_b_segel_runter", caption: "Segel runter", type: "sail_down", icon: "sail-down" },
+    { name: "logbuch_b_anker_ab", caption: "Anker ab", type: "anchor_down", icon: "anchor-down" },
+    { name: "logbuch_b_anker_auf", caption: "Anker auf", type: "anchor_up", icon: "anchor-up" }
+];
+
+logbookActionWidgets.forEach(function(widget) {
+    avnav.api.registerWidget({
+        name: widget.name,
+        caption: widget.caption,
+
+        renderHtml: function(props) {
+            return (
+                '<div class="widgetData logbookDirectWidgetData" title="' + escapeHtml(widget.caption) + '">' +
+                    '<button type="button" class="logbookDirectButton" data-logbook-direct="' + widget.type + '" aria-label="' + escapeHtml(widget.caption) + '">' +
+                        '<img class="logbookDirectIcon" src="' + iconPath(widget.icon) + '" alt="">' +
+                    '</button>' +
+                '</div>'
+            );
+        }
+    });
+});
+
+
 document.addEventListener("click", function(ev) {
     var target = ev.target;
 
@@ -45,6 +136,22 @@ document.addEventListener("click", function(ev) {
         ev.preventDefault();
         ev.stopPropagation();
         openLogbookOverlay();
+        return;
+    }
+
+    var directType = target.getAttribute("data-logbook-direct");
+
+    if (!directType && target.closest) {
+        var directButton = target.closest("[data-logbook-direct]");
+        if (directButton) {
+            directType = directButton.getAttribute("data-logbook-direct");
+        }
+    }
+
+    if (directType) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        saveDirectLogbookEntry(directType);
     }
 }, true);
 
@@ -188,11 +295,8 @@ function openLogbookOverlay() {
     }
 
     var textField = document.getElementById("logbookText");
-    if (textField) {
-        setTimeout(function() {
-            textField.focus();
-        }, 100);
-    }
+    // Kein automatischer Fokus:
+    // Auf Tablets würde sonst sofort die Bildschirmtastatur öffnen.
 
     overlay.querySelectorAll("button[data-type]").forEach(function(btn) {
         btn.addEventListener("click", function(e) {
@@ -247,6 +351,32 @@ function logbookButton(type, label, iconName, extraClass) {
             '<span class="logbookButtonLabel">' + escapeHtml(label) + '</span>' +
         '</button>'
     );
+}
+
+
+
+function saveDirectLogbookEntry(type) {
+    var url =
+        AVNAV_BASE_URL +
+        "/api/add?type=" +
+        encodeURIComponent(type) +
+        "&text=";
+
+    fetch(url)
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.status === "OK") {
+                console.log("direct logbook saved", type, data);
+                return;
+            }
+
+            console.warn("direct logbook warning", data);
+        })
+        .catch(function(err) {
+            console.error("direct logbook error", err);
+        });
 }
 
 function saveLogbookEntry(type) {
