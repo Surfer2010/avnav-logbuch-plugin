@@ -27,6 +27,7 @@ Alle Einträge werden zusammen mit Zeit und GPS-Position gespeichert.
 # Overlay Bedienung
 
 Das Plugin besitzt ein eigenes Overlay innerhalb von AVNav. (logbuch_b_popup)
+<img width="1118" height="674" alt="grafik" src="https://github.com/user-attachments/assets/54ffef2a-71cd-46ca-b713-f300efe80401" />
 
 Das Overlay ermöglicht:
 
