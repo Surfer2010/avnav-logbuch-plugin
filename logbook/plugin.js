@@ -532,7 +532,7 @@ function monitorExportJob(jobId) {
                     return;
                 }
 
-                setLogbookStatus("Export fehlgeschlagen", "error");
+                setLogbookStatus(job.message || "Export fehlgeschlagen", "error");
             })
             .catch(function(err) {
                 console.error(err);

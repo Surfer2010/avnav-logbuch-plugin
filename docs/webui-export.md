@@ -215,3 +215,55 @@ API:
 curl "http://localhost:8080/plugins/user-logbook/api/exportCurrentTripKmz"
 
 Die erzeugte KMZ wird wie alle Overlays nach AVNAV_DATA_DIR/overlays/ geschrieben und vorhandene Dateien werden überschrieben.
+
+## Fehlende Tagesdaten
+
+Wenn für einen Tag keine Logbuchdatei existiert, wird im Overlay eine verständliche Meldung angezeigt:
+
+```text
+Keine Logbucheinträge für diesen Tag.
+
+Wenn keine GPX-Trackdatei existiert:
+
+Keine GPX-Trackdatei für diesen Tag.
+
+Der Export läuft weiter asynchron, aber der Job endet mit Status ERROR und einer lesbaren message.
+
+## Fehlende Tagesdaten
+
+Wenn für einen Tag keine Logbuchdatei existiert, wird im Overlay eine verständliche Meldung angezeigt:
+
+```text
+Keine Logbucheinträge für diesen Tag.
+
+Wenn keine GPX-Trackdatei existiert:
+
+Keine GPX-Trackdatei für diesen Tag.
+
+Der Export läuft weiter asynchron, aber der Job endet mit Status ERROR und einer lesbaren message.
+
+## Fehlende Tagesdaten
+
+Wenn für einen Tag keine Logbuchdatei existiert, wird im Overlay eine verständliche Meldung angezeigt:
+
+```text
+Keine Logbucheinträge für diesen Tag.
+
+Wenn keine GPX-Trackdatei existiert:
+
+Keine GPX-Trackdatei für diesen Tag.
+
+Der Export läuft weiterhin asynchron. Der Job endet mit Status ERROR, liefert aber eine lesbare message.
+
+## Fehlende Tagesdaten
+
+Wenn für einen Tag keine Logbuchdatei existiert, wird im Overlay eine verständliche Meldung angezeigt:
+
+```text
+Keine Logbucheinträge für diesen Tag.
+
+Wenn keine GPX-Trackdatei existiert:
+
+Keine GPX-Trackdatei für diesen Tag.
+
+Der Export läuft weiterhin asynchron. Der Job endet mit Status ERROR, liefert aber eine lesbare message.

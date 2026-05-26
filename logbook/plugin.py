@@ -529,7 +529,13 @@ class Plugin(object):
                 job['message'] = 'Export fertig.'
             else:
                 job['status'] = 'ERROR'
-                job['message'] = 'Export fehlgeschlagen.'
+
+                if 'No logbook file found' in job['stderr']:
+                    job['message'] = 'Keine Logbucheinträge für diesen Tag.'
+                elif 'GPX file not found' in job['stderr']:
+                    job['message'] = 'Keine GPX-Trackdatei für diesen Tag.'
+                else:
+                    job['message'] = 'Export fehlgeschlagen.'
 
             self.api.log('Logbook export job finished: %s status=%s' % (job_id, job['status']))
 
