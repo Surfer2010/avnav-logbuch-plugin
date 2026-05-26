@@ -12,11 +12,13 @@ Das Plugin ergänzt AVNav um ein einfach bedienbares Bord- und Törnlogbuch.
 
 Direkt aus der Kartenansicht können folgende Zustände erfasst werden:
 
-- Motor an / aus
-- Segel gesetzt / geborgen
-- Anker fallen / auf
-- Freitext-Notizen
-- Törn Start / Ende
+- Motor an / aus (logbuch_b_motor...)
+- Segel gesetzt / geborgen (logbuch_b_anker...)
+- Anker fallen / auf (logbuch_b_segel...)
+- (nur im Overlay) Freitext-Notizen
+- (nur im Overlay) Törn Start / Ende
+<img width="159" height="427" alt="grafik" src="https://github.com/user-attachments/assets/6c4cb255-21cb-40f9-9bbd-8df0a332e7a7" />
+
 
 Alle Einträge werden zusammen mit Zeit und GPS-Position gespeichert.
 
@@ -24,7 +26,7 @@ Alle Einträge werden zusammen mit Zeit und GPS-Position gespeichert.
 
 # Overlay Bedienung
 
-Das Plugin besitzt ein eigenes Overlay innerhalb von AVNav.
+Das Plugin besitzt ein eigenes Overlay innerhalb von AVNav. (logbuch_b_popup)
 
 Das Overlay ermöglicht:
 
