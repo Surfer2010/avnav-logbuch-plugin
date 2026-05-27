@@ -254,6 +254,18 @@ Der aktuelle Fokus liegt auf:
 
 ---
 
+## Versioning
+
+This project follows Semantic Versioning 2.0.0:
+
+- MAJOR: incompatible API or storage changes
+- MINOR: new backwards compatible features
+- PATCH: backwards compatible bugfixes
+
+Stable releases should be safe to update within the same MAJOR version.
+
+---
+
 # Lizenz
 
 Siehe LICENSE Datei im Repository.
