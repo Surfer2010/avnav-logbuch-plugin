@@ -12,19 +12,47 @@ Das Plugin ergänzt AVNav um ein einfach bedienbares Bord- und Törnlogbuch.
 
 Direkt aus der Kartenansicht können folgende Zustände erfasst werden:
 
-- Motor an / aus
-- Segel gesetzt / geborgen
-- Anker fallen / auf
-- Freitext-Notizen
-- Törn Start / Ende
+- Motor an / aus (logbuch_b_motor...)
+- Segel gesetzt / geborgen (logbuch_b_anker...)
+- Anker fallen / auf (logbuch_b_segel...)
+- (nur im Overlay) Freitext-Notizen
+- (nur im Overlay) Törn Start / Ende
+<img width="159" height="427" alt="grafik" src="https://github.com/user-attachments/assets/6c4cb255-21cb-40f9-9bbd-8df0a332e7a7" />
+
 
 Alle Einträge werden zusammen mit Zeit und GPS-Position gespeichert.
 
 ---
+# Installation
+```
+cd /tmp
+
+rm -rf avnav-logbuch-plugin
+
+git clone https://github.com/Surfer2010/avnav-logbuch-plugin.git
+
+cd avnav-logbuch-plugin
+
+cp logbook/plugin.py /home/pi/avnav/data/plugins/logbook/plugin.py
+cp logbook/plugin.js /home/pi/avnav/data/plugins/logbook/plugin.js
+cp logbook/plugin.css /home/pi/avnav/data/plugins/logbook/plugin.css
+
+rm -rf /home/pi/avnav/data/logbook-tools
+mkdir -p /home/pi/avnav/data/logbook-tools
+
+cp -a tools/. /home/pi/avnav/data/logbook-tools/
+
+sudo chown -R pi:pi /home/pi/avnav/data/plugins/logbook
+sudo chown -R pi:pi /home/pi/avnav/data/logbook-tools
+
+sudo systemctl restart avnav
+```
+---
 
 # Overlay Bedienung
 
-Das Plugin besitzt ein eigenes Overlay innerhalb von AVNav.
+Das Plugin besitzt ein eigenes Overlay innerhalb von AVNav. (logbuch_b_popup)
+<img width="1118" height="674" alt="grafik" src="https://github.com/user-attachments/assets/54ffef2a-71cd-46ca-b713-f300efe80401" />
 
 Das Overlay ermöglicht:
 
@@ -223,6 +251,18 @@ Der aktuelle Fokus liegt auf:
 * Overlay Bedienung
 * Exportfunktionen
 * Touchoptimierung
+
+---
+
+## Versioning
+
+This project follows Semantic Versioning 2.0.0:
+
+- MAJOR: incompatible API or storage changes
+- MINOR: new backwards compatible features
+- PATCH: backwards compatible bugfixes
+
+Stable releases should be safe to update within the same MAJOR version.
 
 ---
 
