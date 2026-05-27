@@ -123,6 +123,13 @@ class Plugin(object):
         if hasattr(self.api, 'registerRestart'):
             self.api.registerRestart(self.stop)
 
+        # Register editable parameters with AVNav.
+        # Even with an empty parameter list this enables runtime
+        # enable/disable support and prepares future configuration options.
+        if hasattr(self.api, 'registerEditableParameters'):
+            self.api.registerEditableParameters([], self._editable_parameters_changed)
+
+
     def _get_config(self, name, default):
         try:
             value = self.api.getConfigValue(name)
@@ -140,6 +147,12 @@ class Plugin(object):
 
     def _as_bool(self, value):
         return str(value).strip().lower() in ('1', 'true', 'yes', 'on', 'ja')
+
+    def _editable_parameters_changed(self, new_params):
+        try:
+            self.api.log("Editable parameters changed: %s" % str(new_params))
+        except Exception:
+            pass
 
     def stop(self):
         try:
