@@ -23,6 +23,31 @@ Direkt aus der Kartenansicht können folgende Zustände erfasst werden:
 Alle Einträge werden zusammen mit Zeit und GPS-Position gespeichert.
 
 ---
+# Installation
+```
+cd /tmp
+
+rm -rf avnav-logbuch-plugin
+
+git clone https://github.com/Surfer2010/avnav-logbuch-plugin.git
+
+cd avnav-logbuch-plugin
+
+cp logbook/plugin.py /home/pi/avnav/data/plugins/logbook/plugin.py
+cp logbook/plugin.js /home/pi/avnav/data/plugins/logbook/plugin.js
+cp logbook/plugin.css /home/pi/avnav/data/plugins/logbook/plugin.css
+
+rm -rf /home/pi/avnav/data/logbook-tools
+mkdir -p /home/pi/avnav/data/logbook-tools
+
+cp -a tools/. /home/pi/avnav/data/logbook-tools/
+
+sudo chown -R pi:pi /home/pi/avnav/data/plugins/logbook
+sudo chown -R pi:pi /home/pi/avnav/data/logbook-tools
+
+sudo systemctl restart avnav
+```
+---
 
 # Overlay Bedienung
 
