@@ -1010,33 +1010,43 @@ def build_kml(date_dash, intervals, anchors, notes, track_points):
 #
 def write_kmz(output_file, kml_content):
 
+    output_file = Path(output_file)
+
     output_file.parent.mkdir(
         parents=True,
         exist_ok=True,
     )
 
+    tmp_file = output_file.with_name(output_file.name + ".tmp")
+
+    if tmp_file.exists():
+        tmp_file.unlink()
+
     icons_dir = Path(__file__).parent / "kmz-icons"
 
-    #
-    # mode="w" überschreibt vorhandene Dateien
-    # ohne Rückfrage.
-    #
-    with zipfile.ZipFile(
-        output_file,
-        "w",
-        zipfile.ZIP_DEFLATED,
-    ) as kmz:
+    try:
+        with zipfile.ZipFile(
+            tmp_file,
+            "w",
+            zipfile.ZIP_DEFLATED,
+        ) as kmz:
 
-        kmz.writestr("doc.kml", kml_content)
+            kmz.writestr("doc.kml", kml_content)
 
-        anchor_icon = icons_dir / "anchor.png"
-        note_icon = icons_dir / "note.png"
+            anchor_icon = icons_dir / "anchor.png"
+            note_icon = icons_dir / "note.png"
 
-        if anchor_icon.exists():
-            kmz.write(anchor_icon, "icons/anchor.png")
+            if anchor_icon.exists():
+                kmz.write(anchor_icon, "icons/anchor.png")
 
-        if note_icon.exists():
-            kmz.write(note_icon, "icons/note.png")
+            if note_icon.exists():
+                kmz.write(note_icon, "icons/note.png")
+
+        tmp_file.replace(output_file)
+
+    finally:
+        if tmp_file.exists():
+            tmp_file.unlink()
 
 
 #

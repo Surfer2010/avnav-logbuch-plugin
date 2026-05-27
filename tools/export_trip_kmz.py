@@ -327,23 +327,41 @@ def build_trip_kml(start_dash, end_dash, day_folders, total_stats):
 def write_trip_kmz(output_file, kml_content):
     """
     Schreibt KMZ inklusive lokaler Icons.
+
+    Der Export wird zuerst in eine temporäre Datei geschrieben.
+    Erst nach erfolgreichem Abschluss wird die Zieldatei atomar ersetzt.
+    Dadurch bleibt bei einem Abbruch die bisherige KMZ erhalten.
     """
+
+    output_file = Path(output_file)
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
+    tmp_file = output_file.with_name(output_file.name + ".tmp")
+
+    if tmp_file.exists():
+        tmp_file.unlink()
+
     icons_dir = Path(__file__).parent / "kmz-icons"
 
-    with zipfile.ZipFile(output_file, "w", zipfile.ZIP_DEFLATED) as kmz:
-        kmz.writestr("doc.kml", kml_content)
+    try:
+        with zipfile.ZipFile(tmp_file, "w", zipfile.ZIP_DEFLATED) as kmz:
+            kmz.writestr("doc.kml", kml_content)
 
-        anchor_icon = icons_dir / "anchor.png"
-        note_icon = icons_dir / "note.png"
+            anchor_icon = icons_dir / "anchor.png"
+            note_icon = icons_dir / "note.png"
 
-        if anchor_icon.exists():
-            kmz.write(anchor_icon, "icons/anchor.png")
+            if anchor_icon.exists():
+                kmz.write(anchor_icon, "icons/anchor.png")
 
-        if note_icon.exists():
-            kmz.write(note_icon, "icons/note.png")
+            if note_icon.exists():
+                kmz.write(note_icon, "icons/note.png")
+
+        tmp_file.replace(output_file)
+
+    finally:
+        if tmp_file.exists():
+            tmp_file.unlink()
 
 
 def main():
