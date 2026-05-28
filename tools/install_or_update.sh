@@ -100,12 +100,24 @@ else
 fi
 
 if [ -d "${PLUGIN_PARENT_DIR}/logbook" ]; then
+if [ -d "${PLUGIN_PARENT_DIR}/user-logbook" ]; then
+
+    LEGACY_ID_BACKUP="${BACKUP_DIR}/user-logbook.legacy.${STAMP}"
+
+    echo "Moving legacy plugin-id directory to backup: ${LEGACY_ID_BACKUP}"
+
+    mv "${PLUGIN_PARENT_DIR}/user-logbook" "${LEGACY_ID_BACKUP}"
+
+fi
+
     LEGACY_BACKUP="${BACKUP_DIR}/logbook.legacy.${STAMP}"
     echo "Moving legacy plugin to backup: ${LEGACY_BACKUP}"
     mv "${PLUGIN_PARENT_DIR}/logbook" "${LEGACY_BACKUP}"
 fi
 
-for LEGACY_DISABLED in "${PLUGIN_PARENT_DIR}"/logbook.disabled*; do
+for LEGACY_DISABLED in \
+    "${PLUGIN_PARENT_DIR}"/logbook.disabled* \
+    "${PLUGIN_PARENT_DIR}"/user-logbook.disabled*; do
     if [ -e "${LEGACY_DISABLED}" ]; then
         LEGACY_DISABLED_BACKUP="${BACKUP_DIR}/$(basename "${LEGACY_DISABLED}").${STAMP}"
         echo "Moving disabled legacy plugin to backup: ${LEGACY_DISABLED_BACKUP}"
@@ -118,6 +130,10 @@ if [ -f "${AVNAV_DATA_DIR}/avnav_server.xml" ]; then
     echo "Creating config backup: ${CONFIG_BACKUP}"
     cp -a "${AVNAV_DATA_DIR}/avnav_server.xml" "${CONFIG_BACKUP}"
 fi
+
+rm -rf "${PLUGIN_PARENT_DIR}/logbook" 2>/dev/null || true
+
+rm -rf "${PLUGIN_PARENT_DIR}/user-logbook" 2>/dev/null || true
 
 rm -rf "${TARGET_DIR}"
 mkdir -p "${TARGET_DIR}"
