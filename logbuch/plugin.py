@@ -628,7 +628,7 @@ class Plugin(object):
             'job': job
         }
 
-    def _parse_logbook_timestamp(self, value):
+    def _parse_logbuch_timestamp(self, value):
         try:
             if not value:
                 return None
@@ -672,7 +672,7 @@ class Plugin(object):
                             if event_type not in ('trip_start', 'trip_end'):
                                 continue
 
-                            timestamp = self._parse_logbook_timestamp(
+                            timestamp = self._parse_logbuch_timestamp(
                                 entry.get('timestamp')
                             )
 

@@ -51,7 +51,7 @@ def detect_avnav_data_dir(cli_value=None):
     )
 
 
-def get_logbook_dir(avnav_data_dir):
+def get_logbuch_dir(avnav_data_dir):
     return Path(avnav_data_dir) / "logbook"
 
 
@@ -71,7 +71,7 @@ def print_detected_paths(avnav_data_dir):
     avnav_data_dir = Path(avnav_data_dir)
 
     print(f"AVNav data: {avnav_data_dir}")
-    print(f"Logbook:    {get_logbook_dir(avnav_data_dir)}")
+    print(f"Logbook:    {get_logbuch_dir(avnav_data_dir)}")
     print(f"Tracks:     {get_tracks_dir(avnav_data_dir)}")
     print(f"Overlays:   {get_overlays_dir(avnav_data_dir)}")
     print(f"Plugins:    {get_plugins_dir(avnav_data_dir)}")

@@ -56,11 +56,11 @@ def parse_time(value):
         return None
 
 
-def read_logbook(path):
+def read_logbuch(path):
     entries = []
 
     if not path.exists():
-        raise FileNotFoundError(f"Logbook file not found: {path}")
+        raise FileNotFoundError(f"Logbuch file not found: {path}")
 
     with path.open("r", encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, start=1):
@@ -316,23 +316,23 @@ def main():
 
     avnav_data = Path(args.avnav_data)
     tracks_dir = avnav_data / "tracks"
-    logbook_dir = avnav_data / "logbook"
+    logbuch_dir = avnav_data / "logbook"
 
     avt_file = tracks_dir / f"{args.date}.avt"
-    logbook_file = logbook_dir / f"logbook-{args.date}.jsonl"
+    logbuch_file = logbuch_dir / f"logbook-{args.date}.jsonl"
 
     if args.output:
         output_file = Path(args.output)
     else:
         output_file = tracks_dir / f"{args.date}_additional.gpx"
 
-    entries = read_logbook(logbook_file)
+    entries = read_logbuch(logbuch_file)
     points = read_avt(avt_file)
 
     intervals, anchors, warnings = build_intervals(entries)
     gpx = build_gpx(args.date, intervals, anchors, points)
 
-    print(f"Logbook entries: {len(entries)}")
+    print(f"Logbuch entries: {len(entries)}")
     print(f"Track points: {len(points)}")
     print(f"Intervals: {len(intervals)}")
     print(f"Anchor points: {len(anchors)}")

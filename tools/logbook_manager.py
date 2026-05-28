@@ -20,7 +20,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-from common import detect_avnav_data_dir, get_logbook_dir, get_tracks_dir, print_detected_paths
+from common import detect_avnav_data_dir, get_logbuch_dir, get_tracks_dir, print_detected_paths
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -146,14 +146,14 @@ def create_testdata():
     - ein Logbuch mit Motor, Segel, Anker, Notiz
     """
 
-    logbook_dir = TEST_AVNAV_DATA / "logbook"
+    logbuch_dir = TEST_AVNAV_DATA / "logbook"
     tracks_dir = TEST_AVNAV_DATA / "tracks"
 
-    logbook_dir.mkdir(parents=True, exist_ok=True)
+    logbuch_dir.mkdir(parents=True, exist_ok=True)
     tracks_dir.mkdir(parents=True, exist_ok=True)
 
     gpx_file = tracks_dir / "2026-06-01.gpx"
-    logbook_file = logbook_dir / "20260601_logbuch.jsonl"
+    logbuch_file = logbuch_dir / "20260601_logbuch.jsonl"
 
     gpx_file.write_text("""<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="avnav-test">
@@ -176,7 +176,7 @@ def create_testdata():
 </gpx>
 """, encoding="utf-8")
 
-    logbook_file.write_text("""{"timestamp":"2026-06-01T10:00:00Z","event_type":"motor_on","text":"","lat":54.000000,"lon":10.000000,"state":{"motor":true,"sail":false,"anchor":false},"source":"test"}
+    logbuch_file.write_text("""{"timestamp":"2026-06-01T10:00:00Z","event_type":"motor_on","text":"","lat":54.000000,"lon":10.000000,"state":{"motor":true,"sail":false,"anchor":false},"source":"test"}
 {"timestamp":"2026-06-01T10:20:00Z","event_type":"motor_off","text":"","lat":54.000000,"lon":10.040000,"state":{"motor":false,"sail":false,"anchor":false},"source":"test"}
 {"timestamp":"2026-06-01T10:25:00Z","event_type":"sail_set","text":"","lat":54.010000,"lon":10.050000,"state":{"motor":false,"sail":true,"anchor":false},"source":"test"}
 {"timestamp":"2026-06-01T10:40:00Z","event_type":"sail_down","text":"","lat":54.040000,"lon":10.080000,"state":{"motor":false,"sail":false,"anchor":false},"source":"test"}
@@ -187,7 +187,7 @@ def create_testdata():
     print()
     print("Testdaten erzeugt:")
     print(gpx_file)
-    print(logbook_file)
+    print(logbuch_file)
 
 
 def run_testdata_export():
@@ -230,15 +230,15 @@ def run_testdata_export():
     ])
 
 
-def list_logbook_files():
+def list_logbuch_files():
     """
     Logbuchdateien anzeigen.
     """
 
     avnav_data = ask_avnav_data()
-    logbook_dir = get_logbook_dir(Path(avnav_data))
+    logbuch_dir = get_logbuch_dir(Path(avnav_data))
 
-    run(["ls", "-lah", str(logbook_dir)])
+    run(["ls", "-lah", str(logbuch_dir)])
 
 
 def list_track_files():
@@ -320,7 +320,7 @@ def menu():
         elif choice == "5":
             run_testdata_export()
         elif choice == "6":
-            list_logbook_files()
+            list_logbuch_files()
         elif choice == "7":
             list_track_files()
         elif choice == "8":

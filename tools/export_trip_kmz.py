@@ -28,7 +28,7 @@ import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from common import detect_avnav_data_dir, get_logbook_dir, get_tracks_dir, get_overlays_dir, print_detected_paths
+from common import detect_avnav_data_dir, get_logbuch_dir, get_tracks_dir, get_overlays_dir, print_detected_paths
 
 import export_additional_kmz as day_export
 
@@ -383,7 +383,7 @@ def main():
     avnav_data = detect_avnav_data_dir(args.avnav_data)
     tracks_dir = get_tracks_dir(avnav_data)
     overlays_dir = get_overlays_dir(avnav_data)
-    logbook_dir = get_logbook_dir(avnav_data)
+    logbuch_dir = get_logbuch_dir(avnav_data)
 
     start_dash = start_date.strftime("%Y-%m-%d")
     end_dash = end_date.strftime("%Y-%m-%d")
@@ -408,8 +408,8 @@ def main():
         gpx_file = tracks_dir / f"{date_dash}.gpx"
 
         try:
-            logbook_file = day_export.find_logbook_file(
-                logbook_dir,
+            logbuch_file = day_export.find_logbuch_file(
+                logbuch_dir,
                 date_dash,
                 date_compact,
             )
@@ -421,7 +421,7 @@ def main():
             print(f"SKIP: no GPX file for {date_dash}: {gpx_file}")
             continue
 
-        entries = day_export.read_logbook(logbook_file)
+        entries = day_export.read_logbuch(logbuch_file)
         track_points = day_export.read_gpx_points(gpx_file)
 
         folder, stats, warnings = build_day_folder(
@@ -437,7 +437,7 @@ def main():
             all_warnings.append(f"{date_dash}: {warning}")
 
         print(f"DAY: {date_dash}")
-        print(f"  Logbook: {logbook_file}")
+        print(f"  Logbook: {logbuch_file}")
         print(f"  GPX: {gpx_file}")
         print(f"  Entries: {len(entries)}")
         print(f"  Track points: {len(track_points)}")

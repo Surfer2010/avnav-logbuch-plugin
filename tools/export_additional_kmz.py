@@ -31,7 +31,7 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
-from common import detect_avnav_data_dir, get_logbook_dir, get_tracks_dir, get_overlays_dir, print_detected_paths
+from common import detect_avnav_data_dir, get_logbuch_dir, get_tracks_dir, get_overlays_dir, print_detected_paths
 from xml.etree import ElementTree as ET
 
 
@@ -191,7 +191,7 @@ def calculate_track_metrics(points, duration_seconds):
     }
 
 
-def find_logbook_file(logbook_dir, date_dash, date_compact):
+def find_logbuch_file(logbuch_dir, date_dash, date_compact):
     """
     Sucht bevorzugt:
         YYYYMMDD_logbuch.jsonl
@@ -201,12 +201,12 @@ def find_logbook_file(logbook_dir, date_dash, date_compact):
     """
 
     preferred = (
-        logbook_dir /
+        logbuch_dir /
         f"{date_compact}_logbuch.jsonl"
     )
 
     legacy = (
-        logbook_dir /
+        logbuch_dir /
         f"logbook-{date_dash}.jsonl"
     )
 
@@ -223,7 +223,7 @@ def find_logbook_file(logbook_dir, date_dash, date_compact):
     )
 
 
-def read_logbook(path):
+def read_logbuch(path):
     """
     Lädt JSONL-Logbuchdatei.
 
@@ -1097,12 +1097,12 @@ def main():
     avnav_data = detect_avnav_data_dir(args.avnav_data)
     tracks_dir = get_tracks_dir(avnav_data)
     overlays_dir = get_overlays_dir(avnav_data)
-    logbook_dir = get_logbook_dir(avnav_data)
+    logbuch_dir = get_logbuch_dir(avnav_data)
 
     gpx_file = tracks_dir / f"{date_dash}.gpx"
 
-    logbook_file = find_logbook_file(
-        logbook_dir,
+    logbuch_file = find_logbuch_file(
+        logbuch_dir,
         date_dash,
         date_compact,
     )
@@ -1115,7 +1115,7 @@ def main():
             f"{date_compact}_logbuch.kmz"
         )
 
-    entries = read_logbook(logbook_file)
+    entries = read_logbuch(logbuch_file)
     track_points = read_gpx_points(gpx_file)
 
     intervals, anchors, notes, warnings = build_intervals(
@@ -1132,10 +1132,10 @@ def main():
 
     print_detected_paths(avnav_data)
     print(f"Date: {date_dash}")
-    print(f"Logbook file: {logbook_file}")
+    print(f"Logbuch file: {logbuch_file}")
     print(f"GPX file: {gpx_file}")
     print(f"Output: {output_file}")
-    print(f"Logbook entries: {len(entries)}")
+    print(f"Logbuch entries: {len(entries)}")
     print(f"Track points: {len(track_points)}")
     print(f"Intervals: {len(intervals)}")
     print(f"Anchor points: {len(anchors)}")
