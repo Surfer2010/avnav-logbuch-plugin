@@ -31,11 +31,11 @@ Datenquellen je Tag
 
 Logbuch:
 
-logbook/YYYYMMDD_logbuch.jsonl
+logbuch/YYYYMMDD_logbuch.jsonl
 
 Fallback:
 
-logbook/logbook-YYYY-MM-DD.jsonl
+logbuch/logbuch-YYYY-MM-DD.jsonl
 
 Track:
 

@@ -24,7 +24,7 @@ var logbuchWidget = {
     renderHtml: function(props) {
         return (
             '<div class="widgetData logbuchWidgetData">' +
-                '<button type="button" class="logbookOpenButton" data-logbook-open="1">' +
+                '<button type="button" class="logbuchOpenButton" data-logbuch-open="1">' +
                     'Logbuch' +
                 '</button>' +
             '</div>'
@@ -115,7 +115,7 @@ logbuchActionWidgets.forEach(function(widget) {
         renderHtml: function(props) {
             return (
                 '<div class="widgetData logbuchDirectWidgetData" title="' + escapeHtml(widget.caption) + '">' +
-                    '<button type="button" class="logbuchDirectButton" data-logbook-direct="' + widget.type + '" aria-label="' + escapeHtml(widget.caption) + '">' +
+                    '<button type="button" class="logbuchDirectButton" data-logbuch-direct="' + widget.type + '" aria-label="' + escapeHtml(widget.caption) + '">' +
                         '<img class="logbuchDirectIcon" src="' + iconPath(widget.icon) + '" alt="">' +
                     '</button>' +
                 '</div>'
@@ -132,19 +132,19 @@ document.addEventListener("click", function(ev) {
         return;
     }
 
-    if (target.getAttribute("data-logbook-open") === "1") {
+    if (target.getAttribute("data-logbuch-open") === "1") {
         ev.preventDefault();
         ev.stopPropagation();
         openLogbuchOverlay();
         return;
     }
 
-    var directType = target.getAttribute("data-logbook-direct");
+    var directType = target.getAttribute("data-logbuch-direct");
 
     if (!directType && target.closest) {
-        var directButton = target.closest("[data-logbook-direct]");
+        var directButton = target.closest("[data-logbuch-direct]");
         if (directButton) {
-            directType = directButton.getAttribute("data-logbook-direct");
+            directType = directButton.getAttribute("data-logbuch-direct");
         }
     }
 
@@ -192,7 +192,7 @@ function openLogbuchOverlay() {
 
             '<div class="logbuchHeader">' +
                 '<h2>Logbucheintrag</h2>' +
-                '<button type="button" id="logbookCloseTop" class="logbookCloseButton">×</button>' +
+                '<button type="button" id="logbuchCloseTop" class="logbuchCloseButton">×</button>' +
             '</div>' +
 
             '<div class="logbuchMainLayout">' +
@@ -225,31 +225,31 @@ function openLogbuchOverlay() {
 
                     '<div class="logbuchExportRow">' +
 
-                        '<button type="button" id="logbookExportToday" class="logbuchMiniButton">' +
+                        '<button type="button" id="logbuchExportToday" class="logbuchMiniButton">' +
                             'KMZ Heute' +
                         '</button>' +
 
-                        '<button type="button" id="logbookExportTrip" class="logbuchMiniButton">' +
+                        '<button type="button" id="logbuchExportTrip" class="logbuchMiniButton">' +
                             'Törn Export' +
                         '</button>' +
 
-                        '<button type="button" id="logbookTripStart" class="logbuchMiniButton">' +
+                        '<button type="button" id="logbuchTripStart" class="logbuchMiniButton">' +
                             'Törn Start' +
                         '</button>' +
 
-                        '<button type="button" id="logbookTripEnd" class="logbuchMiniButton">' +
+                        '<button type="button" id="logbuchTripEnd" class="logbuchMiniButton">' +
                             'Törn Ende' +
                         '</button>' +
 
                     '</div>' +
 
-                    '<div class="logbuchSectionTitle logbookHistoryTitle">Anmerkung / Freitext</div>' +
+                    '<div class="logbuchSectionTitle logbuchHistoryTitle">Anmerkung / Freitext</div>' +
 
                     '<div class="logbuchTextRow">' +
 
-                        '<textarea id="logbookText" placeholder="Freitext / Bemerkung eingeben..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>' +
+                        '<textarea id="logbuchText" placeholder="Freitext / Bemerkung eingeben..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>' +
 
-                        '<button type="button" id="logbookSaveManual" class="logbookVerticalSave">' +
+                        '<button type="button" id="logbuchSaveManual" class="logbuchVerticalSave">' +
                             '<span>Speichern</span>' +
                         '</button>' +
 
@@ -294,7 +294,7 @@ function openLogbuchOverlay() {
         }, false);
     }
 
-    var textField = document.getElementById("logbookText");
+    var textField = document.getElementById("logbuchText");
     // Kein automatischer Fokus:
     // Auf Tablets würde sonst sofort die Bildschirmtastatur öffnen.
 
@@ -306,36 +306,36 @@ function openLogbuchOverlay() {
         }, false);
     });
 
-    document.getElementById("logbookSaveManual").addEventListener("click", function(e) {
+    document.getElementById("logbuchSaveManual").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         saveLogbuchEntry("manual");
     }, false);
-    document.getElementById("logbookCloseTop").addEventListener("click", function(e) {
+    document.getElementById("logbuchCloseTop").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         overlay.remove();
     }, false);
 
-    document.getElementById("logbookExportToday").addEventListener("click", function(e) {
+    document.getElementById("logbuchExportToday").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         exportTodayKmz();
     }, false);
 
-    document.getElementById("logbookExportTrip").addEventListener("click", function(e) {
+    document.getElementById("logbuchExportTrip").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         exportTripKmz();
     }, false);
 
-    document.getElementById("logbookTripStart").addEventListener("click", function(e) {
+    document.getElementById("logbuchTripStart").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         saveLogbuchEntry("trip_start");
     }, false);
 
-    document.getElementById("logbookTripEnd").addEventListener("click", function(e) {
+    document.getElementById("logbuchTripEnd").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         saveLogbuchEntry("trip_end");
@@ -380,7 +380,7 @@ function saveDirectLogbuchEntry(type) {
 }
 
 function saveLogbuchEntry(type) {
-    var textField = document.getElementById("logbookText");
+    var textField = document.getElementById("logbuchText");
     var text = textField ? (textField.value || "") : "";
 
     setLogbuchStatus("Speichere...", "info");
@@ -416,11 +416,11 @@ function saveLogbuchEntry(type) {
              * z. B. Motor an, obwohl Motor bereits läuft.
              */
             setLogbuchStatus(data.message || "Aktion nicht möglich", "warning");
-            console.warn("logbook warning", data);
+            console.warn("logbuch warning", data);
         })
         .catch(function(err) {
             setLogbuchStatus("Fehler beim Speichern", "error");
-            console.error("logbook request error", err);
+            console.error("logbuch request error", err);
         });
 }
 
@@ -446,7 +446,7 @@ function loadLogbuchEntries() {
         })
         .catch(function(err) {
             target.innerHTML = "Fehler beim Laden der Einträge.";
-            console.error("logbook list error", err);
+            console.error("logbuch list error", err);
         });
 }
 

@@ -41,9 +41,9 @@ Rollback
 Beispiel:
 
 rm -rf /home/pi/avnav/data/plugins/logbuch
-cp -a /home/pi/avnav/data/plugin-backups/logbook.backup.YYYY-MM-DD-HHMMSS /home/pi/avnav/data/plugins/logbuch
+cp -a /home/pi/avnav/data/plugin-backups/logbuch.backup.YYYY-MM-DD-HHMMSS /home/pi/avnav/data/plugins/logbuch
 sudo systemctl restart avnav
 Prüfung
-tail -n 100 /home/pi/avnav/data/log/avnav.log | grep -i logbook
+tail -n 100 /home/pi/avnav/data/log/avnav.log | grep -i logbuch
 curl http://localhost:8080/plugins/user-logbuch/plugin.js | head
 

@@ -34,7 +34,7 @@
     font-weight: 700;
 }
 
-.logbookCloseButton {
+.logbuchCloseButton {
     width: 34px;
     height: 34px;
     border: none;
@@ -118,7 +118,7 @@
     letter-spacing: 0.04em;
 }
 
-.logbookHistoryTitle {
+.logbuchHistoryTitle {
     margin-top: 0;
 }
 
@@ -148,8 +148,8 @@
 }
 
 .logbuchToggleButton:active,
-.logbookActions button:active,
-.logbookOpenButton:active {
+.logbuchActions button:active,
+.logbuchOpenButton:active {
     transform: scale(0.97);
 }
 
@@ -190,7 +190,7 @@
     background: linear-gradient(145deg, #a9520a, #6e2f05);
 }
 
-.logbookOpenButton {
+.logbuchOpenButton {
     width: 100%;
     min-height: 58px;
     border: none;
@@ -211,7 +211,7 @@
     align-items: stretch;
 }
 
-#logbookText {
+#logbuchText {
     width: 100%;
     min-height: 108px;
     resize: vertical;
@@ -224,7 +224,7 @@
     font-size: 0.95rem;
 }
 
-.logbookVerticalSave {
+.logbuchVerticalSave {
     border: 1px solid rgba(255,255,255,0.14);
     border-radius: 9px;
     background: linear-gradient(145deg, #3b82f6, #1d4ed8);
@@ -246,7 +246,7 @@
     padding: 4px;
 }
 
-.logbookVerticalSave:active {
+.logbuchVerticalSave:active {
     transform: rotate(180deg) scale(0.97);
 }
 

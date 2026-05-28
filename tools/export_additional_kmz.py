@@ -197,7 +197,7 @@ def find_logbuch_file(logbuch_dir, date_dash, date_compact):
         YYYYMMDD_logbuch.jsonl
 
     und unterstützt zusätzlich:
-        logbook-YYYY-MM-DD.jsonl
+        logbuch-YYYY-MM-DD.jsonl
     """
 
     preferred = (
@@ -207,7 +207,7 @@ def find_logbuch_file(logbuch_dir, date_dash, date_compact):
 
     legacy = (
         logbuch_dir /
-        f"logbook-{date_dash}.jsonl"
+        f"logbuch-{date_dash}.jsonl"
     )
 
     if preferred.exists():
@@ -217,7 +217,7 @@ def find_logbuch_file(logbuch_dir, date_dash, date_compact):
         return legacy
 
     raise FileNotFoundError(
-        f"No logbook file found:\n"
+        f"No logbuch file found:\n"
         f"  {preferred}\n"
         f"  {legacy}"
     )
@@ -253,7 +253,7 @@ def read_logbuch(path):
 
             except Exception as error:
                 print(
-                    f"WARNING: invalid logbook line "
+                    f"WARNING: invalid logbuch line "
                     f"{path}:{line_number}: {error}"
                 )
 

@@ -54,7 +54,7 @@ git diff
 Aenderungen uebernehmen:
 ```bash
 git add .
-git commit -m "Add initial logbook widget"
+git commit -m "Add initial logbuch widget"
 ```
 Version markieren:
 ```bash

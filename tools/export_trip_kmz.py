@@ -6,8 +6,8 @@ Erzeugt eine gemeinsame KMZ-Datei für mehrere Tage.
 
 Input je Tag:
 - tracks/YYYY-MM-DD.gpx
-- logbook/YYYYMMDD_logbuch.jsonl
-- fallback: logbook/logbook-YYYY-MM-DD.jsonl
+- logbuch/YYYYMMDD_logbuch.jsonl
+- fallback: logbuch/logbuch-YYYY-MM-DD.jsonl
 
 Output:
 - overlays/YYYYMMDD-YYYYMMDD_toern_logbuch.kmz
@@ -414,7 +414,7 @@ def main():
                 date_compact,
             )
         except FileNotFoundError:
-            print(f"SKIP: no logbook file for {date_dash}")
+            print(f"SKIP: no logbuch file for {date_dash}")
             continue
 
         if not gpx_file.exists():

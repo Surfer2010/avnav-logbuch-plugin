@@ -56,7 +56,7 @@ Benötigte Tools
 
 Die Export-Scripts werden durch tools/install_or_update.sh installiert nach:
 
-AVNAV_DATA_DIR/logbook-tools
+AVNAV_DATA_DIR/logbuch-tools
 
 Darin liegen unter anderem:
 

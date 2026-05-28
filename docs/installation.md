@@ -23,7 +23,7 @@ systemctl restart avnav
 ```
 Pruefen
 ```bash
-journalctl -u avnav -n 100 --no-pager | grep -i logbook
+journalctl -u avnav -n 100 --no-pager | grep -i logbuch
 ```
 Erwartete Ausgabe enthaelt ungefaehr:
 ```text

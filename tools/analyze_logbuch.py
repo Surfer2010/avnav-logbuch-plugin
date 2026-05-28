@@ -2,11 +2,11 @@
 """
 Analyze AVNav Logbuch JSONL files.
 
-This script reads one or more JSONL logbook files and calculates:
+This script reads one or more JSONL logbuch files and calculates:
 - motor runtime
 - sailing time
 - anchor time
-- number of logbook entries
+- number of logbuch entries
 - open intervals
 
 The script currently works event-based:
@@ -230,9 +230,9 @@ def write_markdown(result, output_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Analyze AVNav Logbuch JSONL files")
-    parser.add_argument("files", nargs="+", help="JSONL logbook files")
-    parser.add_argument("--json", default="exports/logbook-analysis.json", help="JSON output path")
-    parser.add_argument("--markdown", default="exports/logbook-analysis.md", help="Markdown output path")
+    parser.add_argument("files", nargs="+", help="JSONL logbuch files")
+    parser.add_argument("--json", default="exports/logbuch-analysis.json", help="JSON output path")
+    parser.add_argument("--markdown", default="exports/logbuch-analysis.md", help="Markdown output path")
 
     args = parser.parse_args()
 

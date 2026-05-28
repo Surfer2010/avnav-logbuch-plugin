@@ -146,7 +146,7 @@ def create_testdata():
     - ein Logbuch mit Motor, Segel, Anker, Notiz
     """
 
-    logbuch_dir = TEST_AVNAV_DATA / "logbook"
+    logbuch_dir = TEST_AVNAV_DATA / "logbuch"
     tracks_dir = TEST_AVNAV_DATA / "tracks"
 
     logbuch_dir.mkdir(parents=True, exist_ok=True)

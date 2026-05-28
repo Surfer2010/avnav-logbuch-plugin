@@ -3,7 +3,7 @@
 Zentrales Menü:
 
 ```bash
-python3 tools/logbook_manager.py
+python3 tools/logbuch_manager.py
 Funktionen
 KMZ für ein bestimmtes Datum erzeugen
 KMZ für heute erzeugen
@@ -24,7 +24,7 @@ Ausgabe:
 Vorhandene KMZ-Dateien werden überschrieben.
 
 Testdaten
-python3 tools/logbook_manager.py
+python3 tools/logbuch_manager.py
 
 Dann Option:
 
@@ -52,7 +52,7 @@ python3 tools/export_trip_kmz.py \
 
 Über Menü:
 
-python3 tools/logbook_manager.py
+python3 tools/logbuch_manager.py
 
 Dann Option:
 
@@ -71,7 +71,7 @@ python3 tools/export_trip_kmz.py \
 
 Über Menü:
 
-python3 tools/logbook_manager.py
+python3 tools/logbuch_manager.py
 
 Dann Option:
 
@@ -90,7 +90,7 @@ python3 tools/export_trip_kmz.py \
 
 Über Menü:
 
-python3 tools/logbook_manager.py
+python3 tools/logbuch_manager.py
 
 Dann Option:
 

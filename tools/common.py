@@ -52,7 +52,7 @@ def detect_avnav_data_dir(cli_value=None):
 
 
 def get_logbuch_dir(avnav_data_dir):
-    return Path(avnav_data_dir) / "logbook"
+    return Path(avnav_data_dir) / "logbuch"
 
 
 def get_tracks_dir(avnav_data_dir):

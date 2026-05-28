@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# AVNav Logbuch Plugin installer/updater
-#
-# Installs from:
-# - extracted release ZIP: user-logbuch/tools/install_or_update.sh
-# - git checkout: tools/install_or_update.sh
-#
-# It removes legacy plugin directories from the active AVNav plugin path.
-# It does not delete logbook data files.
-
 TARGET_DIR=""
 RESTART_AVNAV="yes"
 
@@ -36,11 +27,6 @@ done
 
 echo "AVNav Logbuch Plugin installer/updater"
 
-if ! command -v unzip >/dev/null 2>&1; then
-    echo "ERROR: unzip is required."
-    exit 1
-fi
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 if [ -f "${SCRIPT_DIR}/../plugin.py" ]; then
@@ -51,10 +37,6 @@ elif [ -d "${SCRIPT_DIR}/../logbuch" ] && [ -f "${SCRIPT_DIR}/../logbuch/plugin.
     TOOLS_SOURCE_DIR="${SCRIPT_DIR}"
 else
     echo "ERROR: Could not find plugin source directory."
-    echo "Expected either:"
-    echo "  ${SCRIPT_DIR}/../plugin.py"
-    echo "or:"
-    echo "  ${SCRIPT_DIR}/../logbuch/plugin.py"
     exit 1
 fi
 
@@ -91,28 +73,44 @@ echo "Backup directory: ${BACKUP_DIR}"
 mkdir -p "${PLUGIN_PARENT_DIR}"
 mkdir -p "${BACKUP_DIR}"
 
+if [ -d "${AVNAV_DATA_DIR}/logbook" ] && [ ! -d "${AVNAV_DATA_DIR}/logbuch" ]; then
+    echo "Migrating data directory: ${AVNAV_DATA_DIR}/logbook -> ${AVNAV_DATA_DIR}/logbuch"
+    mv "${AVNAV_DATA_DIR}/logbook" "${AVNAV_DATA_DIR}/logbuch"
+fi
+
+if [ -d "${AVNAV_DATA_DIR}/logbook-tools" ] && [ ! -d "${AVNAV_DATA_DIR}/logbuch-tools" ]; then
+    echo "Migrating tools directory: ${AVNAV_DATA_DIR}/logbook-tools -> ${AVNAV_DATA_DIR}/logbuch-tools"
+    mv "${AVNAV_DATA_DIR}/logbook-tools" "${AVNAV_DATA_DIR}/logbuch-tools"
+fi
+
+if [ -d "${AVNAV_DATA_DIR}/logbuch" ]; then
+    for OLD_FILE in "${AVNAV_DATA_DIR}"/logbuch/logbook-*.jsonl; do
+        if [ -e "${OLD_FILE}" ]; then
+            NEW_FILE="$(dirname "${OLD_FILE}")/$(basename "${OLD_FILE}" | sed 's/^logbook-/logbuch-/')"
+            if [ ! -e "${NEW_FILE}" ]; then
+                echo "Migrating log file: ${OLD_FILE} -> ${NEW_FILE}"
+                mv "${OLD_FILE}" "${NEW_FILE}"
+            fi
+        fi
+    done
+fi
+
 if [ -d "${TARGET_DIR}" ]; then
     BACKUP_PATH="${BACKUP_DIR}/logbuch.backup.${STAMP}"
     echo "Creating plugin backup: ${BACKUP_PATH}"
     cp -a "${TARGET_DIR}" "${BACKUP_PATH}"
-else
-    echo "No existing logbuch plugin directory found. Skipping logbuch backup."
 fi
 
 if [ -d "${PLUGIN_PARENT_DIR}/logbook" ]; then
-if [ -d "${PLUGIN_PARENT_DIR}/user-logbook" ]; then
-
-    LEGACY_ID_BACKUP="${BACKUP_DIR}/user-logbook.legacy.${STAMP}"
-
-    echo "Moving legacy plugin-id directory to backup: ${LEGACY_ID_BACKUP}"
-
-    mv "${PLUGIN_PARENT_DIR}/user-logbook" "${LEGACY_ID_BACKUP}"
-
-fi
-
     LEGACY_BACKUP="${BACKUP_DIR}/logbook.legacy.${STAMP}"
     echo "Moving legacy plugin to backup: ${LEGACY_BACKUP}"
     mv "${PLUGIN_PARENT_DIR}/logbook" "${LEGACY_BACKUP}"
+fi
+
+if [ -d "${PLUGIN_PARENT_DIR}/user-logbook" ]; then
+    LEGACY_ID_BACKUP="${BACKUP_DIR}/user-logbook.legacy.${STAMP}"
+    echo "Moving legacy plugin-id directory to backup: ${LEGACY_ID_BACKUP}"
+    mv "${PLUGIN_PARENT_DIR}/user-logbook" "${LEGACY_ID_BACKUP}"
 fi
 
 for LEGACY_DISABLED in \
@@ -132,7 +130,6 @@ if [ -f "${AVNAV_DATA_DIR}/avnav_server.xml" ]; then
 fi
 
 rm -rf "${PLUGIN_PARENT_DIR}/logbook" 2>/dev/null || true
-
 rm -rf "${PLUGIN_PARENT_DIR}/user-logbook" 2>/dev/null || true
 
 rm -rf "${TARGET_DIR}"
@@ -143,7 +140,7 @@ chmod 755 "${AVNAV_DATA_DIR}/overlays"
 
 cp -a "${SOURCE_DIR}/." "${TARGET_DIR}/"
 
-TOOLS_TARGET_DIR="${AVNAV_DATA_DIR}/logbook-tools"
+TOOLS_TARGET_DIR="${AVNAV_DATA_DIR}/logbuch-tools"
 echo "Installing tools to: ${TOOLS_TARGET_DIR}"
 rm -rf "${TOOLS_TARGET_DIR}"
 mkdir -p "${TOOLS_TARGET_DIR}"
@@ -167,20 +164,10 @@ else
 fi
 
 echo "Installation/update finished."
-echo "Installed plugin.json:"
 cat "${TARGET_DIR}/plugin.json"
-
-echo ""
-echo "Installed files:"
-find "${TARGET_DIR}" -maxdepth 2 -type f | sort
 
 echo ""
 echo "Useful checks:"
 echo "  find ${PLUGIN_PARENT_DIR} -maxdepth 2 -name plugin.json -print -exec cat {} \\;"
 echo "  curl http://localhost:8080/plugins/user-logbuch/plugin.js | head"
 echo "  curl http://localhost:8080/plugins/user-logbook/plugin.js | head"
-echo ""
-echo "Rollback example:"
-echo "  rm -rf ${TARGET_DIR}"
-echo "  cp -a ${BACKUP_DIR}/logbuch.backup.${STAMP} ${TARGET_DIR}"
-echo "  sudo systemctl restart avnav"
