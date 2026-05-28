@@ -5,7 +5,7 @@ Der KMZ Export kombiniert:
 
 AVNav GPX Tagestrack
 +
-AVNav Logbook JSONL
+AVNav Logbuch JSONL
 
 zu:
 

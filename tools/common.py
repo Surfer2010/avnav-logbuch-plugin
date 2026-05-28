@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Gemeinsame Hilfsfunktionen für AVNav Logbook Tools.
+Gemeinsame Hilfsfunktionen für AVNav Logbuch Tools.
 
 Ziel:
 - einheitliche Pfaderkennung

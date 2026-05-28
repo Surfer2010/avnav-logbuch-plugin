@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AVNav Logbook Manager
+AVNav Logbuch Manager
 
 Zentrales CLI-Menü für wiederkehrende Aufgaben:
 
@@ -293,7 +293,7 @@ def menu():
     while True:
         print()
         print("====================================")
-        print("AVNav Logbook Manager")
+        print("AVNav Logbuch Manager")
         print("====================================")
         print("1  KMZ für Datum erzeugen")
         print("2  KMZ für heute erzeugen")

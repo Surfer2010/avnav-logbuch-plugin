@@ -28,7 +28,7 @@ journalctl -u avnav -n 100 --no-pager | grep -i logbook
 Erwartete Ausgabe enthaelt ungefaehr:
 ```text
 loaded /var/lib/avnav/plugins/logbuch/plugin.py as user-logbuch
-Logbook plugin started
+Logbuch plugin started
 ```
 Frontend pruefen
 Im Browser:
@@ -41,7 +41,7 @@ F12 -> Console
 ```
 Erwartete Ausgabe:
 ```text
-logbook plugin loaded
+logbuch plugin loaded
 ```
 Direkt pruefen
 ```text

@@ -1,4 +1,4 @@
-# AVNav Logbook Plugin
+# AVNav Logbuch Plugin
 
 Erweitertes elektronisches Logbuch für AVNav mit Overlay, direkten Aktions-Widgets, GPX/KMZ-Export und Törn-Auswertung.
 

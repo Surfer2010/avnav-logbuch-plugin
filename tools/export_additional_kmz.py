@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-AVNav Logbook → KMZ Export
+AVNav Logbuch → KMZ Export
 
 Erzeugt eine Google-Earth-/KML-kompatible KMZ-Datei
 aus:
 
 - AVNav GPX Tagestrack
-- AVNav Logbook JSONL
+- AVNav Logbuch JSONL
 
 Funktionen:
 - Motorstrecken
@@ -1055,7 +1055,7 @@ def write_kmz(output_file, kml_content):
 def main():
 
     parser = argparse.ArgumentParser(
-        description="Export AVNav Logbook KMZ"
+        description="Export AVNav Logbuch KMZ"
     )
 
     parser.add_argument(

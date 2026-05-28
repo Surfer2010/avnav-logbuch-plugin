@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Analyze AVNav Logbook JSONL files.
+Analyze AVNav Logbuch JSONL files.
 
 This script reads one or more JSONL logbook files and calculates:
 - motor runtime
@@ -188,7 +188,7 @@ def write_markdown(result, output_path):
     """Write a simple Markdown report."""
     lines = []
 
-    lines.append("# AVNav Logbook Auswertung")
+    lines.append("# AVNav Logbuch Auswertung")
     lines.append("")
     lines.append("## Zusammenfassung")
     lines.append("")
@@ -229,7 +229,7 @@ def write_markdown(result, output_path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze AVNav Logbook JSONL files")
+    parser = argparse.ArgumentParser(description="Analyze AVNav Logbuch JSONL files")
     parser.add_argument("files", nargs="+", help="JSONL logbook files")
     parser.add_argument("--json", default="exports/logbook-analysis.json", help="JSON output path")
     parser.add_argument("--markdown", default="exports/logbook-analysis.md", help="Markdown output path")

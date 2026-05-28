@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AVNav Logbook Multi-Day / Törn KMZ Export
+AVNav Logbuch Multi-Day / Törn KMZ Export
 
 Erzeugt eine gemeinsame KMZ-Datei für mehrere Tage.
 

@@ -1,4 +1,4 @@
-# AVNav Logbook Plugin
+# AVNav Logbuch Plugin
 # Stores digital logbook events as JSONL and optionally writes to InfluxDB v2.
 #
 # Main goals:
@@ -71,7 +71,7 @@ class Plugin(object):
         return {
             'description': 'Digitales Logbuch mit Statusprüfung, Zeitstempel, GPS, SOG, COG, Heading und Freitext.',
             'data': [
-                {'path': cls.LOG_STATUS, 'description': 'Logbook plugin status'},
+                {'path': cls.LOG_STATUS, 'description': 'Logbuch plugin status'},
                 {'path': cls.LOG_COUNT, 'description': 'Number of logbook entries in current runtime'},
                 {'path': cls.LAST_EVENT, 'description': 'Last logbook event type'},
                 {'path': cls.MOTOR_STATE, 'description': 'Current motor state'},
@@ -167,14 +167,14 @@ class Plugin(object):
 
             self._rebuild_state_from_log()
 
-            self.api.log('Logbook plugin started, log_dir=%s' % self.log_dir)
+            self.api.log('Logbuch plugin started, log_dir=%s' % self.log_dir)
             self.api.setStatus('Logbook', 'running')
             self.api.addData(self.LOG_STATUS, 'running')
             self.api.addData(self.LOG_COUNT, self.count)
             self._publish_state()
 
         except Exception as e:
-            self.api.error('Logbook plugin startup error: %s' % str(e))
+            self.api.error('Logbuch plugin startup error: %s' % str(e))
             self.api.setStatus('Logbook', 'error')
 
             try:
