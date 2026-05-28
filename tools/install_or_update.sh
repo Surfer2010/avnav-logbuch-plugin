@@ -51,11 +51,11 @@ if [ -z "${TARGET_DIR}" ]; then
         AVNAV_DATA_DIR="/var/lib/avnav"
     else
         echo "ERROR: Could not detect AVNav data directory."
-        echo "Use --target /path/to/plugins/user-logbuch"
+        echo "Use --target /path/to/plugins/logbuch"
         exit 1
     fi
 
-    TARGET_DIR="${AVNAV_DATA_DIR}/plugins/user-logbuch"
+    TARGET_DIR="${AVNAV_DATA_DIR}/plugins/logbuch"
 else
     AVNAV_DATA_DIR="$(dirname "$(dirname "${TARGET_DIR}")")"
 fi
@@ -107,6 +107,12 @@ if [ -d "${PLUGIN_PARENT_DIR}/logbook" ]; then
     mv "${PLUGIN_PARENT_DIR}/logbook" "${LEGACY_BACKUP}"
 fi
 
+if [ -d "${PLUGIN_PARENT_DIR}/user-logbuch" ]; then
+    LEGACY_USER_LOGBUCH_BACKUP="${BACKUP_DIR}/user-logbuch.legacy.${STAMP}"
+    echo "Moving legacy user-logbuch plugin directory to backup: ${LEGACY_USER_LOGBUCH_BACKUP}"
+    mv "${PLUGIN_PARENT_DIR}/user-logbuch" "${LEGACY_USER_LOGBUCH_BACKUP}"
+fi
+
 if [ -d "${PLUGIN_PARENT_DIR}/user-logbook" ]; then
     LEGACY_ID_BACKUP="${BACKUP_DIR}/user-logbook.legacy.${STAMP}"
     echo "Moving legacy plugin-id directory to backup: ${LEGACY_ID_BACKUP}"
@@ -130,6 +136,7 @@ if [ -f "${AVNAV_DATA_DIR}/avnav_server.xml" ]; then
 fi
 
 rm -rf "${PLUGIN_PARENT_DIR}/logbook" 2>/dev/null || true
+rm -rf "${PLUGIN_PARENT_DIR}/user-logbuch" 2>/dev/null || true
 rm -rf "${PLUGIN_PARENT_DIR}/user-logbook" 2>/dev/null || true
 
 rm -rf "${TARGET_DIR}"
@@ -169,5 +176,5 @@ cat "${TARGET_DIR}/plugin.json"
 echo ""
 echo "Useful checks:"
 echo "  find ${PLUGIN_PARENT_DIR} -maxdepth 2 -name plugin.json -print -exec cat {} \\;"
-echo "  curl http://localhost:8080/plugins/user-logbuch/plugin.js | head"
+echo "  curl http://localhost:8080/plugins/logbuch/plugin.js | head"
 echo "  curl http://localhost:8080/plugins/user-logbook/plugin.js | head"
