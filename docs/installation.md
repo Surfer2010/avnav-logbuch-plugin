@@ -6,18 +6,18 @@ Bei einer AVNav-Installation ueber Debian-Paket liegt das Datenverzeichnis typis
 ```
 Das Plugin wird installiert nach:
 ```text
-/var/lib/avnav/plugins/logbook
+/var/lib/avnav/plugins/logbuch
 ```
 Installation
 ```bash
-mkdir -p /var/lib/avnav/plugins/logbook
+mkdir -p /var/lib/avnav/plugins/logbuch
 
-cp logbook/plugin.py /var/lib/avnav/plugins/logbook/
-cp logbook/plugin.js /var/lib/avnav/plugins/logbook/
-cp logbook/plugin.css /var/lib/avnav/plugins/logbook/
+cp logbuch/plugin.py /var/lib/avnav/plugins/logbuch/
+cp logbuch/plugin.js /var/lib/avnav/plugins/logbuch/
+cp logbuch/plugin.css /var/lib/avnav/plugins/logbuch/
 
-chown -R avnav:avnav /var/lib/avnav/plugins/logbook
-chmod -R 755 /var/lib/avnav/plugins/logbook
+chown -R avnav:avnav /var/lib/avnav/plugins/logbuch
+chmod -R 755 /var/lib/avnav/plugins/logbuch
 
 systemctl restart avnav
 ```
@@ -27,7 +27,7 @@ journalctl -u avnav -n 100 --no-pager | grep -i logbook
 ```
 Erwartete Ausgabe enthaelt ungefaehr:
 ```text
-loaded /var/lib/avnav/plugins/logbook/plugin.py as user-logbook
+loaded /var/lib/avnav/plugins/logbuch/plugin.py as user-logbuch
 Logbook plugin started
 ```
 Frontend pruefen
@@ -45,5 +45,5 @@ logbook plugin loaded
 ```
 Direkt pruefen
 ```text
-http://AVNAV-IP:8080/plugins/user-logbook/plugin.js
+http://AVNAV-IP:8080/plugins/user-logbuch/plugin.js
 ```

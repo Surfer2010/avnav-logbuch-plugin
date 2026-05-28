@@ -134,15 +134,15 @@ WebUI/API Export
 
 Asynchroner Tagesexport:
 
-curl "http://localhost:8080/plugins/user-logbook/api/exportKmz?date=2026-05-24"
+curl "http://localhost:8080/plugins/user-logbuch/api/exportKmz?date=2026-05-24"
 
 Asynchroner Törnexport:
 
-curl "http://localhost:8080/plugins/user-logbook/api/exportTripKmz?from=2026-05-21&to=2026-05-24"
+curl "http://localhost:8080/plugins/user-logbuch/api/exportTripKmz?from=2026-05-21&to=2026-05-24"
 
 Jobstatus:
 
-curl "http://localhost:8080/plugins/user-logbook/api/exportStatus"
+curl "http://localhost:8080/plugins/user-logbuch/api/exportStatus"
 
 
 Overlay Export Buttons

@@ -13,7 +13,7 @@ set -euo pipefail
 #   ./tools/install_or_update.sh
 #   ./tools/install_or_update.sh --branch main
 #   ./tools/install_or_update.sh --branch fix/responsive-overlay-input-button
-#   ./tools/install_or_update.sh --target /home/pi/avnav/data/plugins/logbook
+#   ./tools/install_or_update.sh --target /home/pi/avnav/data/plugins/logbuch
 #   ./tools/install_or_update.sh --no-restart
 #
 # Notes:
@@ -74,11 +74,11 @@ if [ -z "${TARGET_DIR}" ]; then
         AVNAV_DATA_DIR="/var/lib/avnav"
     else
         echo "ERROR: Could not detect AVNav data directory."
-        echo "Use --target /path/to/plugins/logbook"
+        echo "Use --target /path/to/plugins/logbuch"
         exit 1
     fi
 
-    TARGET_DIR="${AVNAV_DATA_DIR}/plugins/logbook"
+    TARGET_DIR="${AVNAV_DATA_DIR}/plugins/logbuch"
 else
     AVNAV_DATA_DIR="$(dirname "$(dirname "${TARGET_DIR}")")"
 fi
@@ -181,7 +181,7 @@ find "${TARGET_DIR}" -maxdepth 2 -type f | sort
 echo ""
 echo "Useful checks:"
 echo "  tail -n 100 ${AVNAV_DATA_DIR}/log/avnav.log | grep -i logbook"
-echo "  curl http://localhost:8080/plugins/user-logbook/plugin.js | head"
+echo "  curl http://localhost:8080/plugins/user-logbuch/plugin.js | head"
 echo ""
 echo "Rollback example:"
 echo "  rm -rf ${TARGET_DIR}"

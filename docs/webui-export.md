@@ -5,11 +5,11 @@ Das Plugin stellt asynchrone Export-Endpunkte bereit.
 ## Tages-KMZ erzeugen
 
 ```bash
-curl "http://localhost:8080/plugins/user-logbook/api/exportKmz?date=2026-05-24"
+curl "http://localhost:8080/plugins/user-logbuch/api/exportKmz?date=2026-05-24"
 
 Ohne Datum wird der aktuelle UTC-Tag verwendet:
 
-curl "http://localhost:8080/plugins/user-logbook/api/exportKmz"
+curl "http://localhost:8080/plugins/user-logbuch/api/exportKmz"
 
 Antwort enthält eine Job-ID:
 
@@ -23,16 +23,16 @@ Antwort enthält eine Job-ID:
   }
 }
 Törn-KMZ erzeugen
-curl "http://localhost:8080/plugins/user-logbook/api/exportTripKmz?from=2026-05-21&to=2026-05-24"
+curl "http://localhost:8080/plugins/user-logbuch/api/exportTripKmz?from=2026-05-21&to=2026-05-24"
 Jobstatus abfragen
 
 Alle Jobs:
 
-curl "http://localhost:8080/plugins/user-logbook/api/exportStatus"
+curl "http://localhost:8080/plugins/user-logbuch/api/exportStatus"
 
 Ein einzelner Job:
 
-curl "http://localhost:8080/plugins/user-logbook/api/exportStatus?job=JOB_ID"
+curl "http://localhost:8080/plugins/user-logbuch/api/exportStatus?job=JOB_ID"
 Ausgabeorte
 
 Tages-KMZ:
@@ -212,7 +212,7 @@ kein trip_start vorhanden:
 
 API:
 
-curl "http://localhost:8080/plugins/user-logbook/api/exportCurrentTripKmz"
+curl "http://localhost:8080/plugins/user-logbuch/api/exportCurrentTripKmz"
 
 Die erzeugte KMZ wird wie alle Overlays nach AVNAV_DATA_DIR/overlays/ geschrieben und vorhandene Dateien werden überschrieben.
 
