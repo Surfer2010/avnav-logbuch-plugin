@@ -27,7 +27,7 @@ ln -s /var/lib/avnav /home/pi/avnav/data
 
 Prüfen:
 
-ls -lah /home/pi/avnav/data/logbook
+ls -lah /home/pi/avnav/data/logbuch
 ls -lah /home/pi/avnav/data/tracks
 Umgebungsvariable
 
@@ -40,12 +40,12 @@ Danach können Tools ohne --avnav-data aufgerufen werden:
 python3 tools/export_additional_kmz.py --date 2026-05-24
 Verzeichnisstruktur
 AVNAV_DATA_DIR/
-├── logbook/
+├── logbuch/
 │   ├── YYYYMMDD_logbuch.jsonl
-│   └── logbook-YYYY-MM-DD.jsonl
+│   └── logbuch-YYYY-MM-DD.jsonl
 ├── tracks/
 │   ├── YYYY-MM-DD.gpx
 │   └── YYYYMMDD_logbuch.kmz
 └── plugins/
-    └── logbook/
+    └── logbuch/
 

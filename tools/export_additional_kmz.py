@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-AVNav Logbook → KMZ Export
+AVNav Logbuch → KMZ Export
 
 Erzeugt eine Google-Earth-/KML-kompatible KMZ-Datei
 aus:
 
 - AVNav GPX Tagestrack
-- AVNav Logbook JSONL
+- AVNav Logbuch JSONL
 
 Funktionen:
 - Motorstrecken
@@ -31,7 +31,7 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
-from common import detect_avnav_data_dir, get_logbook_dir, get_tracks_dir, get_overlays_dir, print_detected_paths
+from common import detect_avnav_data_dir, get_logbuch_dir, get_tracks_dir, get_overlays_dir, print_detected_paths
 from xml.etree import ElementTree as ET
 
 
@@ -191,23 +191,23 @@ def calculate_track_metrics(points, duration_seconds):
     }
 
 
-def find_logbook_file(logbook_dir, date_dash, date_compact):
+def find_logbuch_file(logbuch_dir, date_dash, date_compact):
     """
     Sucht bevorzugt:
         YYYYMMDD_logbuch.jsonl
 
     und unterstützt zusätzlich:
-        logbook-YYYY-MM-DD.jsonl
+        logbuch-YYYY-MM-DD.jsonl
     """
 
     preferred = (
-        logbook_dir /
+        logbuch_dir /
         f"{date_compact}_logbuch.jsonl"
     )
 
     legacy = (
-        logbook_dir /
-        f"logbook-{date_dash}.jsonl"
+        logbuch_dir /
+        f"logbuch-{date_dash}.jsonl"
     )
 
     if preferred.exists():
@@ -217,13 +217,13 @@ def find_logbook_file(logbook_dir, date_dash, date_compact):
         return legacy
 
     raise FileNotFoundError(
-        f"No logbook file found:\n"
+        f"No logbuch file found:\n"
         f"  {preferred}\n"
         f"  {legacy}"
     )
 
 
-def read_logbook(path):
+def read_logbuch(path):
     """
     Lädt JSONL-Logbuchdatei.
 
@@ -253,7 +253,7 @@ def read_logbook(path):
 
             except Exception as error:
                 print(
-                    f"WARNING: invalid logbook line "
+                    f"WARNING: invalid logbuch line "
                     f"{path}:{line_number}: {error}"
                 )
 
@@ -1055,7 +1055,7 @@ def write_kmz(output_file, kml_content):
 def main():
 
     parser = argparse.ArgumentParser(
-        description="Export AVNav Logbook KMZ"
+        description="Export AVNav Logbuch KMZ"
     )
 
     parser.add_argument(
@@ -1097,12 +1097,12 @@ def main():
     avnav_data = detect_avnav_data_dir(args.avnav_data)
     tracks_dir = get_tracks_dir(avnav_data)
     overlays_dir = get_overlays_dir(avnav_data)
-    logbook_dir = get_logbook_dir(avnav_data)
+    logbuch_dir = get_logbuch_dir(avnav_data)
 
     gpx_file = tracks_dir / f"{date_dash}.gpx"
 
-    logbook_file = find_logbook_file(
-        logbook_dir,
+    logbuch_file = find_logbuch_file(
+        logbuch_dir,
         date_dash,
         date_compact,
     )
@@ -1115,7 +1115,7 @@ def main():
             f"{date_compact}_logbuch.kmz"
         )
 
-    entries = read_logbook(logbook_file)
+    entries = read_logbuch(logbuch_file)
     track_points = read_gpx_points(gpx_file)
 
     intervals, anchors, notes, warnings = build_intervals(
@@ -1132,10 +1132,10 @@ def main():
 
     print_detected_paths(avnav_data)
     print(f"Date: {date_dash}")
-    print(f"Logbook file: {logbook_file}")
+    print(f"Logbuch file: {logbuch_file}")
     print(f"GPX file: {gpx_file}")
     print(f"Output: {output_file}")
-    print(f"Logbook entries: {len(entries)}")
+    print(f"Logbuch entries: {len(entries)}")
     print(f"Track points: {len(track_points)}")
     print(f"Intervals: {len(intervals)}")
     print(f"Anchor points: {len(anchors)}")

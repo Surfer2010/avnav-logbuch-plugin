@@ -28,9 +28,9 @@ Buttons und Statusanzeige formatieren
 Entwicklungsablauf
 Nach Aenderungen an einer Datei:
 ```bash
-cp logbook/plugin.js /var/lib/avnav/plugins/logbook/
-cp logbook/plugin.py /var/lib/avnav/plugins/logbook/
-cp logbook/plugin.css /var/lib/avnav/plugins/logbook/
+cp logbuch/plugin.js /var/lib/avnav/plugins/logbuch/
+cp logbuch/plugin.py /var/lib/avnav/plugins/logbuch/
+cp logbuch/plugin.css /var/lib/avnav/plugins/logbuch/
 systemctl restart avnav
 ```
 Browser hart neu laden:
@@ -54,7 +54,7 @@ git diff
 Aenderungen uebernehmen:
 ```bash
 git add .
-git commit -m "Add initial logbook widget"
+git commit -m "Add initial logbuch widget"
 ```
 Version markieren:
 ```bash

@@ -1,7 +1,7 @@
-console.log("logbook plugin loaded");
+console.log("logbuch plugin loaded");
 
 /*
- * AVNav Logbook Frontend
+ * AVNav Logbuch Frontend
  *
  * Funktionen:
  * - AVNav Widget mit Logbuch-Button
@@ -11,7 +11,7 @@ console.log("logbook plugin loaded");
  * - sichtbare Warnungen bei ungültigen Aktionen
  */
 
-var logbookWidget = {
+var logbuchWidget = {
     name: "logbuch_b_popup",
 
     storeKeys: {
@@ -23,8 +23,8 @@ var logbookWidget = {
 
     renderHtml: function(props) {
         return (
-            '<div class="widgetData logbookWidgetData">' +
-                '<button type="button" class="logbookOpenButton" data-logbook-open="1">' +
+            '<div class="widgetData logbuchWidgetData">' +
+                '<button type="button" class="logbuchOpenButton" data-logbuch-open="1">' +
                     'Logbuch' +
                 '</button>' +
             '</div>'
@@ -32,12 +32,12 @@ var logbookWidget = {
     }
 };
 
-avnav.api.registerWidget(logbookWidget);
+avnav.api.registerWidget(logbuchWidget);
 
-function logbookIconSvg(iconName) {
+function logbuchIconSvg(iconName) {
     var icons = {
         "motor-an":
-            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
+            '<svg viewBox="0 0 64 64" class="logbuchDirectSvg">' +
             '<path d="M18 28h6v-8h18v6h6c4 0 7 3 7 7v10c0 4-3 7-7 7h-6v5H24v-5h-6c-4 0-7-3-7-7V33c0-4 3-5 7-5z"/>' +
             '<rect x="25" y="12" width="15" height="7" rx="2"/>' +
             '<rect x="5" y="31" width="7" height="15" rx="2"/>' +
@@ -45,60 +45,60 @@ function logbookIconSvg(iconName) {
             '</svg>',
 
         "motor-aus":
-            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
+            '<svg viewBox="0 0 64 64" class="logbuchDirectSvg">' +
             '<path d="M18 28h6v-8h18v6h6c4 0 7 3 7 7v10c0 4-3 7-7 7h-6v5H24v-5h-6c-4 0-7-3-7-7V33c0-4 3-5 7-5z"/>' +
             '<rect x="25" y="12" width="15" height="7" rx="2"/>' +
             '<rect x="5" y="31" width="7" height="15" rx="2"/>' +
             '<rect x="55" y="31" width="5" height="15" rx="2"/>' +
-            '<path d="M9 58 L58 9" class="logbookDirectStroke"/>' +
+            '<path d="M9 58 L58 9" class="logbuchDirectStroke"/>' +
             '</svg>',
 
         "segel-hoch":
-            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
+            '<svg viewBox="0 0 64 64" class="logbuchDirectSvg">' +
             '<path d="M15 50h28c-2 5-7 7-14 7s-12-2-14-7z"/>' +
             '<path d="M28 12v37h-15c3-14 8-26 15-37z"/>' +
             '<path d="M31 16v33h15c-2-12-7-23-15-33z"/>' +
-            '<path d="M51 48V22" class="logbookDirectStroke"/>' +
-            '<path d="M42 31l9-9 9 9" class="logbookDirectStroke"/>' +
+            '<path d="M51 48V22" class="logbuchDirectStroke"/>' +
+            '<path d="M42 31l9-9 9 9" class="logbuchDirectStroke"/>' +
             '</svg>',
 
         "segel-runter":
-            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
+            '<svg viewBox="0 0 64 64" class="logbuchDirectSvg">' +
             '<path d="M14 50h29c-2 5-7 7-15 7s-12-2-14-7z"/>' +
             '<path d="M26 31v18H13c2-7 6-13 13-18z"/>' +
-            '<path d="M51 20v26" class="logbookDirectStroke"/>' +
-            '<path d="M42 37l9 9 9-9" class="logbookDirectStroke"/>' +
+            '<path d="M51 20v26" class="logbuchDirectStroke"/>' +
+            '<path d="M42 37l9 9 9-9" class="logbuchDirectStroke"/>' +
             '</svg>',
 
         "anker-ab":
-            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
-            '<circle cx="25" cy="10" r="6" fill="none" class="logbookDirectStroke"/>' +
-            '<path d="M25 16v31" class="logbookDirectStroke"/>' +
-            '<path d="M16 25h18" class="logbookDirectStroke"/>' +
-            '<path d="M14 34c0 13 8 20 11 20s11-7 11-20" fill="none" class="logbookDirectStroke"/>' +
+            '<svg viewBox="0 0 64 64" class="logbuchDirectSvg">' +
+            '<circle cx="25" cy="10" r="6" fill="none" class="logbuchDirectStroke"/>' +
+            '<path d="M25 16v31" class="logbuchDirectStroke"/>' +
+            '<path d="M16 25h18" class="logbuchDirectStroke"/>' +
+            '<path d="M14 34c0 13 8 20 11 20s11-7 11-20" fill="none" class="logbuchDirectStroke"/>' +
             '<path d="M8 39l7-4 2 8" />' +
             '<path d="M42 39l-7-4-2 8" />' +
-            '<path d="M51 23v28" class="logbookDirectStroke"/>' +
-            '<path d="M42 42l9 9 9-9" class="logbookDirectStroke"/>' +
+            '<path d="M51 23v28" class="logbuchDirectStroke"/>' +
+            '<path d="M42 42l9 9 9-9" class="logbuchDirectStroke"/>' +
             '</svg>',
 
         "anker-auf":
-            '<svg viewBox="0 0 64 64" class="logbookDirectSvg">' +
-            '<circle cx="25" cy="10" r="6" fill="none" class="logbookDirectStroke"/>' +
-            '<path d="M25 16v31" class="logbookDirectStroke"/>' +
-            '<path d="M16 25h18" class="logbookDirectStroke"/>' +
-            '<path d="M14 34c0 13 8 20 11 20s11-7 11-20" fill="none" class="logbookDirectStroke"/>' +
+            '<svg viewBox="0 0 64 64" class="logbuchDirectSvg">' +
+            '<circle cx="25" cy="10" r="6" fill="none" class="logbuchDirectStroke"/>' +
+            '<path d="M25 16v31" class="logbuchDirectStroke"/>' +
+            '<path d="M16 25h18" class="logbuchDirectStroke"/>' +
+            '<path d="M14 34c0 13 8 20 11 20s11-7 11-20" fill="none" class="logbuchDirectStroke"/>' +
             '<path d="M8 39l7-4 2 8" />' +
             '<path d="M42 39l-7-4-2 8" />' +
-            '<path d="M51 51V23" class="logbookDirectStroke"/>' +
-            '<path d="M42 32l9-9 9 9" class="logbookDirectStroke"/>' +
+            '<path d="M51 51V23" class="logbuchDirectStroke"/>' +
+            '<path d="M42 32l9-9 9 9" class="logbuchDirectStroke"/>' +
             '</svg>'
     };
 
     return icons[iconName] || "";
 }
 
-var logbookActionWidgets = [
+var logbuchActionWidgets = [
     { name: "logbuch_b_motor_an", caption: "Motor an", type: "motor_on", icon: "motor-on" },
     { name: "logbuch_b_motor_aus", caption: "Motor aus", type: "motor_off", icon: "motor-off" },
     { name: "logbuch_b_segel_hoch", caption: "Segel hoch", type: "sail_set", icon: "sail-set" },
@@ -107,16 +107,16 @@ var logbookActionWidgets = [
     { name: "logbuch_b_anker_auf", caption: "Anker auf", type: "anchor_up", icon: "anchor-up" }
 ];
 
-logbookActionWidgets.forEach(function(widget) {
+logbuchActionWidgets.forEach(function(widget) {
     avnav.api.registerWidget({
         name: widget.name,
         caption: widget.caption,
 
         renderHtml: function(props) {
             return (
-                '<div class="widgetData logbookDirectWidgetData" title="' + escapeHtml(widget.caption) + '">' +
-                    '<button type="button" class="logbookDirectButton" data-logbook-direct="' + widget.type + '" aria-label="' + escapeHtml(widget.caption) + '">' +
-                        '<img class="logbookDirectIcon" src="' + iconPath(widget.icon) + '" alt="">' +
+                '<div class="widgetData logbuchDirectWidgetData" title="' + escapeHtml(widget.caption) + '">' +
+                    '<button type="button" class="logbuchDirectButton" data-logbuch-direct="' + widget.type + '" aria-label="' + escapeHtml(widget.caption) + '">' +
+                        '<img class="logbuchDirectIcon" src="' + iconPath(widget.icon) + '" alt="">' +
                     '</button>' +
                 '</div>'
             );
@@ -132,26 +132,26 @@ document.addEventListener("click", function(ev) {
         return;
     }
 
-    if (target.getAttribute("data-logbook-open") === "1") {
+    if (target.getAttribute("data-logbuch-open") === "1") {
         ev.preventDefault();
         ev.stopPropagation();
-        openLogbookOverlay();
+        openLogbuchOverlay();
         return;
     }
 
-    var directType = target.getAttribute("data-logbook-direct");
+    var directType = target.getAttribute("data-logbuch-direct");
 
     if (!directType && target.closest) {
-        var directButton = target.closest("[data-logbook-direct]");
+        var directButton = target.closest("[data-logbuch-direct]");
         if (directButton) {
-            directType = directButton.getAttribute("data-logbook-direct");
+            directType = directButton.getAttribute("data-logbuch-direct");
         }
     }
 
     if (directType) {
         ev.preventDefault();
         ev.stopPropagation();
-        saveDirectLogbookEntry(directType);
+        saveDirectLogbuchEntry(directType);
     }
 }, true);
 
@@ -167,96 +167,96 @@ function iconPath(name) {
     return AVNAV_BASE_URL + "/icons/" + name + ".png";
 }
 
-function setLogbookStatus(message, level) {
-    var status = document.getElementById("logbookStatus");
+function setLogbuchStatus(message, level) {
+    var status = document.getElementById("logbuchStatus");
 
     if (!status) {
         return;
     }
 
-    status.className = "logbookStatus logbookStatus-" + (level || "info");
+    status.className = "logbuchStatus logbuchStatus-" + (level || "info");
     status.innerText = message || "";
 }
 
-function openLogbookOverlay() {
-    var existing = document.getElementById("logbookOverlay");
+function openLogbuchOverlay() {
+    var existing = document.getElementById("logbuchOverlay");
     if (existing) {
         existing.remove();
     }
 
     var overlay = document.createElement("div");
-    overlay.id = "logbookOverlay";
+    overlay.id = "logbuchOverlay";
 
     overlay.innerHTML =
-        '<div class="logbookBox">' +
+        '<div class="logbuchBox">' +
 
-            '<div class="logbookHeader">' +
+            '<div class="logbuchHeader">' +
                 '<h2>Logbucheintrag</h2>' +
-                '<button type="button" id="logbookCloseTop" class="logbookCloseButton">×</button>' +
+                '<button type="button" id="logbuchCloseTop" class="logbuchCloseButton">×</button>' +
             '</div>' +
 
-            '<div class="logbookMainLayout">' +
+            '<div class="logbuchMainLayout">' +
 
-                '<div class="logbookInputPane">' +
+                '<div class="logbuchInputPane">' +
 
-                    '<div class="logbookSectionTitle">Motor</div>' +
-                    '<div class="logbookGroup">' +
-                        logbookButton("motor_on", "Motor an", "motor-on", "logbookMotorOn") +
-                        logbookButton("motor_off", "Motor aus", "motor-off", "logbookMotorOff") +
+                    '<div class="logbuchSectionTitle">Motor</div>' +
+                    '<div class="logbuchGroup">' +
+                        logbuchButton("motor_on", "Motor an", "motor-on", "logbuchMotorOn") +
+                        logbuchButton("motor_off", "Motor aus", "motor-off", "logbuchMotorOff") +
                     '</div>' +
 
-                    '<div class="logbookSectionTitle">Segel</div>' +
-                    '<div class="logbookGroup">' +
-                        logbookButton("sail_set", "Segel setzen", "sail-set", "logbookSailOn") +
-                        logbookButton("sail_down", "Segel einholen", "sail-down", "logbookSailOff") +
+                    '<div class="logbuchSectionTitle">Segel</div>' +
+                    '<div class="logbuchGroup">' +
+                        logbuchButton("sail_set", "Segel setzen", "sail-set", "logbuchSailOn") +
+                        logbuchButton("sail_down", "Segel einholen", "sail-down", "logbuchSailOff") +
                     '</div>' +
 
-                    '<div class="logbookSectionTitle">Anker</div>' +
-                    '<div class="logbookGroup">' +
-                        logbookButton("anchor_down", "Anker ab", "anchor-down", "logbookAnchorOn") +
-                        logbookButton("anchor_up", "Anker auf", "anchor-up", "logbookAnchorOff") +
+                    '<div class="logbuchSectionTitle">Anker</div>' +
+                    '<div class="logbuchGroup">' +
+                        logbuchButton("anchor_down", "Anker ab", "anchor-down", "logbuchAnchorOn") +
+                        logbuchButton("anchor_up", "Anker auf", "anchor-up", "logbuchAnchorOff") +
                     '</div>' +
 
                 '</div>' +
 
-                '<div class="logbookHistoryPane">' +
+                '<div class="logbuchHistoryPane">' +
 
-                    '<div id="logbookStatus" class="logbookStatus logbookStatus-info">Bereit</div>' +
+                    '<div id="logbuchStatus" class="logbuchStatus logbuchStatus-info">Bereit</div>' +
 
-                    '<div class="logbookExportRow">' +
+                    '<div class="logbuchExportRow">' +
 
-                        '<button type="button" id="logbookExportToday" class="logbookMiniButton">' +
+                        '<button type="button" id="logbuchExportToday" class="logbuchMiniButton">' +
                             'KMZ Heute' +
                         '</button>' +
 
-                        '<button type="button" id="logbookExportTrip" class="logbookMiniButton">' +
+                        '<button type="button" id="logbuchExportTrip" class="logbuchMiniButton">' +
                             'Törn Export' +
                         '</button>' +
 
-                        '<button type="button" id="logbookTripStart" class="logbookMiniButton">' +
+                        '<button type="button" id="logbuchTripStart" class="logbuchMiniButton">' +
                             'Törn Start' +
                         '</button>' +
 
-                        '<button type="button" id="logbookTripEnd" class="logbookMiniButton">' +
+                        '<button type="button" id="logbuchTripEnd" class="logbuchMiniButton">' +
                             'Törn Ende' +
                         '</button>' +
 
                     '</div>' +
 
-                    '<div class="logbookSectionTitle logbookHistoryTitle">Anmerkung / Freitext</div>' +
+                    '<div class="logbuchSectionTitle logbuchHistoryTitle">Anmerkung / Freitext</div>' +
 
-                    '<div class="logbookTextRow">' +
+                    '<div class="logbuchTextRow">' +
 
-                        '<textarea id="logbookText" placeholder="Freitext / Bemerkung eingeben..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>' +
+                        '<textarea id="logbuchText" placeholder="Freitext / Bemerkung eingeben..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>' +
 
-                        '<button type="button" id="logbookSaveManual" class="logbookVerticalSave">' +
+                        '<button type="button" id="logbuchSaveManual" class="logbuchVerticalSave">' +
                             '<span>Speichern</span>' +
                         '</button>' +
 
                     '</div>' +
 
-                    '<div class="logbookSectionTitle">Letzte Einträge</div>' +
-                    '<div id="logbookEntries" class="logbookEntries">Lade Einträge...</div>' +
+                    '<div class="logbuchSectionTitle">Letzte Einträge</div>' +
+                    '<div id="logbuchEntries" class="logbuchEntries">Lade Einträge...</div>' +
 
                 '</div>' +
 
@@ -287,14 +287,14 @@ function openLogbookOverlay() {
         }
     }, false);
 
-    var box = overlay.querySelector(".logbookBox");
+    var box = overlay.querySelector(".logbuchBox");
     if (box) {
         box.addEventListener("click", function(e) {
             e.stopPropagation();
         }, false);
     }
 
-    var textField = document.getElementById("logbookText");
+    var textField = document.getElementById("logbuchText");
     // Kein automatischer Fokus:
     // Auf Tablets würde sonst sofort die Bildschirmtastatur öffnen.
 
@@ -302,60 +302,60 @@ function openLogbookOverlay() {
         btn.addEventListener("click", function(e) {
             e.preventDefault();
             e.stopPropagation();
-            saveLogbookEntry(btn.getAttribute("data-type"));
+            saveLogbuchEntry(btn.getAttribute("data-type"));
         }, false);
     });
 
-    document.getElementById("logbookSaveManual").addEventListener("click", function(e) {
+    document.getElementById("logbuchSaveManual").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
-        saveLogbookEntry("manual");
+        saveLogbuchEntry("manual");
     }, false);
-    document.getElementById("logbookCloseTop").addEventListener("click", function(e) {
+    document.getElementById("logbuchCloseTop").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         overlay.remove();
     }, false);
 
-    document.getElementById("logbookExportToday").addEventListener("click", function(e) {
+    document.getElementById("logbuchExportToday").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         exportTodayKmz();
     }, false);
 
-    document.getElementById("logbookExportTrip").addEventListener("click", function(e) {
+    document.getElementById("logbuchExportTrip").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         exportTripKmz();
     }, false);
 
-    document.getElementById("logbookTripStart").addEventListener("click", function(e) {
+    document.getElementById("logbuchTripStart").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
-        saveLogbookEntry("trip_start");
+        saveLogbuchEntry("trip_start");
     }, false);
 
-    document.getElementById("logbookTripEnd").addEventListener("click", function(e) {
+    document.getElementById("logbuchTripEnd").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
-        saveLogbookEntry("trip_end");
+        saveLogbuchEntry("trip_end");
     }, false);
 
-    loadLogbookEntries();
+    loadLogbuchEntries();
 }
 
-function logbookButton(type, label, iconName, extraClass) {
+function logbuchButton(type, label, iconName, extraClass) {
     return (
-        '<button type="button" class="logbookToggleButton ' + extraClass + '" data-type="' + type + '">' +
-            '<img class="logbookButtonIcon" src="' + iconPath(iconName) + '" alt="">' +
-            '<span class="logbookButtonLabel">' + escapeHtml(label) + '</span>' +
+        '<button type="button" class="logbuchToggleButton ' + extraClass + '" data-type="' + type + '">' +
+            '<img class="logbuchButtonIcon" src="' + iconPath(iconName) + '" alt="">' +
+            '<span class="logbuchButtonLabel">' + escapeHtml(label) + '</span>' +
         '</button>'
     );
 }
 
 
 
-function saveDirectLogbookEntry(type) {
+function saveDirectLogbuchEntry(type) {
     var url =
         AVNAV_BASE_URL +
         "/api/add?type=" +
@@ -368,22 +368,22 @@ function saveDirectLogbookEntry(type) {
         })
         .then(function(data) {
             if (data.status === "OK") {
-                console.log("direct logbook saved", type, data);
+                console.log("direct logbuch saved", type, data);
                 return;
             }
 
-            console.warn("direct logbook warning", data);
+            console.warn("direct logbuch warning", data);
         })
         .catch(function(err) {
-            console.error("direct logbook error", err);
+            console.error("direct logbuch error", err);
         });
 }
 
-function saveLogbookEntry(type) {
-    var textField = document.getElementById("logbookText");
+function saveLogbuchEntry(type) {
+    var textField = document.getElementById("logbuchText");
     var text = textField ? (textField.value || "") : "";
 
-    setLogbookStatus("Speichere...", "info");
+    setLogbuchStatus("Speichere...", "info");
 
     var url =
         AVNAV_BASE_URL +
@@ -398,16 +398,16 @@ function saveLogbookEntry(type) {
         })
         .then(function(data) {
             if (data.status === "OK") {
-                setLogbookStatus("Gespeichert: " + readableEventType(type), "success");
+                setLogbuchStatus("Gespeichert: " + readableEventType(type), "success");
 
                 if (textField) {
                     textField.value = "";
                     textField.focus();
                 }
 
-                loadLogbookEntries();
+                loadLogbuchEntries();
 
-                console.log("logbook saved", data);
+                console.log("logbuch saved", data);
                 return;
             }
 
@@ -415,17 +415,17 @@ function saveLogbookEntry(type) {
              * Server liefert ERROR bei ungültigen Zuständen:
              * z. B. Motor an, obwohl Motor bereits läuft.
              */
-            setLogbookStatus(data.message || "Aktion nicht möglich", "warning");
-            console.warn("logbook warning", data);
+            setLogbuchStatus(data.message || "Aktion nicht möglich", "warning");
+            console.warn("logbuch warning", data);
         })
         .catch(function(err) {
-            setLogbookStatus("Fehler beim Speichern", "error");
-            console.error("logbook request error", err);
+            setLogbuchStatus("Fehler beim Speichern", "error");
+            console.error("logbuch request error", err);
         });
 }
 
-function loadLogbookEntries() {
-    var target = document.getElementById("logbookEntries");
+function loadLogbuchEntries() {
+    var target = document.getElementById("logbuchEntries");
     if (!target) {
         return;
     }
@@ -442,16 +442,16 @@ function loadLogbookEntries() {
                 return;
             }
 
-            renderLogbookEntries(data.entries || []);
+            renderLogbuchEntries(data.entries || []);
         })
         .catch(function(err) {
             target.innerHTML = "Fehler beim Laden der Einträge.";
-            console.error("logbook list error", err);
+            console.error("logbuch list error", err);
         });
 }
 
-function renderLogbookEntries(entries) {
-    var target = document.getElementById("logbookEntries");
+function renderLogbuchEntries(entries) {
+    var target = document.getElementById("logbuchEntries");
     if (!target) {
         return;
     }
@@ -475,14 +475,14 @@ function renderLogbookEntries(entries) {
         }
 
         html +=
-            '<div class="logbookEntry">' +
-                '<div class="logbookEntryIcon">' +
+            '<div class="logbuchEntry">' +
+                '<div class="logbuchEntryIcon">' +
                     '<img src="' + iconPath(icon) + '" alt="">' +
                 '</div>' +
-                '<div class="logbookEntryContent">' +
-                    '<div class="logbookEntryTitle">' + escapeHtml(type) + '</div>' +
-                    '<div class="logbookEntryMeta">' + escapeHtml(time) + escapeHtml(position) + '</div>' +
-                    '<div class="logbookEntryText">' + (text || "&nbsp;") + '</div>' +
+                '<div class="logbuchEntryContent">' +
+                    '<div class="logbuchEntryTitle">' + escapeHtml(type) + '</div>' +
+                    '<div class="logbuchEntryMeta">' + escapeHtml(time) + escapeHtml(position) + '</div>' +
+                    '<div class="logbuchEntryText">' + (text || "&nbsp;") + '</div>' +
                 '</div>' +
             '</div>';
     });
@@ -529,7 +529,7 @@ function escapeHtml(value) {
 
 
 function exportTodayKmz() {
-    setLogbookStatus("KMZ Export startet...", "info");
+    setLogbuchStatus("KMZ Export startet...", "info");
 
     fetch(AVNAV_BASE_URL + "/api/exportKmz")
         .then(function(response) {
@@ -537,7 +537,7 @@ function exportTodayKmz() {
         })
         .then(function(data) {
             if (data.status !== "OK") {
-                setLogbookStatus("KMZ Exportfehler", "error");
+                setLogbuchStatus("KMZ Exportfehler", "error");
                 return;
             }
 
@@ -545,7 +545,7 @@ function exportTodayKmz() {
         })
         .catch(function(err) {
             console.error(err);
-            setLogbookStatus("KMZ Exportfehler", "error");
+            setLogbuchStatus("KMZ Exportfehler", "error");
         });
 }
 
@@ -556,7 +556,7 @@ function exportTripKmz() {
     );
 
     if (choice === null) {
-        setLogbookStatus("Törn Export abgebrochen", "info");
+        setLogbuchStatus("Törn Export abgebrochen", "info");
         return;
     }
 
@@ -572,11 +572,11 @@ function exportTripKmz() {
         return;
     }
 
-    setLogbookStatus("Ungültige Auswahl", "error");
+    setLogbuchStatus("Ungültige Auswahl", "error");
 }
 
 function exportTripKmzLastSevenDays() {
-    setLogbookStatus("Törn Export 7 Tage startet...", "info");
+    setLogbuchStatus("Törn Export 7 Tage startet...", "info");
 
     var now = new Date();
     var toDate = now.toISOString().slice(0, 10);
@@ -594,7 +594,7 @@ function exportTripKmzLastSevenDays() {
 }
 
 function exportTripKmzSinceTripStart() {
-    setLogbookStatus("Törn Export seit Start startet...", "info");
+    setLogbuchStatus("Törn Export seit Start startet...", "info");
 
     startExportRequest(
         AVNAV_BASE_URL + "/api/exportCurrentTripKmz",
@@ -609,7 +609,7 @@ function startExportRequest(url, errorMessage) {
         })
         .then(function(data) {
             if (data.status !== "OK") {
-                setLogbookStatus(data.message || errorMessage, "error");
+                setLogbuchStatus(data.message || errorMessage, "error");
                 return;
             }
 
@@ -617,7 +617,7 @@ function startExportRequest(url, errorMessage) {
         })
         .catch(function(err) {
             console.error(err);
-            setLogbookStatus(errorMessage, "error");
+            setLogbuchStatus(errorMessage, "error");
         });
 }
 
@@ -638,7 +638,7 @@ function monitorExportJob(jobId) {
             .then(function(data) {
                 if (data.status !== "OK") {
                     clearInterval(timer);
-                    setLogbookStatus("Exportstatus Fehler", "error");
+                    setLogbuchStatus("Exportstatus Fehler", "error");
                     return;
                 }
 
@@ -646,33 +646,33 @@ function monitorExportJob(jobId) {
 
                 if (!job) {
                     clearInterval(timer);
-                    setLogbookStatus("Job nicht gefunden", "error");
+                    setLogbuchStatus("Job nicht gefunden", "error");
                     return;
                 }
 
                 if (job.status === "RUNNING") {
-                    setLogbookStatus("Export läuft...", "info");
+                    setLogbuchStatus("Export läuft...", "info");
                     return;
                 }
 
                 clearInterval(timer);
 
                 if (job.status === "OK") {
-                    setLogbookStatus("Export fertig", "success");
+                    setLogbuchStatus("Export fertig", "success");
                     return;
                 }
 
-                setLogbookStatus(job.message || "Export fehlgeschlagen", "error");
+                setLogbuchStatus(job.message || "Export fehlgeschlagen", "error");
             })
             .catch(function(err) {
                 console.error(err);
                 clearInterval(timer);
-                setLogbookStatus("Exportstatus Fehler", "error");
+                setLogbuchStatus("Exportstatus Fehler", "error");
             });
 
         if (pollCount > 60) {
             clearInterval(timer);
-            setLogbookStatus("Export Timeout", "error");
+            setLogbuchStatus("Export Timeout", "error");
         }
     }, 1000);
 }

@@ -1,4 +1,4 @@
-# AVNav Logbook Plugin
+# AVNav Logbuch Plugin
 
 Erweitertes elektronisches Logbuch für AVNav mit Overlay, direkten Aktions-Widgets, GPX/KMZ-Export und Törn-Auswertung.
 
@@ -33,17 +33,17 @@ git clone https://github.com/Surfer2010/avnav-logbuch-plugin.git
 
 cd avnav-logbuch-plugin
 
-cp logbook/plugin.py /home/pi/avnav/data/plugins/logbook/plugin.py
-cp logbook/plugin.js /home/pi/avnav/data/plugins/logbook/plugin.js
-cp logbook/plugin.css /home/pi/avnav/data/plugins/logbook/plugin.css
+cp logbuch/plugin.py /home/pi/avnav/data/plugins/logbuch/plugin.py
+cp logbuch/plugin.js /home/pi/avnav/data/plugins/logbuch/plugin.js
+cp logbuch/plugin.css /home/pi/avnav/data/plugins/logbuch/plugin.css
 
-rm -rf /home/pi/avnav/data/logbook-tools
-mkdir -p /home/pi/avnav/data/logbook-tools
+rm -rf /home/pi/avnav/data/logbuch-tools
+mkdir -p /home/pi/avnav/data/logbuch-tools
 
-cp -a tools/. /home/pi/avnav/data/logbook-tools/
+cp -a tools/. /home/pi/avnav/data/logbuch-tools/
 
-sudo chown -R pi:pi /home/pi/avnav/data/plugins/logbook
-sudo chown -R pi:pi /home/pi/avnav/data/logbook-tools
+sudo chown -R pi:pi /home/pi/avnav/data/plugins/logbuch
+sudo chown -R pi:pi /home/pi/avnav/data/logbuch-tools
 
 sudo systemctl restart avnav
 ```
@@ -152,11 +152,11 @@ Standardmäßig nutzt das Plugin:
 Wichtige Verzeichnisse:
 
 ```text
-logbook/
+logbuch/
 tracks/
 overlays/
 plugins/
-logbook-tools/
+logbuch-tools/
 ```
 
 ---

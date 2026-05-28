@@ -13,7 +13,7 @@ The file contains:
 
 Input:
 - AVNav track file:   tracks/YYYY-MM-DD.avt
-- Logbook JSONL:      logbook/logbook-YYYY-MM-DD.jsonl
+- Logbuch JSONL:      logbuch/logbuch-YYYY-MM-DD.jsonl
 
 Example:
 
@@ -56,11 +56,11 @@ def parse_time(value):
         return None
 
 
-def read_logbook(path):
+def read_logbuch(path):
     entries = []
 
     if not path.exists():
-        raise FileNotFoundError(f"Logbook file not found: {path}")
+        raise FileNotFoundError(f"Logbuch file not found: {path}")
 
     with path.open("r", encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, start=1):
@@ -257,7 +257,7 @@ def build_gpx(date_value, intervals, anchors, points):
     lines.append('<?xml version="1.0" encoding="UTF-8" standalone="no" ?>')
     lines.append('<gpx xmlns="http://www.topografix.com/GPX/1/1"')
     lines.append('     version="1.1"')
-    lines.append('     creator="avnav-logbook-plugin"')
+    lines.append('     creator="avnav-logbuch-plugin"')
     lines.append('     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
     lines.append('     xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">')
     lines.append(f"  <metadata><name>Logbook additional {xml_escape(date_value)}</name></metadata>")
@@ -306,7 +306,7 @@ def build_gpx(date_value, intervals, anchors, points):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Export AVNav logbook additional GPX")
+    parser = argparse.ArgumentParser(description="Export AVNav logbuch additional GPX")
     parser.add_argument("--date", required=True, help="Date in YYYY-MM-DD format")
     parser.add_argument("--avnav-data", default="/home/pi/avnav/data", help="AVNav data directory")
     parser.add_argument("--output", default="", help="Optional output GPX file")
@@ -316,23 +316,23 @@ def main():
 
     avnav_data = Path(args.avnav_data)
     tracks_dir = avnav_data / "tracks"
-    logbook_dir = avnav_data / "logbook"
+    logbuch_dir = avnav_data / "logbuch"
 
     avt_file = tracks_dir / f"{args.date}.avt"
-    logbook_file = logbook_dir / f"logbook-{args.date}.jsonl"
+    logbuch_file = logbuch_dir / f"logbuch-{args.date}.jsonl"
 
     if args.output:
         output_file = Path(args.output)
     else:
         output_file = tracks_dir / f"{args.date}_additional.gpx"
 
-    entries = read_logbook(logbook_file)
+    entries = read_logbuch(logbuch_file)
     points = read_avt(avt_file)
 
     intervals, anchors, warnings = build_intervals(entries)
     gpx = build_gpx(args.date, intervals, anchors, points)
 
-    print(f"Logbook entries: {len(entries)}")
+    print(f"Logbuch entries: {len(entries)}")
     print(f"Track points: {len(points)}")
     print(f"Intervals: {len(intervals)}")
     print(f"Anchor points: {len(anchors)}")

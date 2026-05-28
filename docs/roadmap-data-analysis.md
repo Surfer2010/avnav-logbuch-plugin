@@ -42,7 +42,7 @@ Nächste sinnvolle Felder:
   "sog": 4.8,
   "cog": 123.0,
   "trip_id": "2026-05-21",
-  "source": "avnav-logbook-plugin"
+  "source": "avnav-logbuch-plugin"
 }
 Auswertungslogik
 Motorstunden
@@ -92,7 +92,7 @@ Aktuelles Mindestmodell:
   "text": "",
   "lat": null,
   "lon": null,
-  "source": "avnav-logbook-plugin"
+  "source": "avnav-logbuch-plugin"
 }
 
 Geplante Erweiterung:
@@ -107,7 +107,7 @@ Geplante Erweiterung:
   "cog": 123.0,
   "heading": 121.0,
   "trip_id": "2026-05-21",
-  "source": "avnav-logbook-plugin"
+  "source": "avnav-logbuch-plugin"
 }
 Eventtypen
 Motor
@@ -235,7 +235,7 @@ oder:
 OpenLayers
 InfluxDB-Strategie
 Measurement
-avnav_logbook
+avnav_logbuch
 Tags
 event_type
 trip_id
@@ -247,7 +247,7 @@ sog
 cog
 text
 Beispiel Line Protocol
-avnav_logbook,event_type=motor_on,source=avnav-logbook-plugin lat=54.123456,lon=10.123456,text="Motor an"
+avnav_logbuch,event_type=motor_on,source=avnav-logbuch-plugin lat=54.123456,lon=10.123456,text="Motor an"
 Grafana Dashboards
 
 Mögliche Panels:
@@ -300,7 +300,7 @@ Tages-/Wochen-/Trip-Zusammenfassung erzeugen
 
 Geplante Datei:
 
-tools/analyze_logbook.py
+tools/analyze_logbuch.py
 
 Ausgabeformate:
 
@@ -321,7 +321,7 @@ tools/export_geojson.py
 
 Ausgabe:
 
-exports/logbook-map.geojson
+exports/logbuch-map.geojson
 Phase 5: InfluxDB
 
 Ziele:
@@ -387,7 +387,7 @@ EOF
 
 ```bash
 git add docs/roadmap-data-analysis.md
-git commit -m "Add roadmap for logbook data analysis and InfluxDB"
+git commit -m "Add roadmap for logbuch data analysis and InfluxDB"
 git push
 Empfohlener nächster technischer Schritt
 
@@ -402,7 +402,7 @@ plugin.py erweitert speichern:
 
 Danach kommt das erste Auswertescript:
 
-tools/analyze_logbook.py
+tools/analyze_logbuch.py
 
 Das kann dann direkt berechnen:
 

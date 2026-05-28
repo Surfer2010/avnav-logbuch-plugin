@@ -1,8 +1,8 @@
-# AVNav Logbook Plugin
-# Stores digital logbook events as JSONL and optionally writes to InfluxDB v2.
+# AVNav Logbuch Plugin
+# Stores digital logbuch events as JSONL and optionally writes to InfluxDB v2.
 #
 # Main goals:
-# - create timestamped logbook entries
+# - create timestamped logbuch entries
 # - attach current AVNav navigation data
 # - store robust local JSONL files
 # - validate runtime states for motor, sail and anchor
@@ -26,12 +26,12 @@ except Exception:
 
 
 class Plugin(object):
-    LOG_STATUS = 'logbook.status'
-    LOG_COUNT = 'logbook.count'
-    LAST_EVENT = 'logbook.lastEvent'
-    MOTOR_STATE = 'logbook.motor'
-    SAIL_STATE = 'logbook.sail'
-    ANCHOR_STATE = 'logbook.anchor'
+    LOG_STATUS = 'logbuch.status'
+    LOG_COUNT = 'logbuch.count'
+    LAST_EVENT = 'logbuch.lastEvent'
+    MOTOR_STATE = 'logbuch.motor'
+    SAIL_STATE = 'logbuch.sail'
+    ANCHOR_STATE = 'logbuch.anchor'
 
     START_EVENTS = {
         'motor_on': 'motor',
@@ -71,9 +71,9 @@ class Plugin(object):
         return {
             'description': 'Digitales Logbuch mit Statusprüfung, Zeitstempel, GPS, SOG, COG, Heading und Freitext.',
             'data': [
-                {'path': cls.LOG_STATUS, 'description': 'Logbook plugin status'},
-                {'path': cls.LOG_COUNT, 'description': 'Number of logbook entries in current runtime'},
-                {'path': cls.LAST_EVENT, 'description': 'Last logbook event type'},
+                {'path': cls.LOG_STATUS, 'description': 'Logbuch plugin status'},
+                {'path': cls.LOG_COUNT, 'description': 'Number of logbuch entries in current runtime'},
+                {'path': cls.LAST_EVENT, 'description': 'Last logbuch event type'},
                 {'path': cls.MOTOR_STATE, 'description': 'Current motor state'},
                 {'path': cls.SAIL_STATE, 'description': 'Current sail state'},
                 {'path': cls.ANCHOR_STATE, 'description': 'Current anchor state'},
@@ -100,10 +100,10 @@ class Plugin(object):
         }
 
         self.base_dir = self._get_base_dir()
-        self.log_dir = self._get_config('logDir', os.path.join(self.base_dir, 'logbook'))
+        self.log_dir = self._get_config('logDir', os.path.join(self.base_dir, 'logbuch'))
 
         # Die Export-Tools werden durch tools/install_or_update.sh hier installiert.
-        self.tools_dir = self._get_config('toolsDir', os.path.join(self.base_dir, 'logbook-tools'))
+        self.tools_dir = self._get_config('toolsDir', os.path.join(self.base_dir, 'logbuch-tools'))
 
         # Testwerte für LXC ohne echtes GPS.
         self.test_lat = self._get_config('testLat', '')
@@ -167,14 +167,14 @@ class Plugin(object):
 
             self._rebuild_state_from_log()
 
-            self.api.log('Logbook plugin started, log_dir=%s' % self.log_dir)
+            self.api.log('Logbuch plugin started, log_dir=%s' % self.log_dir)
             self.api.setStatus('Logbook', 'running')
             self.api.addData(self.LOG_STATUS, 'running')
             self.api.addData(self.LOG_COUNT, self.count)
             self._publish_state()
 
         except Exception as e:
-            self.api.error('Logbook plugin startup error: %s' % str(e))
+            self.api.error('Logbuch plugin startup error: %s' % str(e))
             self.api.setStatus('Logbook', 'error')
 
             try:
@@ -196,7 +196,7 @@ class Plugin(object):
 
     def _today_file(self):
         day = datetime.datetime.utcnow().strftime('%Y-%m-%d')
-        return os.path.join(self.log_dir, 'logbook-%s.jsonl' % day)
+        return os.path.join(self.log_dir, 'logbuch-%s.jsonl' % day)
 
     def _to_float(self, value):
         try:
@@ -278,7 +278,7 @@ class Plugin(object):
             'cog': nav.get('cog'),
             'heading': nav.get('heading'),
             'state': dict(self.state),
-            'source': 'avnav-logbook-plugin'
+            'source': 'avnav-logbuch-plugin'
         }
 
     def _append_jsonl(self, entry):
@@ -388,7 +388,7 @@ class Plugin(object):
             import urllib.parse
             import urllib.request
 
-            measurement = 'avnav_logbook'
+            measurement = 'avnav_logbuch'
             event_type = str(entry.get('event_type') or 'manual').replace(' ', '_').replace(',', '_')
 
             fields = []
@@ -543,7 +543,7 @@ class Plugin(object):
             else:
                 job['status'] = 'ERROR'
 
-                if 'No logbook file found' in job['stderr']:
+                if 'No logbuch file found' in job['stderr']:
                     job['message'] = 'Keine Logbucheinträge für diesen Tag.'
                 elif 'GPX file not found' in job['stderr']:
                     job['message'] = 'Keine GPX-Trackdatei für diesen Tag.'
@@ -628,7 +628,7 @@ class Plugin(object):
             'job': job
         }
 
-    def _parse_logbook_timestamp(self, value):
+    def _parse_logbuch_timestamp(self, value):
         try:
             if not value:
                 return None
@@ -672,7 +672,7 @@ class Plugin(object):
                             if event_type not in ('trip_start', 'trip_end'):
                                 continue
 
-                            timestamp = self._parse_logbook_timestamp(
+                            timestamp = self._parse_logbuch_timestamp(
                                 entry.get('timestamp')
                             )
 

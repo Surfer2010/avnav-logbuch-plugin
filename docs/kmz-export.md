@@ -5,7 +5,7 @@ Der KMZ Export kombiniert:
 
 AVNav GPX Tagestrack
 +
-AVNav Logbook JSONL
+AVNav Logbuch JSONL
 
 zu:
 
@@ -39,11 +39,11 @@ Datenquellen
 
 Logbuch:
 
-/home/pi/avnav/data/logbook/YYYYMMDD_logbuch.jsonl
+/home/pi/avnav/data/logbuch/YYYYMMDD_logbuch.jsonl
 
 Legacy wird unterstützt:
 
-/home/pi/avnav/data/logbook/logbook-YYYY-MM-DD.jsonl
+/home/pi/avnav/data/logbuch/logbuch-YYYY-MM-DD.jsonl
 
 Track:
 
