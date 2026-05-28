@@ -16,7 +16,7 @@ Beispiel:
 
 ./install_or_update.sh --branch fix/responsive-overlay-input-button
 Installation in einen bestimmten Zielpfad
-./install_or_update.sh --target /home/pi/avnav/data/plugins/logbuch
+./install_or_update.sh --target /home/pi/avnav/data/plugins/user-logbuch
 Ohne Neustart installieren
 ./install_or_update.sh --no-restart
 Was das Script macht
@@ -40,8 +40,8 @@ Rollback
 
 Beispiel:
 
-rm -rf /home/pi/avnav/data/plugins/logbuch
-cp -a /home/pi/avnav/data/plugin-backups/logbuch.backup.YYYY-MM-DD-HHMMSS /home/pi/avnav/data/plugins/logbuch
+rm -rf /home/pi/avnav/data/plugins/user-logbuch
+cp -a /home/pi/avnav/data/plugin-backups/logbuch.backup.YYYY-MM-DD-HHMMSS /home/pi/avnav/data/plugins/user-logbuch
 sudo systemctl restart avnav
 Prüfung
 tail -n 100 /home/pi/avnav/data/log/avnav.log | grep -i logbuch

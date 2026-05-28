@@ -6,18 +6,18 @@ Bei einer AVNav-Installation ueber Debian-Paket liegt das Datenverzeichnis typis
 ```
 Das Plugin wird installiert nach:
 ```text
-/var/lib/avnav/plugins/logbuch
+/var/lib/avnav/plugins/user-logbuch
 ```
 Installation
 ```bash
-mkdir -p /var/lib/avnav/plugins/logbuch
+mkdir -p /var/lib/avnav/plugins/user-logbuch
 
-cp logbuch/plugin.py /var/lib/avnav/plugins/logbuch/
-cp logbuch/plugin.js /var/lib/avnav/plugins/logbuch/
-cp logbuch/plugin.css /var/lib/avnav/plugins/logbuch/
+cp logbuch/plugin.py /var/lib/avnav/plugins/user-logbuch/
+cp logbuch/plugin.js /var/lib/avnav/plugins/user-logbuch/
+cp logbuch/plugin.css /var/lib/avnav/plugins/user-logbuch/
 
-chown -R avnav:avnav /var/lib/avnav/plugins/logbuch
-chmod -R 755 /var/lib/avnav/plugins/logbuch
+chown -R avnav:avnav /var/lib/avnav/plugins/user-logbuch
+chmod -R 755 /var/lib/avnav/plugins/user-logbuch
 
 systemctl restart avnav
 ```
@@ -27,7 +27,7 @@ journalctl -u avnav -n 100 --no-pager | grep -i logbuch
 ```
 Erwartete Ausgabe enthaelt ungefaehr:
 ```text
-loaded /var/lib/avnav/plugins/logbuch/plugin.py as user-logbuch
+loaded /var/lib/avnav/plugins/user-logbuch/plugin.py as logbuch
 Logbuch plugin started
 ```
 Frontend pruefen

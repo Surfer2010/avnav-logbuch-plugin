@@ -28,9 +28,9 @@ Buttons und Statusanzeige formatieren
 Entwicklungsablauf
 Nach Aenderungen an einer Datei:
 ```bash
-cp logbuch/plugin.js /var/lib/avnav/plugins/logbuch/
-cp logbuch/plugin.py /var/lib/avnav/plugins/logbuch/
-cp logbuch/plugin.css /var/lib/avnav/plugins/logbuch/
+cp logbuch/plugin.js /var/lib/avnav/plugins/user-logbuch/
+cp logbuch/plugin.py /var/lib/avnav/plugins/user-logbuch/
+cp logbuch/plugin.css /var/lib/avnav/plugins/user-logbuch/
 systemctl restart avnav
 ```
 Browser hart neu laden:

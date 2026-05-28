@@ -33,16 +33,16 @@ git clone https://github.com/Surfer2010/avnav-logbuch-plugin.git
 
 cd avnav-logbuch-plugin
 
-cp logbuch/plugin.py /home/pi/avnav/data/plugins/logbuch/plugin.py
-cp logbuch/plugin.js /home/pi/avnav/data/plugins/logbuch/plugin.js
-cp logbuch/plugin.css /home/pi/avnav/data/plugins/logbuch/plugin.css
+cp logbuch/plugin.py /home/pi/avnav/data/plugins/user-logbuch/plugin.py
+cp logbuch/plugin.js /home/pi/avnav/data/plugins/user-logbuch/plugin.js
+cp logbuch/plugin.css /home/pi/avnav/data/plugins/user-logbuch/plugin.css
 
 rm -rf /home/pi/avnav/data/logbuch-tools
 mkdir -p /home/pi/avnav/data/logbuch-tools
 
 cp -a tools/. /home/pi/avnav/data/logbuch-tools/
 
-sudo chown -R pi:pi /home/pi/avnav/data/plugins/logbuch
+sudo chown -R pi:pi /home/pi/avnav/data/plugins/user-logbuch
 sudo chown -R pi:pi /home/pi/avnav/data/logbuch-tools
 
 sudo systemctl restart avnav

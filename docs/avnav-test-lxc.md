@@ -28,7 +28,7 @@ http://IP-DES-LXC:8080
 ```
 Plugin-Pfad
 ```text
-/var/lib/avnav/plugins/logbuch
+/var/lib/avnav/plugins/user-logbuch
 ```
 Wichtige Logs
 ```bash

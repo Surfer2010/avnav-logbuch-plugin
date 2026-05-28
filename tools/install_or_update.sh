@@ -51,11 +51,11 @@ if [ -z "${TARGET_DIR}" ]; then
         AVNAV_DATA_DIR="/var/lib/avnav"
     else
         echo "ERROR: Could not detect AVNav data directory."
-        echo "Use --target /path/to/plugins/logbuch"
+        echo "Use --target /path/to/plugins/user-logbuch"
         exit 1
     fi
 
-    TARGET_DIR="${AVNAV_DATA_DIR}/plugins/logbuch"
+    TARGET_DIR="${AVNAV_DATA_DIR}/plugins/user-logbuch"
 else
     AVNAV_DATA_DIR="$(dirname "$(dirname "${TARGET_DIR}")")"
 fi
