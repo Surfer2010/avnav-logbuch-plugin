@@ -268,4 +268,59 @@ Stable releases should be safe to update within the same MAJOR version.
 
 # Lizenz
 
+## Installation ab v1.4.1
+
+### Standardinstallation über AVNav
+
+Für neue Installationen wird das Release-ZIP direkt in AVNav hochgeladen:
+
+```text
+logbuch-v1.4.1.zip
+```
+
+Das ZIP enthält bereits den korrekten Pluginordner:
+
+```text
+logbuch/
+```
+
+Ein separates Installationsscript ist für eine Neuinstallation nicht nötig.
+
+### Manuelle Installation per CLI
+
+```bash
+cd /home/pi/avnav/data/plugins
+unzip /pfad/zu/logbuch-v1.4.1.zip
+sudo systemctl restart avnav
+```
+
+AVNav stellt das Plugin danach unter folgendem Pfad bereit:
+
+```text
+/plugins/user-logbuch/
+```
+
+### Migration von Versionen vor v1.4.1
+
+Version `v1.4.1` enthält Breaking Changes bei internen Pfaden und Dateinamen:
+
+```text
+logbook/                       -> logbuch/
+logbook-tools/                 -> logbuch-tools/
+logbook-YYYY-MM-DD.jsonl       -> logbuch-YYYY-MM-DD.jsonl
+```
+
+Für bestehende Installationen sollte das Update-Script verwendet werden, da es diese Altlasten automatisch migriert:
+
+```bash
+cd /tmp
+wget https://github.com/Surfer2010/avnav-logbuch-plugin/releases/download/v1.4.1/logbuch-v1.4.1.zip
+unzip logbuch-v1.4.1.zip
+cd logbuch/tools
+chmod +x install_or_update.sh
+sudo ./install_or_update.sh
+```
+
+Das Script verschiebt bestehende Daten automatisch in die neue Struktur und legt Backups unter dem AVNav-Datenverzeichnis ab.
+
 Siehe LICENSE Datei im Repository.
