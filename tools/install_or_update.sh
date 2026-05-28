@@ -1,38 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# AVNav Logbook Plugin installer/updater
+# AVNav Logbuch Plugin installer/updater
 #
-# Purpose:
-# - download plugin ZIP from GitHub
-# - create backup of existing plugin
-# - install/update plugin files
-# - restart AVNav unless disabled
+# Installs from:
+# - extracted release ZIP: user-logbuch/tools/install_or_update.sh
+# - git checkout: tools/install_or_update.sh
 #
-# Usage:
-#   ./tools/install_or_update.sh
-#   ./tools/install_or_update.sh --branch main
-#   ./tools/install_or_update.sh --branch fix/responsive-overlay-input-button
-#   ./tools/install_or_update.sh --target /home/pi/avnav/data/plugins/logbuch
-#   ./tools/install_or_update.sh --no-restart
-#
-# Notes:
-# - This script is intended for AVNav systems without git.
-# - It uses wget and unzip.
-# - It does not delete logbook data files.
+# It removes legacy plugin directories from the active AVNav plugin path.
+# It does not delete logbook data files.
 
-REPO_OWNER="Surfer2010"
-REPO_NAME="avnav-logbuch-plugin"
-BRANCH="main"
 TARGET_DIR=""
 RESTART_AVNAV="yes"
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
-        --branch)
-            BRANCH="$2"
-            shift 2
-            ;;
         --target)
             TARGET_DIR="$2"
             shift 2
@@ -42,7 +24,7 @@ while [ "$#" -gt 0 ]; do
             shift 1
             ;;
         --help|-h)
-            echo "Usage: $0 [--branch BRANCH] [--target TARGET_DIR] [--no-restart]"
+            echo "Usage: $0 [--target TARGET_DIR] [--no-restart]"
             exit 0
             ;;
         *)
@@ -52,23 +34,36 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-echo "AVNav Logbook Plugin installer/updater"
-echo "Repository: ${REPO_OWNER}/${REPO_NAME}"
-echo "Branch: ${BRANCH}"
-
-if ! command -v wget >/dev/null 2>&1; then
-    echo "ERROR: wget is required."
-    exit 1
-fi
+echo "AVNav Logbuch Plugin installer/updater"
 
 if ! command -v unzip >/dev/null 2>&1; then
     echo "ERROR: unzip is required."
     exit 1
 fi
 
-# Detect AVNav data directory.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+if [ -f "${SCRIPT_DIR}/../plugin.py" ]; then
+    SOURCE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+    TOOLS_SOURCE_DIR="${SCRIPT_DIR}"
+elif [ -d "${SCRIPT_DIR}/../logbuch" ] && [ -f "${SCRIPT_DIR}/../logbuch/plugin.py" ]; then
+    SOURCE_DIR="$(cd "${SCRIPT_DIR}/../logbuch" && pwd)"
+    TOOLS_SOURCE_DIR="${SCRIPT_DIR}"
+else
+    echo "ERROR: Could not find plugin source directory."
+    echo "Expected either:"
+    echo "  ${SCRIPT_DIR}/../plugin.py"
+    echo "or:"
+    echo "  ${SCRIPT_DIR}/../logbuch/plugin.py"
+    exit 1
+fi
+
 if [ -z "${TARGET_DIR}" ]; then
-    if [ -d "/home/pi/avnav/data" ]; then
+    DETECTED_DATA_DIR="$(journalctl -u avnav -n 100 --no-pager 2>/dev/null | sed -n 's/.*datadir=\([^ ,]*\).*/\1/p' | tail -n 1)"
+
+    if [ -n "${DETECTED_DATA_DIR}" ] && [ -d "${DETECTED_DATA_DIR}" ]; then
+        AVNAV_DATA_DIR="${DETECTED_DATA_DIR}"
+    elif [ -d "/home/pi/avnav/data" ]; then
         AVNAV_DATA_DIR="/home/pi/avnav/data"
     elif [ -d "/var/lib/avnav" ]; then
         AVNAV_DATA_DIR="/var/lib/avnav"
@@ -85,78 +80,59 @@ fi
 
 PLUGIN_PARENT_DIR="$(dirname "${TARGET_DIR}")"
 BACKUP_DIR="${AVNAV_DATA_DIR}/plugin-backups"
-STAMP="$(date +%F-%H%M%S)"
-WORK_DIR="/tmp/avnav-logbook-update-${STAMP}"
-ZIP_FILE="${WORK_DIR}/plugin.zip"
+STAMP="$(date +%Y%m%d-%H%M%S)"
 
 echo "AVNav data directory: ${AVNAV_DATA_DIR}"
 echo "Target plugin directory: ${TARGET_DIR}"
+echo "Source plugin directory: ${SOURCE_DIR}"
+echo "Tools source directory: ${TOOLS_SOURCE_DIR}"
 echo "Backup directory: ${BACKUP_DIR}"
 
-mkdir -p "${WORK_DIR}"
 mkdir -p "${PLUGIN_PARENT_DIR}"
 mkdir -p "${BACKUP_DIR}"
 
-# Backup existing plugin, if present.
 if [ -d "${TARGET_DIR}" ]; then
-    BACKUP_PATH="${BACKUP_DIR}/logbook.backup.${STAMP}"
-    echo "Creating backup: ${BACKUP_PATH}"
+    BACKUP_PATH="${BACKUP_DIR}/logbuch.backup.${STAMP}"
+    echo "Creating plugin backup: ${BACKUP_PATH}"
     cp -a "${TARGET_DIR}" "${BACKUP_PATH}"
 else
-    echo "No existing plugin directory found. Skipping plugin backup."
+    echo "No existing logbuch plugin directory found. Skipping logbuch backup."
 fi
 
-# Backup AVNav config, if present.
+if [ -d "${PLUGIN_PARENT_DIR}/logbook" ]; then
+    LEGACY_BACKUP="${BACKUP_DIR}/logbook.legacy.${STAMP}"
+    echo "Moving legacy plugin to backup: ${LEGACY_BACKUP}"
+    mv "${PLUGIN_PARENT_DIR}/logbook" "${LEGACY_BACKUP}"
+fi
+
+for LEGACY_DISABLED in "${PLUGIN_PARENT_DIR}"/logbook.disabled*; do
+    if [ -e "${LEGACY_DISABLED}" ]; then
+        LEGACY_DISABLED_BACKUP="${BACKUP_DIR}/$(basename "${LEGACY_DISABLED}").${STAMP}"
+        echo "Moving disabled legacy plugin to backup: ${LEGACY_DISABLED_BACKUP}"
+        mv "${LEGACY_DISABLED}" "${LEGACY_DISABLED_BACKUP}"
+    fi
+done
+
 if [ -f "${AVNAV_DATA_DIR}/avnav_server.xml" ]; then
     CONFIG_BACKUP="${BACKUP_DIR}/avnav_server.xml.backup.${STAMP}"
     echo "Creating config backup: ${CONFIG_BACKUP}"
     cp -a "${AVNAV_DATA_DIR}/avnav_server.xml" "${CONFIG_BACKUP}"
 fi
 
-DOWNLOAD_URL="https://codeload.github.com/${REPO_OWNER}/${REPO_NAME}/zip/refs/heads/${BRANCH}"
-
-echo "Downloading: ${DOWNLOAD_URL}"
-wget -O "${ZIP_FILE}" "${DOWNLOAD_URL}"
-
-echo "Unpacking ZIP..."
-unzip -q "${ZIP_FILE}" -d "${WORK_DIR}"
-
-SOURCE_DIR="$(find "${WORK_DIR}" -maxdepth 3 -type d -path "*/logbook" | head -n 1)"
-
-if [ -z "${SOURCE_DIR}" ]; then
-    echo "ERROR: Could not find logbook directory inside downloaded ZIP."
-    exit 1
-fi
-
-if [ ! -f "${SOURCE_DIR}/plugin.py" ]; then
-    echo "ERROR: plugin.py not found in ${SOURCE_DIR}"
-    exit 1
-fi
-
-echo "Installing from: ${SOURCE_DIR}"
-
 rm -rf "${TARGET_DIR}"
 mkdir -p "${TARGET_DIR}"
 
-# Overlay directory for generated KMZ/KML overlays.
 mkdir -p "${AVNAV_DATA_DIR}/overlays"
 chmod 755 "${AVNAV_DATA_DIR}/overlays"
+
 cp -a "${SOURCE_DIR}/." "${TARGET_DIR}/"
 
-# Install CLI/export tools outside the plugin directory.
-# The plugin uses these tools for asynchronous KMZ export jobs.
-TOOLS_SOURCE_DIR="$(dirname "${SOURCE_DIR}")/tools"
 TOOLS_TARGET_DIR="${AVNAV_DATA_DIR}/logbook-tools"
-
-if [ -d "${TOOLS_SOURCE_DIR}" ]; then
-    echo "Installing tools to: ${TOOLS_TARGET_DIR}"
-    rm -rf "${TOOLS_TARGET_DIR}"
-    mkdir -p "${TOOLS_TARGET_DIR}"
-    cp -a "${TOOLS_SOURCE_DIR}/." "${TOOLS_TARGET_DIR}/"
-    chmod -R 755 "${TOOLS_TARGET_DIR}"
-else
-    echo "WARNING: tools directory not found in downloaded ZIP."
-fi
+echo "Installing tools to: ${TOOLS_TARGET_DIR}"
+rm -rf "${TOOLS_TARGET_DIR}"
+mkdir -p "${TOOLS_TARGET_DIR}"
+cp -a "${TOOLS_SOURCE_DIR}/." "${TOOLS_TARGET_DIR}/"
+chmod -R 755 "${TOOLS_TARGET_DIR}"
 
 chmod -R 755 "${TARGET_DIR}"
 
@@ -175,15 +151,20 @@ else
 fi
 
 echo "Installation/update finished."
+echo "Installed plugin.json:"
+cat "${TARGET_DIR}/plugin.json"
+
+echo ""
 echo "Installed files:"
 find "${TARGET_DIR}" -maxdepth 2 -type f | sort
 
 echo ""
 echo "Useful checks:"
-echo "  tail -n 100 ${AVNAV_DATA_DIR}/log/avnav.log | grep -i logbook"
+echo "  find ${PLUGIN_PARENT_DIR} -maxdepth 2 -name plugin.json -print -exec cat {} \\;"
 echo "  curl http://localhost:8080/plugins/user-logbuch/plugin.js | head"
+echo "  curl http://localhost:8080/plugins/user-logbook/plugin.js | head"
 echo ""
 echo "Rollback example:"
 echo "  rm -rf ${TARGET_DIR}"
-echo "  cp -a ${BACKUP_DIR}/logbook.backup.${STAMP} ${TARGET_DIR}"
+echo "  cp -a ${BACKUP_DIR}/logbuch.backup.${STAMP} ${TARGET_DIR}"
 echo "  sudo systemctl restart avnav"
