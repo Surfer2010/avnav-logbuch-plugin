@@ -241,7 +241,7 @@ function openLogbuchOverlay() {
 
                     '<div class="logbuchTextRow">' +
 
-                        '<textarea id="logbuchText" placeholder="Freitext / Bemerkung eingeben..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>' +
+                        '<textarea id="logbuchText" readonly placeholder="Freitext / Bemerkung eingeben..." autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>' +
 
                         '<button type="button" id="logbuchSaveManual" class="logbuchVerticalSave">' +
                             '<span>Speichern</span>' +
@@ -291,6 +291,19 @@ function openLogbuchOverlay() {
     var textField = document.getElementById("logbuchText");
     // Kein automatischer Fokus:
     // Auf Tablets würde sonst sofort die Bildschirmtastatur öffnen.
+    if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+    }
+
+    if (textField) {
+        textField.addEventListener("pointerdown", function() {
+            textField.removeAttribute("readonly");
+        }, false);
+
+        textField.addEventListener("click", function() {
+            textField.removeAttribute("readonly");
+        }, false);
+    }
 
     overlay.querySelectorAll("button[data-type]").forEach(function(btn) {
         btn.addEventListener("click", function(e) {
