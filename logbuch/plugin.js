@@ -199,22 +199,20 @@ function openLogbuchOverlay() {
 
                 '<div class="logbuchInputPane">' +
 
-                    '<div class="logbuchSectionTitle">Motor</div>' +
-                    '<div class="logbuchGroup">' +
+                    '<div class="logbuchActionGrid">' +
+
+                        '<div class="logbuchActionLabel"><span>Motor</span></div>' +
                         logbuchButton("motor_on", "Motor an", "motor-on", "logbuchMotorOn") +
                         logbuchButton("motor_off", "Motor aus", "motor-off", "logbuchMotorOff") +
-                    '</div>' +
 
-                    '<div class="logbuchSectionTitle">Segel</div>' +
-                    '<div class="logbuchGroup">' +
+                        '<div class="logbuchActionLabel"><span>Segel</span></div>' +
                         logbuchButton("sail_set", "Segel setzen", "sail-set", "logbuchSailOn") +
                         logbuchButton("sail_down", "Segel einholen", "sail-down", "logbuchSailOff") +
-                    '</div>' +
 
-                    '<div class="logbuchSectionTitle">Anker</div>' +
-                    '<div class="logbuchGroup">' +
+                        '<div class="logbuchActionLabel"><span>Anker</span></div>' +
                         logbuchButton("anchor_down", "Anker ab", "anchor-down", "logbuchAnchorOn") +
                         logbuchButton("anchor_up", "Anker auf", "anchor-up", "logbuchAnchorOff") +
+
                     '</div>' +
 
                 '</div>' +
@@ -225,12 +223,8 @@ function openLogbuchOverlay() {
 
                     '<div class="logbuchExportRow">' +
 
-                        '<button type="button" id="logbuchExportToday" class="logbuchMiniButton">' +
-                            'KMZ Heute' +
-                        '</button>' +
-
-                        '<button type="button" id="logbuchExportTrip" class="logbuchMiniButton">' +
-                            'Törn Export' +
+                        '<button type="button" id="logbuchOpenExport" class="logbuchMiniButton">' +
+                            'Export' +
                         '</button>' +
 
                         '<button type="button" id="logbuchTripStart" class="logbuchMiniButton">' +
@@ -317,16 +311,10 @@ function openLogbuchOverlay() {
         overlay.remove();
     }, false);
 
-    document.getElementById("logbuchExportToday").addEventListener("click", function(e) {
+    document.getElementById("logbuchOpenExport").addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
-        exportTodayKmz();
-    }, false);
-
-    document.getElementById("logbuchExportTrip").addEventListener("click", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        exportTripKmz();
+        openLogbuchExportOverlay();
     }, false);
 
     document.getElementById("logbuchTripStart").addEventListener("click", function(e) {
@@ -528,10 +516,132 @@ function escapeHtml(value) {
 }
 
 
-function exportTodayKmz() {
+
+function todayDateString() {
+    var now = new Date();
+    var year = now.getFullYear();
+    var month = String(now.getMonth() + 1).padStart(2, "0");
+    var day = String(now.getDate()).padStart(2, "0");
+    return year + "-" + month + "-" + day;
+}
+
+function isValidDateString(value) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) {
+        return false;
+    }
+
+    var parts = value.split("-");
+    var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+
+    return (
+        date.getFullYear() === Number(parts[0]) &&
+        date.getMonth() === Number(parts[1]) - 1 &&
+        date.getDate() === Number(parts[2])
+    );
+}
+
+function openLogbuchExportOverlay() {
+    var existing = document.getElementById("logbuchExportOverlay");
+    if (existing) {
+        existing.remove();
+    }
+
+    var today = todayDateString();
+
+    var overlay = document.createElement("div");
+    overlay.id = "logbuchExportOverlay";
+
+    overlay.innerHTML =
+        '<div class="logbuchExportBox">' +
+            '<div class="logbuchHeader">' +
+                '<h2>Export</h2>' +
+                '<button type="button" id="logbuchExportCloseTop" class="logbuchCloseButton">×</button>' +
+            '</div>' +
+
+            '<div class="logbuchExportForm">' +
+                '<label for="logbuchExportFrom">Von</label>' +
+                '<input type="date" id="logbuchExportFrom" value="' + today + '">' +
+
+                '<label for="logbuchExportTo">Bis</label>' +
+                '<input type="date" id="logbuchExportTo" value="' + today + '">' +
+
+                '<div class="logbuchExportHint">' +
+                    'Gleiches Datum = Tages-KMZ, Zeitraum = Törn-KMZ' +
+                '</div>' +
+
+                '<div class="logbuchExportButtons">' +
+                    '<button type="button" id="logbuchExportRun" class="logbuchMiniButton">Exportieren</button>' +
+                    '<button type="button" id="logbuchExportCancel" class="logbuchMiniButton logbuchSecondaryButton">Zurück</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener("click", function(e) {
+        if (e.target === overlay) {
+            e.preventDefault();
+            e.stopPropagation();
+            overlay.remove();
+        }
+    }, false);
+
+    var box = overlay.querySelector(".logbuchExportBox");
+    if (box) {
+        box.addEventListener("click", function(e) {
+            e.stopPropagation();
+        }, false);
+    }
+
+    document.getElementById("logbuchExportCloseTop").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        overlay.remove();
+    }, false);
+
+    document.getElementById("logbuchExportCancel").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        overlay.remove();
+    }, false);
+
+    document.getElementById("logbuchExportRun").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var fromDate = document.getElementById("logbuchExportFrom").value;
+        var toDate = document.getElementById("logbuchExportTo").value;
+
+        if (!isValidDateString(fromDate) || !isValidDateString(toDate)) {
+            setLogbuchStatus("Ungültiges Exportdatum", "error");
+            return;
+        }
+
+        if (fromDate > toDate) {
+            setLogbuchStatus("Exportdatum: Von liegt nach Bis", "error");
+            return;
+        }
+
+        overlay.remove();
+
+        if (fromDate === toDate) {
+            exportTodayKmz(fromDate);
+            return;
+        }
+
+        exportTripKmz(fromDate, toDate);
+    }, false);
+}
+
+function exportTodayKmz(date) {
     setLogbuchStatus("KMZ Export startet...", "info");
 
-    fetch(AVNAV_BASE_URL + "/api/exportKmz")
+    var url = AVNAV_BASE_URL + "/api/exportKmz";
+    if (date) {
+        url += "?date=" + encodeURIComponent(date);
+    }
+
+    fetch(url)
         .then(function(response) {
             return response.json();
         })
@@ -549,30 +659,17 @@ function exportTodayKmz() {
         });
 }
 
-function exportTripKmz() {
-    var choice = window.prompt(
-        "Törn Export:\n\n1 = letzte 7 Tage\n2 = seit letztem Törn Start",
-        "2"
-    );
+function exportTripKmz(fromDate, toDate) {
+    setLogbuchStatus("Törn Export startet...", "info");
 
-    if (choice === null) {
-        setLogbuchStatus("Törn Export abgebrochen", "info");
-        return;
-    }
+    var url =
+        AVNAV_BASE_URL +
+        "/api/exportTripKmz?from=" +
+        encodeURIComponent(fromDate) +
+        "&to=" +
+        encodeURIComponent(toDate);
 
-    choice = String(choice).trim();
-
-    if (choice === "1") {
-        exportTripKmzLastSevenDays();
-        return;
-    }
-
-    if (choice === "2") {
-        exportTripKmzSinceTripStart();
-        return;
-    }
-
-    setLogbuchStatus("Ungültige Auswahl", "error");
+    startExportRequest(url, "Törn Exportfehler");
 }
 
 function exportTripKmzLastSevenDays() {

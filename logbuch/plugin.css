@@ -109,8 +109,8 @@
 }
 
 .logbuchSectionTitle {
-    margin-top: 6px;
-    margin-bottom: 5px;
+    margin-top: 2px;
+    margin-bottom: 2px;
     font-size: 0.82rem;
     font-weight: 800;
     color: #93bdff;
@@ -125,8 +125,8 @@
 .logbuchGroup {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 2px;
+    margin-bottom: 2px;
 }
 
 .logbuchToggleButton {
@@ -333,85 +333,17 @@
     }
 }
 
-.logbuchExportRow {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-}
 
-.logbuchMiniButton {
-    padding: 0.35rem 0.6rem;
-    font-size: 0.8rem;
-    border-radius: 0.4rem;
-    border: 1px solid #666;
-    background: #2b2b2b;
-    color: #fff;
-    cursor: pointer;
-}
 
-.logbuchMiniButton:hover {
-    background: #3b3b3b;
-}
 
-.logbuchExportRow {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-}
 
-.logbuchMiniButton {
-    padding: 0.35rem 0.6rem;
-    font-size: 0.8rem;
-    border-radius: 0.4rem;
-    border: 1px solid #666;
-    background: #2b2b2b;
-    color: #fff;
-    cursor: pointer;
-}
 
-.logbuchMiniButton:hover {
-    background: #3b3b3b;
-}
 
-.logbuchExportRow {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-}
 
-.logbuchMiniButton {
-    padding: 0.35rem 0.6rem;
-    font-size: 0.8rem;
-    border-radius: 0.4rem;
-    border: 1px solid #666;
-    background: #2b2b2b;
-    color: #fff;
-    cursor: pointer;
-}
 
-.logbuchMiniButton:hover {
-    background: #3b3b3b;
-}
 
-.logbuchExportRow {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-}
 
-.logbuchMiniButton {
-    padding: 0.35rem 0.6rem;
-    font-size: 0.8rem;
-    border-radius: 0.4rem;
-    border: 1px solid #666;
-    background: #2b2b2b;
-    color: #fff;
-    cursor: pointer;
-}
 
-.logbuchMiniButton:hover {
-    background: #3b3b3b;
-}
 
 /* Direkt platzierbare AVNav Logbuch-Buttons */
 .logbuchDirectWidgetData {
@@ -451,10 +383,6 @@
 .logbuchToggleButton {
     transform: scale(0.67);
     transform-origin: center;
-}
-
-.logbuchGroup {
-    gap: 0.25rem;
 }
 
 /* AVNav-style frei platzierbare Logbuch-Button-Widgets */
@@ -711,4 +639,158 @@
     object-fit: contain !important;
 
     filter: brightness(0) contrast(1.4) !important;
+}
+
+
+/* Export controls */
+.logbuchExportRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.logbuchMiniButton {
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 9px;
+    background: linear-gradient(145deg, #334155, #1e293b);
+    color: white;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 800;
+    padding: 8px 10px;
+    min-height: 38px;
+}
+
+.logbuchMiniButton:hover {
+    filter: brightness(1.08);
+}
+
+.logbuchMiniButton:active {
+    transform: scale(0.97);
+}
+
+.logbuchSecondaryButton {
+    background: linear-gradient(145deg, #475569, #334155);
+}
+
+#logbuchExportOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 23, 0.68);
+}
+
+.logbuchExportBox {
+    width: min(420px, 92vw);
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 14px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+    color: white;
+    padding: 14px;
+}
+
+.logbuchExportForm {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.logbuchExportForm label {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #dbeafe;
+}
+
+.logbuchExportForm input[type="date"] {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 9px;
+    background: #202a36;
+    color: white;
+    font-size: 0.95rem;
+    padding: 8px 10px;
+}
+
+.logbuchExportHint {
+    grid-column: 1 / -1;
+    color: #a8b4c4;
+    font-size: 0.82rem;
+    line-height: 1.25;
+    margin-top: 2px;
+}
+
+.logbuchExportButtons {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+@media (max-width: 520px) {
+    .logbuchExportForm {
+        grid-template-columns: 1fr;
+    }
+
+    .logbuchExportButtons {
+        justify-content: stretch;
+    }
+
+    .logbuchExportButtons .logbuchMiniButton {
+        flex: 1 1 auto;
+    }
+}
+
+/* Main action button grid: label + two buttons */
+.logbuchActionGrid {
+    display: grid;
+    grid-template-columns: 42px 1fr 1fr;
+    gap: 2px 10px;
+    align-items: stretch;
+}
+
+.logbuchActionLabel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 112px;
+}
+
+.logbuchActionLabel span {
+    display: inline-block;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    white-space: nowrap;
+    font-size: 0.82rem;
+    font-weight: 900;
+    color: #93bdff;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+}
+
+.logbuchActionGrid .logbuchToggleButton {
+    width: 100%;
+    max-height: 112px;
+}
+
+@media (max-width: 860px) {
+    .logbuchActionGrid {
+        grid-template-columns: 36px 1fr 1fr;
+        gap: 2px 8px;
+    }
+
+    .logbuchActionLabel {
+        min-height: 96px;
+    }
+
+    .logbuchActionGrid .logbuchToggleButton {
+        max-height: 96px;
+    }
 }
