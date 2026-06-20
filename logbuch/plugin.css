@@ -1,24 +1,44 @@
 #logbuchOverlay {
+    --overlay-width: min(97vw, 900px);
+    --overlay-height: 80vh;
+
+    --gap-xs: 2px;
+    --gap-sm: 8px;
+    --gap-md: 12px;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+
+    --action-size: clamp(76px, 13vw, 112px);
+    --label-width: clamp(30px, 5vw, 42px);
+
+    --color-bg: #111923;
+    --color-panel: #202a36;
+    --color-text: #f2f2f2;
+    --color-muted: #a8b4c4;
+    --color-accent: #93bdff;
+
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.72);
+    z-index: 999999;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 999999;
+    background: rgba(0, 0, 0, 0.72);
+    font-family: sans-serif;
 }
 
 .logbuchBox {
-    width: min(97vw, 900px);
-    max-height: 80vh;
+    width: var(--overlay-width);
+    max-height: var(--overlay-height);
     overflow: hidden;
-    background: #111923;
-    color: #f2f2f2;
+    box-sizing: border-box;
+    padding: var(--gap-md);
     border: 1px solid rgba(130, 180, 255, 0.18);
-    border-radius: 12px;
-    padding: 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text);
     box-shadow: 0 0 30px rgba(0,0,0,0.55);
-    font-family: sans-serif;
 }
 
 .logbuchHeader {
@@ -30,7 +50,7 @@
 
 .logbuchHeader h2 {
     margin: 0;
-    font-size: 1.08rem;
+    font-size: clamp(1rem, 2vw, 1.12rem);
     font-weight: 700;
 }
 
@@ -38,23 +58,63 @@
     width: 34px;
     height: 34px;
     border: none;
-    border-radius: 8px;
-    font-size: 1.45rem;
+    border-radius: var(--radius-sm);
     background: #263241;
     color: white;
     cursor: pointer;
+    font-size: 1.45rem;
+}
+
+.logbuchMainLayout {
+    display: grid;
+    grid-template-columns: minmax(250px, 0.8fr) minmax(320px, 1.2fr);
+    gap: var(--gap-md);
+    max-height: calc(var(--overlay-height) - 70px);
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+}
+
+.logbuchInputPane {
+    min-width: 0;
+    overflow-y: auto;
+    padding: 10px;
+    border-right: 1px solid rgba(255,255,255,0.16);
+}
+
+.logbuchHistoryPane {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.logbuchSectionTitle {
+    margin: 2px 0;
+    color: var(--color-accent);
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.logbuchHistoryTitle {
+    margin-top: 0;
 }
 
 .logbuchStatus {
     min-height: 34px;
     margin-bottom: 10px;
+    padding: 0 10px;
     border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     background: rgba(255,255,255,0.03);
     color: #cbd5e1;
     display: flex;
     align-items: center;
-    padding: 0 10px;
     font-size: 0.95rem;
     font-weight: 700;
 }
@@ -81,64 +141,50 @@
     background: rgba(127, 29, 29, 0.42);
 }
 
-.logbuchMainLayout {
+/* Main action grid: label + two buttons */
+.logbuchActionGrid {
     display: grid;
-    grid-template-columns: 0.78fr 1.22fr;
-    gap: 14px;
-    max-height: calc(80vh - 82px);
-    min-height: 0;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px;
+    grid-template-columns: var(--label-width) repeat(2, minmax(0, 1fr));
+    gap: 2px 10px;
+    align-items: stretch;
 }
 
-.logbuchInputPane {
-    min-width: 0;
-    overflow-y: auto;
-    padding: 10px 12px 10px 10px;
-    border-right: 1px solid rgba(255,255,255,0.16);
-}
-
-.logbuchHistoryPane {
-    min-width: 0;
-    min-height: 0;
-    overflow: hidden;
+.logbuchActionLabel {
+    height: var(--action-size);
     display: flex;
-    flex-direction: column;
-    padding: 10px 10px 10px 4px;
+    align-items: center;
+    justify-content: center;
 }
 
-.logbuchSectionTitle {
-    margin-top: 2px;
-    margin-bottom: 2px;
-    font-size: 0.82rem;
-    font-weight: 800;
-    color: #93bdff;
+.logbuchActionLabel span {
+    display: inline-block;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    white-space: nowrap;
+    color: var(--color-accent);
+    font-size: clamp(0.68rem, 1.2vw, 0.82rem);
+    font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.logbuchHistoryTitle {
-    margin-top: 0;
+    letter-spacing: 0.10em;
 }
 
 .logbuchGroup {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2px;
-    margin-bottom: 2px;
+    gap: var(--gap-xs);
+    margin-bottom: var(--gap-xs);
 }
 
 .logbuchToggleButton {
-    aspect-ratio: 1 / 1;
     width: 100%;
-    max-height: 112px;
+    height: var(--action-size);
     border: 1px solid rgba(255,255,255,0.16);
     border-radius: 11px;
-    font-size: 0.88rem;
+    color: white;
+    cursor: pointer;
+    font-size: clamp(0.76rem, 1.2vw, 0.88rem);
     font-weight: 700;
     line-height: 1.12;
-    cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -148,8 +194,9 @@
 }
 
 .logbuchToggleButton:active,
-.logbuchActions button:active,
-.logbuchOpenButton:active {
+.logbuchOpenButton:active,
+.logbuchMiniButton:active,
+.logbuchVerticalSave:active {
     transform: scale(0.97);
 }
 
@@ -197,16 +244,43 @@
     border-radius: 10px;
     background: #2563eb;
     color: white;
-    font-size: 1rem;
-    font-weight: 700;
     cursor: pointer;
     padding: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.logbuchExportRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.logbuchMiniButton {
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 9px;
+    background: linear-gradient(145deg, #334155, #1e293b);
+    color: white;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.logbuchMiniButton:hover {
+    filter: brightness(1.08);
+}
+
+.logbuchSecondaryButton {
+    background: linear-gradient(145deg, #475569, #334155);
 }
 
 .logbuchTextRow {
     display: grid;
     grid-template-columns: 1fr 46px;
-    gap: 8px;
+    gap: var(--gap-sm);
     margin-bottom: 10px;
     align-items: stretch;
 }
@@ -215,35 +289,31 @@
     width: 100%;
     min-height: 108px;
     resize: vertical;
+    box-sizing: border-box;
     border: 1px solid rgba(255,255,255,0.25);
     border-radius: 9px;
     padding: 10px;
-    box-sizing: border-box;
-    background: #202a36;
+    background: var(--color-panel);
     color: white;
     font-size: 0.95rem;
 }
 
 .logbuchVerticalSave {
+    min-height: 108px;
+    padding: 4px;
     border: 1px solid rgba(255,255,255,0.14);
     border-radius: 9px;
     background: linear-gradient(145deg, #3b82f6, #1d4ed8);
     color: white;
     cursor: pointer;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     writing-mode: vertical-rl;
     transform: rotate(180deg);
-
     font-size: 0.86rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-
-    min-height: 108px;
-    padding: 4px;
 }
 
 .logbuchVerticalSave:active {
@@ -251,12 +321,12 @@
 }
 
 .logbuchEntries {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 7px;
-    overflow-y: auto;
-    min-height: 0;
-    flex: 1 1 auto;
     padding-right: 5px;
     padding-bottom: 4px;
 }
@@ -267,9 +337,9 @@
     gap: 10px;
     align-items: center;
     padding: 7px;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.045);
     border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.045);
 }
 
 .logbuchEntryIcon {
@@ -289,391 +359,25 @@
 }
 
 .logbuchEntryTitle {
+    color: #f8fafc;
     font-size: 0.95rem;
     font-weight: 800;
-    color: #f8fafc;
 }
 
 .logbuchEntryMeta {
+    color: var(--color-muted);
     font-size: 0.76rem;
-    color: #a8b4c4;
     line-height: 1.2;
 }
 
 .logbuchEntryText {
-    font-size: 0.82rem;
-    color: #d8e0eb;
-    word-break: break-word;
     margin-top: 2px;
-}
-
-@media (max-width: 860px) {
-    .logbuchBox {
-        width: 97vw;
-        max-height: 80vh;
-        overflow-y: auto;
-    }
-
-    .logbuchMainLayout {
-        display: block;
-        max-height: none;
-    }
-
-    .logbuchInputPane {
-        border-right: none;
-        border-bottom: 1px solid rgba(255,255,255,0.16);
-    }
-
-    .logbuchHistoryPane {
-        padding-left: 10px;
-    }
-
-    .logbuchEntries {
-        max-height: 300px;
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Direkt platzierbare AVNav Logbuch-Buttons */
-.logbuchDirectWidgetData {
-    width: 100%;
-    height: 100%;
-}
-
-.logbuchDirectButton {
-    width: 100%;
-    height: 100%;
-    min-height: 2.2rem;
-    padding: 0.25rem 0.4rem;
-    border-radius: 0.45rem;
-    border: 1px solid rgba(255,255,255,0.25);
-    background: rgba(25,25,25,0.88);
-    color: #fff;
-    font-size: 0.78rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.3rem;
-    cursor: pointer;
-}
-
-.logbuchDirectButton:active {
-    transform: scale(0.96);
-}
-
-.logbuchDirectIcon {
-    width: 1.15rem;
-    height: 1.15rem;
-    object-fit: contain;
-}
-
-/* Overlay-Quickbuttons kleiner */
-.logbuchToggleButton {
-    transform: scale(0.67);
-    transform-origin: center;
-}
-
-/* AVNav-style frei platzierbare Logbuch-Button-Widgets */
-
-.logbuchDirectWidgetData {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.logbuchDirectButton {
-    width: min(100%, 46px);
-    height: min(100%, 46px);
-
-    min-width: 34px;
-    min-height: 34px;
-
-    max-width: 46px;
-    max-height: 46px;
-
-    padding: 0;
-
-    border-radius: 4px;
-    border: 1px solid #7f8b91;
-
-    background: linear-gradient(#f3f3f3, #d8d8d8);
-
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.85),
-        inset 0 -1px 0 rgba(0,0,0,0.10);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    overflow: hidden;
-}
-
-.logbuchDirectButton:active {
-    background: linear-gradient(#d0d0d0, #ececec);
-}
-
-.logbuchDirectSvg {
-    width: 24px;
-    height: 24px;
-
-    min-width: 20px;
-    min-height: 20px;
-
-    max-width: 26px;
-    max-height: 26px;
-
-    fill: #050505;
-    stroke: #050505;
-
-    display: block;
-}
-
-.logbuchDirectStroke {
-    fill: none;
-    stroke: #050505;
-    stroke-width: 5.5;
-    stroke-linecap: square;
-    stroke-linejoin: miter;
-}
-
-
-/* Keine Textbeschriftung in den direkten Widgets */
-.logbuchDirectButton span,
-.logbuchDirectButton .logbuchButtonLabel {
-    display: none;
-}
-
-/* Fix: direkte Logbuch-Buttons proportional in AVNav-Widget-Zellen skalieren */
-.logbuchDirectWidgetData {
-    position: relative;
-    overflow: hidden;
-}
-
-.logbuchDirectButton {
-    position: relative;
-    overflow: hidden;
-    padding: 0;
-}
-
-.logbuchDirectSvg {
-    width: min(70%, 34px);
-    height: min(70%, 34px);
-    max-width: 34px;
-    max-height: 34px;
-    min-width: 18px;
-    min-height: 18px;
-    display: block;
-}
-
-/* In sehr flachen Widget-Zellen unten kleiner skalieren */
-.logbuchDirectWidgetData .logbuchDirectSvg {
-    width: min(58%, 30px);
-    height: min(58%, 30px);
-}
-
-/* Button optisch näher an AVNav Seitenleiste */
-.logbuchDirectButton {
-    border-radius: 3px;
-    border: 1px solid #6f7d83;
-    background: linear-gradient(#f3f3f3, #d7d7d7);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
-}
-
-/* AVNav zeigt eigene Widget-Captions. Im Button selbst kein Text. */
-.logbuchDirectButton span {
-    display: none !important;
-}
-
-/* Fix: SVG-Icons sauber zentrieren und nicht abschneiden */
-.logbuchDirectButton {
-    position: relative;
-}
-
-.logbuchDirectSvg {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    min-height: 30px !important;
-    max-width: 30px !important;
-    max-height: 30px !important;
-
-    overflow: visible !important;
-    transform: scale(0.82);
-    transform-origin: center center;
-}
-
-.logbuchDirectSvg path,
-.logbuchDirectSvg rect,
-.logbuchDirectSvg circle {
-    vector-effect: non-scaling-stroke;
-}
-
-.logbuchDirectStroke {
-    stroke-width: 4.2 !important;
-}
-
-/* Final: direkte Logbuch-Widgets mit echten Icon-Dateien statt Inline-SVG */
-.logbuchDirectWidgetData {
-    width: 100% !important;
-    height: 100% !important;
-    overflow: hidden !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-}
-
-.logbuchDirectButton {
-    width: min(100%, 46px) !important;
-    height: min(100%, 46px) !important;
-    min-width: 32px !important;
-    min-height: 32px !important;
-    max-width: 46px !important;
-    max-height: 46px !important;
-    padding: 3px !important;
-    margin: 0 !important;
-
-    border-radius: 4px !important;
-    border: 1px solid #7f8b91 !important;
-    background: linear-gradient(#f3f3f3, #d8d8d8) !important;
-
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.85),
-        inset 0 -1px 0 rgba(0,0,0,0.10) !important;
-
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    overflow: hidden !important;
-    cursor: pointer !important;
-}
-
-.logbuchDirectButton:active {
-    background: linear-gradient(#d0d0d0, #ececec) !important;
-    transform: scale(0.97);
-}
-
-.logbuchDirectIcon {
-    width: 82% !important;
-    height: 82% !important;
-    max-width: 34px !important;
-    max-height: 34px !important;
-    object-fit: contain !important;
-    display: block !important;
-    pointer-events: none !important;
-}
-
-.logbuchDirectSvg {
-    display: none !important;
-}
-
-/* Direct-Widget Icons: schwarz und größer */
-.logbuchDirectIcon {
-    width: 92% !important;
-    height: 92% !important;
-    max-width: 40px !important;
-    max-height: 40px !important;
-    object-fit: contain !important;
-    filter: brightness(0) contrast(1.4) !important;
-    opacity: 1 !important;
-}
-
-/* Button bleibt im AVNav-Stil */
-.logbuchDirectButton {
-    padding: 2px !important;
-}
-
-/* Icons nochmals etwas größer */
-.logbuchDirectIcon {
-    width: 98% !important;
-    height: 98% !important;
-
-    max-width: 44px !important;
-    max-height: 44px !important;
-
-    object-fit: contain !important;
-
-    filter: brightness(0) contrast(1.4) !important;
-}
-
-/* Icons nochmals etwas größer */
-.logbuchDirectIcon {
-    width: 98% !important;
-    height: 98% !important;
-
-    max-width: 44px !important;
-    max-height: 44px !important;
-
-    object-fit: contain !important;
-
-    filter: brightness(0) contrast(1.4) !important;
-}
-
-/* Icons nochmals etwas größer */
-.logbuchDirectIcon {
-    width: 98% !important;
-    height: 98% !important;
-
-    max-width: 44px !important;
-    max-height: 44px !important;
-
-    object-fit: contain !important;
-
-    filter: brightness(0) contrast(1.4) !important;
-}
-
-
-/* Export controls */
-.logbuchExportRow {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 12px;
-}
-
-.logbuchMiniButton {
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 9px;
-    background: linear-gradient(145deg, #334155, #1e293b);
-    color: white;
-    cursor: pointer;
+    color: #d8e0eb;
     font-size: 0.82rem;
-    font-weight: 800;
-    padding: 8px 10px;
-    min-height: 38px;
+    word-break: break-word;
 }
 
-.logbuchMiniButton:hover {
-    filter: brightness(1.08);
-}
-
-.logbuchMiniButton:active {
-    transform: scale(0.97);
-}
-
-.logbuchSecondaryButton {
-    background: linear-gradient(145deg, #475569, #334155);
-}
-
+/* Export overlay */
 #logbuchExportOverlay {
     position: fixed;
     inset: 0;
@@ -686,12 +390,12 @@
 
 .logbuchExportBox {
     width: min(420px, 92vw);
-    background: #0f172a;
+    padding: 14px;
     border: 1px solid rgba(255,255,255,0.18);
     border-radius: 14px;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+    background: #0f172a;
     color: white;
-    padding: 14px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.45);
 }
 
 .logbuchExportForm {
@@ -702,9 +406,9 @@
 }
 
 .logbuchExportForm label {
+    color: #dbeafe;
     font-size: 0.9rem;
     font-weight: 800;
-    color: #dbeafe;
 }
 
 .logbuchExportForm input[type="date"] {
@@ -712,7 +416,7 @@
     box-sizing: border-box;
     border: 1px solid rgba(255,255,255,0.18);
     border-radius: 9px;
-    background: #202a36;
+    background: var(--color-panel);
     color: white;
     font-size: 0.95rem;
     padding: 8px 10px;
@@ -720,10 +424,10 @@
 
 .logbuchExportHint {
     grid-column: 1 / -1;
-    color: #a8b4c4;
+    margin-top: 2px;
+    color: var(--color-muted);
     font-size: 0.82rem;
     line-height: 1.25;
-    margin-top: 2px;
 }
 
 .logbuchExportButtons {
@@ -734,7 +438,118 @@
     margin-top: 6px;
 }
 
+/* AVNav direct widgets */
+.logbuchDirectWidgetData {
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.logbuchDirectButton {
+    width: min(100%, 46px) !important;
+    height: min(100%, 46px) !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    max-width: 46px !important;
+    max-height: 46px !important;
+    padding: 2px !important;
+    margin: 0 !important;
+    border: 1px solid #7f8b91 !important;
+    border-radius: 4px !important;
+    background: linear-gradient(#f3f3f3, #d8d8d8) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.85),
+        inset 0 -1px 0 rgba(0,0,0,0.10) !important;
+    color: transparent !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.logbuchDirectButton:active {
+    background: linear-gradient(#d0d0d0, #ececec) !important;
+    transform: scale(0.97);
+}
+
+.logbuchDirectButton span,
+.logbuchDirectButton .logbuchButtonLabel {
+    display: none !important;
+}
+
+.logbuchDirectIcon {
+    width: 98% !important;
+    height: 98% !important;
+    max-width: 44px !important;
+    max-height: 44px !important;
+    object-fit: contain !important;
+    filter: brightness(0) contrast(1.4) !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+    display: block !important;
+}
+
+.logbuchDirectSvg {
+    display: none !important;
+}
+
+@media (max-width: 860px) {
+    #logbuchOverlay {
+        --action-size: clamp(72px, 22vw, 96px);
+        --label-width: 36px;
+    }
+
+    .logbuchBox {
+        width: 97vw;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .logbuchMainLayout {
+        grid-template-columns: 1fr;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .logbuchInputPane {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.16);
+    }
+
+    .logbuchHistoryPane {
+        padding-left: 10px;
+    }
+
+    .logbuchActionGrid {
+        gap: 2px 8px;
+    }
+
+    .logbuchEntries {
+        max-height: 300px;
+    }
+}
+
 @media (max-width: 520px) {
+    #logbuchOverlay {
+        --action-size: clamp(66px, 26vw, 88px);
+        --label-width: 32px;
+    }
+
+    .logbuchBox {
+        padding: 8px;
+    }
+
+    .logbuchMainLayout {
+        gap: 8px;
+    }
+
     .logbuchExportForm {
         grid-template-columns: 1fr;
     }
@@ -745,52 +560,5 @@
 
     .logbuchExportButtons .logbuchMiniButton {
         flex: 1 1 auto;
-    }
-}
-
-/* Main action button grid: label + two buttons */
-.logbuchActionGrid {
-    display: grid;
-    grid-template-columns: 42px 1fr 1fr;
-    gap: 2px 10px;
-    align-items: stretch;
-}
-
-.logbuchActionLabel {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 112px;
-}
-
-.logbuchActionLabel span {
-    display: inline-block;
-    transform: rotate(-90deg);
-    transform-origin: center;
-    white-space: nowrap;
-    font-size: 0.82rem;
-    font-weight: 900;
-    color: #93bdff;
-    text-transform: uppercase;
-    letter-spacing: 0.10em;
-}
-
-.logbuchActionGrid .logbuchToggleButton {
-    width: 100%;
-    max-height: 112px;
-}
-
-@media (max-width: 860px) {
-    .logbuchActionGrid {
-        grid-template-columns: 36px 1fr 1fr;
-        gap: 2px 8px;
-    }
-
-    .logbuchActionLabel {
-        min-height: 96px;
-    }
-
-    .logbuchActionGrid .logbuchToggleButton {
-        max-height: 96px;
     }
 }
