@@ -309,7 +309,14 @@ function openLogbuchOverlay() {
         btn.addEventListener("click", function(e) {
             e.preventDefault();
             e.stopPropagation();
-            saveLogbuchEntry(btn.getAttribute("data-type"));
+
+            var type = btn.getAttribute("data-type");
+            if (type === "motor_off") {
+                openLogbuchMotorHoursOverlay();
+                return;
+            }
+
+            saveLogbuchEntry(type);
         }, false);
     });
 
@@ -354,6 +361,17 @@ function logbuchButton(type, label, iconName, extraClass) {
     );
 }
 
+function isStatusEvent(type) {
+    return [
+        "motor_on",
+        "motor_off",
+        "sail_set",
+        "sail_down",
+        "anchor_down",
+        "anchor_up"
+    ].indexOf(type) >= 0;
+}
+
 
 
 function saveDirectLogbuchEntry(type) {
@@ -373,6 +391,11 @@ function saveDirectLogbuchEntry(type) {
                 return;
             }
 
+            if (isStatusEvent(type)) {
+                openLogbuchForceOverlay(type, "", data.message || "Der aktuelle Status passt nicht zum Ereignis.");
+                return;
+            }
+
             console.warn("direct logbuch warning", data);
         })
         .catch(function(err) {
@@ -384,6 +407,10 @@ function saveLogbuchEntry(type) {
     var textField = document.getElementById("logbuchText");
     var text = textField ? (textField.value || "") : "";
 
+    saveLogbuchEntryWithText(type, text, false);
+}
+
+function saveLogbuchEntryWithText(type, text, force) {
     setLogbuchStatus("Speichere...", "info");
 
     var url =
@@ -391,7 +418,11 @@ function saveLogbuchEntry(type) {
         "/api/add?type=" +
         encodeURIComponent(type) +
         "&text=" +
-        encodeURIComponent(text);
+        encodeURIComponent(text || "");
+
+    if (force) {
+        url += "&force=1";
+    }
 
     fetch(url)
         .then(function(response) {
@@ -401,9 +432,12 @@ function saveLogbuchEntry(type) {
             if (data.status === "OK") {
                 setLogbuchStatus("Gespeichert: " + readableEventType(type), "success");
 
+                var textField = document.getElementById("logbuchText");
                 if (textField) {
                     textField.value = "";
-                    textField.focus();
+                    if (document.activeElement && document.activeElement.blur) {
+                        document.activeElement.blur();
+                    }
                 }
 
                 loadLogbuchEntries();
@@ -412,10 +446,11 @@ function saveLogbuchEntry(type) {
                 return;
             }
 
-            /*
-             * Server liefert ERROR bei ungültigen Zuständen:
-             * z. B. Motor an, obwohl Motor bereits läuft.
-             */
+            if (!force && isStatusEvent(type)) {
+                openLogbuchForceOverlay(type, text, data.message || "Der aktuelle Status passt nicht zum Ereignis.");
+                return;
+            }
+
             setLogbuchStatus(data.message || "Aktion nicht möglich", "warning");
             console.warn("logbuch warning", data);
         })
@@ -643,6 +678,153 @@ function openLogbuchExportOverlay() {
         }
 
         exportTripKmz(fromDate, toDate);
+    }, false);
+}
+
+
+function openLogbuchMotorHoursOverlay() {
+    var existing = document.getElementById("logbuchMotorHoursOverlay");
+    if (existing) {
+        existing.remove();
+    }
+
+    var overlay = document.createElement("div");
+    overlay.id = "logbuchMotorHoursOverlay";
+
+    overlay.innerHTML =
+        '<div class="logbuchExportBox">' +
+            '<div class="logbuchHeader">' +
+                '<h2>Motorstunden</h2>' +
+                '<button type="button" id="logbuchMotorHoursCloseTop" class="logbuchCloseButton">×</button>' +
+            '</div>' +
+
+            '<div class="logbuchExportForm">' +
+                '<label for="logbuchMotorHoursInput">Stunden</label>' +
+                '<input type="number" id="logbuchMotorHoursInput" inputmode="decimal" min="0" step="0.1" placeholder="optional">' +
+
+                '<div class="logbuchExportHint">' +
+                    'Leere Eingabe ist erlaubt. Der Eintrag wird als Motor aus gespeichert.' +
+                '</div>' +
+
+                '<div class="logbuchExportButtons">' +
+                    '<button type="button" id="logbuchMotorHoursSave" class="logbuchMiniButton">Speichern</button>' +
+                    '<button type="button" id="logbuchMotorHoursCancel" class="logbuchMiniButton logbuchSecondaryButton">Abbrechen</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener("click", function(e) {
+        if (e.target === overlay) {
+            e.preventDefault();
+            e.stopPropagation();
+            overlay.remove();
+        }
+    }, false);
+
+    var box = overlay.querySelector(".logbuchExportBox");
+    if (box) {
+        box.addEventListener("click", function(e) {
+            e.stopPropagation();
+        }, false);
+    }
+
+    document.getElementById("logbuchMotorHoursCloseTop").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        overlay.remove();
+    }, false);
+
+    document.getElementById("logbuchMotorHoursCancel").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        overlay.remove();
+    }, false);
+
+    document.getElementById("logbuchMotorHoursSave").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var input = document.getElementById("logbuchMotorHoursInput");
+        var hours = input ? String(input.value || "").trim() : "";
+
+        var textField = document.getElementById("logbuchText");
+        var currentText = textField ? String(textField.value || "").trim() : "";
+        var text = currentText;
+
+        if (hours !== "") {
+            text = "Motorstunden: " + hours;
+            if (currentText !== "") {
+                text += " | " + currentText;
+            }
+        }
+
+        overlay.remove();
+        saveLogbuchEntryWithText("motor_off", text);
+    }, false);
+}
+
+function openLogbuchForceOverlay(type, text, message) {
+    var existing = document.getElementById("logbuchForceOverlay");
+    if (existing) {
+        existing.remove();
+    }
+
+    var overlay = document.createElement("div");
+    overlay.id = "logbuchForceOverlay";
+
+    overlay.innerHTML =
+        '<div class="logbuchExportBox">' +
+            '<div class="logbuchHeader">' +
+                '<h2>Warnung</h2>' +
+                '<button type="button" id="logbuchForceCloseTop" class="logbuchCloseButton">×</button>' +
+            '</div>' +
+
+            '<div class="logbuchExportForm">' +
+                '<div class="logbuchExportHint">' +
+                    escapeHtml(message || "Der aktuelle Status passt nicht zum Ereignis.") +
+                    '<br><br>Trotzdem als Nachtrag speichern?' +
+                '</div>' +
+
+                '<div class="logbuchExportButtons">' +
+                    '<button type="button" id="logbuchForceSave" class="logbuchMiniButton">Trotzdem speichern</button>' +
+                    '<button type="button" id="logbuchForceCancel" class="logbuchMiniButton logbuchSecondaryButton">Abbrechen</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+
+    function closeForceOverlay(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        overlay.remove();
+    }
+
+    overlay.addEventListener("click", function(e) {
+        if (e.target === overlay) {
+            closeForceOverlay(e);
+        }
+    }, false);
+
+    var box = overlay.querySelector(".logbuchExportBox");
+    if (box) {
+        box.addEventListener("click", function(e) {
+            e.stopPropagation();
+        }, false);
+    }
+
+    document.getElementById("logbuchForceCloseTop").addEventListener("click", closeForceOverlay, false);
+    document.getElementById("logbuchForceCancel").addEventListener("click", closeForceOverlay, false);
+
+    document.getElementById("logbuchForceSave").addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        overlay.remove();
+        saveLogbuchEntryWithText(type, text, true);
     }, false);
 }
 

@@ -562,3 +562,34 @@
         flex: 1 1 auto;
     }
 }
+
+#logbuchMotorHoursOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 23, 0.68);
+}
+
+.logbuchExportForm input[type="number"] {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 9px;
+    background: var(--color-panel);
+    color: white;
+    font-size: 0.95rem;
+    padding: 8px 10px;
+}
+
+#logbuchForceOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 23, 0.68);
+}

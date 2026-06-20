@@ -419,16 +419,24 @@ class Plugin(object):
         except Exception as e:
             return False, str(e)
 
-    def _save_entry(self, event_type, text, lat=None, lon=None):
+    def _save_entry(self, event_type, text, lat=None, lon=None, force=False):
         valid, message = self._validate_event(event_type)
 
         if not valid:
-            return {
-                'status': 'ERROR',
-                'message': message,
-                'event_type': event_type,
-                'state': dict(self.state)
-            }
+            if not force or str(message).startswith('Unbekannter Eventtyp'):
+                return {
+                    'status': 'ERROR',
+                    'message': message,
+                    'event_type': event_type,
+                    'state': dict(self.state)
+                }
+
+            text = self._sanitize_text(text)
+            force_note = 'Nachtrag/Override: %s' % message
+            if text:
+                text = text + ' | ' + force_note
+            else:
+                text = force_note
 
         entry = self._build_entry(event_type, text, lat, lon)
 
@@ -798,7 +806,9 @@ class Plugin(object):
                 lat = self._get_arg(args, 'lat', None)
                 lon = self._get_arg(args, 'lon', None)
 
-                return self._save_entry(event_type, text, lat, lon)
+                force = self._as_bool(self._get_arg(args, 'force', 'false'))
+
+                return self._save_entry(event_type, text, lat, lon, force)
 
             if url in ('status', 'api/status'):
                 return {
