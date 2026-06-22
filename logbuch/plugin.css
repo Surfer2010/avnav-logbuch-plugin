@@ -593,3 +593,17 @@
     justify-content: center;
     background: rgba(2, 6, 23, 0.68);
 }
+
+.logbuchVersion {
+    position: absolute;
+    right: 10px;
+    bottom: 6px;
+    color: rgba(255,255,255,0.32);
+    font-size: 0.68rem;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.logbuchBox {
+    position: relative;
+}

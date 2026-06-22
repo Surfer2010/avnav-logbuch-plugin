@@ -256,6 +256,8 @@ function openLogbuchOverlay() {
 
             '</div>' +
 
+            '<div class="logbuchVersion">v1.6.0</div>' +
+
         '</div>';
 
     document.body.appendChild(overlay);
