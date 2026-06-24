@@ -178,7 +178,7 @@
 .logbuchToggleButton {
     width: 100%;
     height: var(--action-size);
-    border: 1px solid rgba(255,255,255,0.16);
+    border: 3px solid rgba(255,255,255,0.16);
     border-radius: 11px;
     color: white;
     cursor: pointer;
@@ -213,28 +213,65 @@
     text-shadow: 0 1px 2px rgba(0,0,0,0.55);
 }
 
-.logbuchMotorOn {
-    background: linear-gradient(145deg, #70a83f, #326f28);
+:root {
+    --logbuch-motor-bg: linear-gradient(145deg, #70a83f, #326f28);
+    --logbuch-motor-bg-dark: linear-gradient(145deg, #2f4f22, #102b0f);
+    --logbuch-motor-border: #b8ff8a;
+
+    --logbuch-sail-bg: linear-gradient(145deg, #347be8, #174a9e);
+    --logbuch-sail-bg-dark: linear-gradient(145deg, #183f78, #0b214a);
+    --logbuch-sail-border: #9fc7ff;
+
+    --logbuch-anchor-bg: linear-gradient(145deg, #e07a10, #a04606);
+    --logbuch-anchor-bg-dark: linear-gradient(145deg, #7a3a08, #3d1b04);
+    --logbuch-anchor-border: #ffc170;
 }
 
+.logbuchMotorOn,
 .logbuchMotorOff {
-    background: linear-gradient(145deg, #2f6f2a, #163f17);
+    background: var(--logbuch-motor-bg-dark);
+    border-color: transparent;
 }
 
-.logbuchSailOn {
-    background: linear-gradient(145deg, #347be8, #174a9e);
+.logbuchMotorOn.logbuchStatusActive,
+.logbuchMotorOff.logbuchStatusActive {
+    background: var(--logbuch-motor-bg);
+    border-color: var(--logbuch-motor-border);
 }
 
+.logbuchSailOn,
 .logbuchSailOff {
-    background: linear-gradient(145deg, #1f5ba8, #112f67);
+    background: var(--logbuch-sail-bg-dark);
+    border-color: transparent;
 }
 
-.logbuchAnchorOn {
-    background: linear-gradient(145deg, #e07a10, #a04606);
+.logbuchSailOn.logbuchStatusActive,
+.logbuchSailOff.logbuchStatusActive {
+    background: var(--logbuch-sail-bg);
+    border-color: var(--logbuch-sail-border);
 }
 
+.logbuchAnchorOn,
 .logbuchAnchorOff {
-    background: linear-gradient(145deg, #a9520a, #6e2f05);
+    background: var(--logbuch-anchor-bg-dark);
+    border-color: transparent;
+}
+
+.logbuchAnchorOn.logbuchStatusActive,
+.logbuchAnchorOff.logbuchStatusActive {
+    background: var(--logbuch-anchor-bg);
+    border-color: var(--logbuch-anchor-border);
+}
+
+.logbuchStatusInactive {
+    opacity: 0.72;
+    filter: brightness(0.82);
+}
+
+.logbuchStatusActive {
+    opacity: 1;
+    filter: brightness(1.08);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.32), 0 0 10px rgba(255,255,255,0.20);
 }
 
 .logbuchOpenButton {

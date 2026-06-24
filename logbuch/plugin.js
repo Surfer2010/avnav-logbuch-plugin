@@ -376,6 +376,62 @@ function isStatusEvent(type) {
 
 
 
+function deriveLogbuchState(entries) {
+    var state = {
+        motor: false,
+        sail: false,
+        anchor: false
+    };
+
+    (entries || []).forEach(function(entry) {
+        if (entry && entry.state) {
+            state.motor = !!entry.state.motor;
+            state.sail = !!entry.state.sail;
+            state.anchor = !!entry.state.anchor;
+            return;
+        }
+
+        var type = entry ? entry.event_type : "";
+        if (type === "motor_on") state.motor = true;
+        if (type === "motor_off") state.motor = false;
+        if (type === "sail_set") state.sail = true;
+        if (type === "sail_down") state.sail = false;
+        if (type === "anchor_down") state.anchor = true;
+        if (type === "anchor_up") state.anchor = false;
+    });
+
+    return state;
+}
+
+function setLogbuchButtonActive(selector, active) {
+    var btn = document.querySelector(selector);
+    if (!btn) {
+        return;
+    }
+
+    btn.classList.toggle("logbuchStatusActive", !!active);
+    btn.classList.toggle("logbuchStatusInactive", !active);
+}
+
+function updateLogbuchStatusButtons(state) {
+    state = state || {
+        motor: false,
+        sail: false,
+        anchor: false
+    };
+
+    setLogbuchButtonActive('[data-type="motor_on"]', state.motor === true);
+    setLogbuchButtonActive('[data-type="motor_off"]', state.motor !== true);
+
+    setLogbuchButtonActive('[data-type="sail_set"]', state.sail === true);
+    setLogbuchButtonActive('[data-type="sail_down"]', state.sail !== true);
+
+    setLogbuchButtonActive('[data-type="anchor_down"]', state.anchor === true);
+    setLogbuchButtonActive('[data-type="anchor_up"]', state.anchor !== true);
+}
+
+
+
 function saveDirectLogbuchEntry(type) {
     var url =
         AVNAV_BASE_URL +
@@ -480,7 +536,9 @@ function loadLogbuchEntries() {
                 return;
             }
 
-            renderLogbuchEntries(data.entries || []);
+            var entries = data.entries || [];
+            updateLogbuchStatusButtons(deriveLogbuchState(entries));
+            renderLogbuchEntries(entries);
         })
         .catch(function(err) {
             target.innerHTML = "Fehler beim Laden der Einträge.";
