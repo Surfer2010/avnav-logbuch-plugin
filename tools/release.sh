@@ -20,6 +20,10 @@ rsync -a --delete \
   "$ROOT/logbuch/" \
   "$ROOT/dist/logbuch/"
 
+mkdir -p "$ROOT/dist/logbuch/tools"
+cp "$ROOT/tools/install_or_update.sh" "$ROOT/dist/logbuch/tools/install_or_update.sh"
+chmod +x "$ROOT/dist/logbuch/tools/install_or_update.sh"
+
 cd "$ROOT/dist"
 rm -f "logbuch-v$VERSION.zip"
 zip -qr "logbuch-v$VERSION.zip" logbuch
@@ -28,3 +32,4 @@ echo "Release package created:"
 echo "$ROOT/dist/logbuch-v$VERSION.zip"
 
 grep -n '"version"' "$ROOT/logbuch/plugin.json" "$ROOT/dist/logbuch/plugin.json"
+ls -lh "$ROOT/dist/logbuch-v$VERSION.zip"
