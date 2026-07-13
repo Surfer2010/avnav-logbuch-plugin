@@ -285,6 +285,45 @@ class Plugin(object):
             'source': 'avnav-logbuch-plugin'
         }
 
+    def _normalize_entry(self, entry):
+        if not isinstance(entry, dict):
+            return None
+
+        normalized = dict(entry)
+
+        normalized.setdefault('schema_version', 0)
+        normalized.setdefault('event_type', 'manual')
+        normalized['text'] = self._sanitize_text(normalized.get('text'))
+        normalized.setdefault('state', {})
+        normalized.setdefault('details', {})
+        normalized.setdefault('source', 'unknown')
+
+        if not isinstance(normalized.get('state'), dict):
+            normalized['state'] = {}
+
+        if not isinstance(normalized.get('details'), dict):
+            normalized['details'] = {}
+
+        if not normalized.get('position_source'):
+            if normalized.get('lat') is not None and normalized.get('lon') is not None:
+                normalized['position_source'] = 'live'
+            else:
+                normalized['position_source'] = 'unknown'
+
+        if not normalized.get('id'):
+            seed = json.dumps(
+                normalized,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(',', ':'),
+                default=str
+            )
+            normalized['id'] = str(
+                uuid.uuid5(uuid.NAMESPACE_URL, 'avnav-logbuch:' + seed)
+            )
+
+        return normalized
+
     def _append_jsonl(self, entry):
         if not os.path.isdir(self.log_dir):
             os.makedirs(self.log_dir)
@@ -312,7 +351,9 @@ class Plugin(object):
                     continue
 
                 try:
-                    entries.append(json.loads(line))
+                    entry = self._normalize_entry(json.loads(line))
+                    if entry is not None:
+                        entries.append(entry)
                 except Exception:
                     pass
 
