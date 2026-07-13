@@ -269,15 +269,19 @@ class Plugin(object):
             nav['lon'] = self._to_float(lon)
 
         return {
+            'schema_version': 1,
+            'id': str(uuid.uuid4()),
             'timestamp': self._now_utc(),
             'event_type': event_type or 'manual',
             'text': self._sanitize_text(text),
             'lat': nav.get('lat'),
             'lon': nav.get('lon'),
+            'position_source': 'live' if nav.get('lat') is not None and nav.get('lon') is not None else 'unknown',
             'sog': nav.get('sog'),
             'cog': nav.get('cog'),
             'heading': nav.get('heading'),
             'state': dict(self.state),
+            'details': {},
             'source': 'avnav-logbuch-plugin'
         }
 
