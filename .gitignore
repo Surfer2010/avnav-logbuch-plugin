@@ -8,3 +8,6 @@ __pycache__/
 *.zip
 testdata/avnav-data/overlays/
 dist/
+
+# Lokale Testausgaben
+export-test/
