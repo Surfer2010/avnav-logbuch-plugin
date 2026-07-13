@@ -483,7 +483,9 @@ class Plugin(object):
             else:
                 text = force_note
 
-        entry = self._build_entry(event_type, text, lat, lon)
+        entry = self._normalize_entry(
+            self._build_entry(event_type, text, lat, lon)
+        )
 
         with self.lock:
             self._apply_event_to_state(event_type)
