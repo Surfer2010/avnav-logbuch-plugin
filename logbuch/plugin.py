@@ -25,6 +25,7 @@ except Exception:
     pass
 
 
+
 class Plugin(object):
     LOG_STATUS = 'logbuch.status'
     LOG_COUNT = 'logbuch.count'
@@ -130,6 +131,109 @@ class Plugin(object):
             self.api.registerEditableParameters([], self._editable_parameters_changed)
 
 
+    def _list_logbook_days(self):
+        """Listet vorhandene Logbuchtage, neuester Tag zuerst."""
+        days = []
+
+        try:
+            filenames = os.listdir(self.log_dir)
+        except OSError:
+            return days
+
+        prefix = 'logbuch-'
+        suffix = '.jsonl'
+
+        for filename in filenames:
+            if not filename.startswith(prefix) or not filename.endswith(suffix):
+                continue
+
+            date_value = filename[len(prefix):-len(suffix)]
+
+            try:
+                datetime.datetime.strptime(date_value, '%Y-%m-%d')
+            except ValueError:
+                continue
+
+            path = os.path.join(self.log_dir, filename)
+            count = 0
+
+            try:
+                with open(path, 'r', encoding='utf-8') as handle:
+                    for line in handle:
+                        if line.strip():
+                            count += 1
+            except (OSError, UnicodeError):
+                continue
+
+            parsed_date = datetime.datetime.strptime(
+                date_value,
+                '%Y-%m-%d'
+            ).date()
+
+            today = datetime.datetime.now().date()
+            yesterday = today - datetime.timedelta(days=1)
+
+            weekday_names = (
+                'Mo',
+                'Di',
+                'Mi',
+                'Do',
+                'Fr',
+                'Sa',
+                'So',
+            )
+
+            if parsed_date == today:
+                title = 'Heute'
+                weekday = ''
+            elif parsed_date == yesterday:
+                title = 'Gestern'
+                weekday = ''
+            else:
+                title = parsed_date.strftime('%d.%m.%Y')
+                weekday = weekday_names[parsed_date.weekday()]
+
+            days.append({
+                'date': date_value,
+                'count': count,
+                'title': title,
+                'weekday': weekday
+            })
+
+        days.sort(key=lambda item: item['date'], reverse=True)
+        return days
+
+    def _read_logbook_day(self, date_value):
+        """Liest die JSONL-Einträge eines bestimmten Tages."""
+        try:
+            datetime.datetime.strptime(date_value, '%Y-%m-%d')
+        except (TypeError, ValueError):
+            return []
+
+        path = os.path.join(
+            self.log_dir,
+            'logbuch-%s.jsonl' % date_value
+        )
+
+        entries = []
+
+        try:
+            with open(path, 'r', encoding='utf-8') as handle:
+                for line in handle:
+                    line = line.strip()
+
+                    if not line:
+                        continue
+
+                    try:
+                        entries.append(json.loads(line))
+                    except (TypeError, ValueError):
+                        continue
+        except OSError:
+            return []
+
+        return entries
+
     def _get_config(self, name, default):
         try:
             value = self.api.getConfigValue(name)
@@ -164,6 +268,26 @@ class Plugin(object):
         try:
             if not os.path.isdir(self.log_dir):
                 os.makedirs(self.log_dir)
+
+            if hasattr(self.api, "registerUserApp"):
+                app_url = self.api.getBaseUrl() + "/index.html"
+                app_icon = os.path.join("icons", "logbook.svg")
+
+                try:
+                    self.api.registerUserApp(
+                        app_url,
+                        app_icon,
+                        title="Logbuch",
+                        name="logbuch-view",
+                        shortText="Logbuch",
+                        longText="Digitales Logbuch",
+                    )
+                except TypeError:
+                    self.api.registerUserApp(
+                        app_url,
+                        app_icon,
+                        "Logbuch",
+                    )
 
             self._rebuild_state_from_log()
 
@@ -871,6 +995,38 @@ class Plugin(object):
             if url in ('list', 'api/list'):
                 limit = int(self._get_arg(args, 'limit', 50))
                 return self._list_entries(limit)
+
+            if url in ('summary', 'api/summary'):
+                return {
+                    'status': 'OK',
+                    'days': self._list_logbook_days()
+                }
+
+            if url in ('day', 'api/day'):
+                date_value = self._get_arg(args, 'date', '')
+
+                if not date_value:
+                    return {
+                        'status': 'ERROR',
+                        'message': 'date required'
+                    }
+
+                try:
+                    datetime.datetime.strptime(date_value, '%Y-%m-%d')
+                except (TypeError, ValueError):
+                    return {
+                        'status': 'ERROR',
+                        'message': 'invalid date format, expected YYYY-MM-DD'
+                    }
+
+                entries = self._read_logbook_day(date_value)
+
+                return {
+                    'status': 'OK',
+                    'date': date_value,
+                    'count': len(entries),
+                    'entries': entries
+                }
 
             if url in ('exportKmz', 'api/exportKmz'):
                 date_value = self._get_arg(args, 'date', '')

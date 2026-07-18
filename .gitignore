@@ -11,3 +11,8 @@ dist/
 
 # Lokale Testausgaben
 export-test/
+
+# Lokale Sicherungen und Python-Cache
+*.bak-*
+__pycache__/
+*.pyc

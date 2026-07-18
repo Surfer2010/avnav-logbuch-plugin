@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Digitales Logbuch</title>
+    <link rel="stylesheet" href="logbook-view.css">
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <button id="menu-toggle" class="menu-toggle" type="button"
+                    aria-label="Navigation öffnen">☰</button>
+
+            <div>
+                <h1>Digitales Logbuch</h1>
+                <p id="status-text">Logbuchdaten werden geladen …</p>
+            </div>
+        </header>
+
+        <div class="app-layout">
+            <aside id="sidebar" class="sidebar">
+                <nav>
+                    <h2>Tage</h2>
+                    <div id="day-navigation"></div>
+
+                    <h2>Funktionen</h2>
+                    <button class="side-action" type="button" disabled>
+                        Zeitraum wählen
+                    </button>
+                    <button class="side-action" type="button" disabled>
+                        Filter
+                    </button>
+                    <button class="side-action" type="button" disabled>
+                        Export
+                    </button>
+                </nav>
+            </aside>
+
+            <main id="content" class="content" tabindex="-1">
+                <div id="day-list"></div>
+            </main>
+        </div>
+    </div>
+
+    <dialog id="event-dialog" class="event-dialog">
+        <form method="dialog">
+            <div class="dialog-header">
+                <div>
+                    <p id="dialog-time" class="dialog-time"></p>
+                    <h2 id="dialog-title"></h2>
+                </div>
+                <button class="dialog-close" value="close"
+                        aria-label="Dialog schließen">×</button>
+            </div>
+
+            <div id="dialog-content" class="dialog-content"></div>
+
+            <div class="dialog-actions">
+                <button type="button" disabled>Bearbeiten</button>
+                <button type="button" disabled>Duplizieren</button>
+                <button type="button" disabled>Danach einfügen</button>
+                <button value="close">Schließen</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script src="logbook-view.js"></script>
+</body>
+</html>
