@@ -29,6 +29,14 @@ const EVENT_TYPES = {
         icon: "⚓",
         title: "Anker auf"
     },
+    trip_start: {
+        icon: "▶",
+        title: "Törn gestartet"
+    },
+    trip_end: {
+        icon: "■",
+        title: "Törn beendet"
+    },
     manual: {
         icon: "✎",
         title: "Logbucheintrag"
@@ -38,18 +46,60 @@ const EVENT_TYPES = {
 const dayList = document.getElementById("day-list");
 const dayNavigation = document.getElementById("day-navigation");
 const dialog = document.getElementById("event-dialog");
+const dialogContent = document.getElementById("dialog-content");
+const dialogEditButton = document.getElementById("dialog-edit-button");
+const dialogSaveButton = document.getElementById("dialog-save-button");
+const dialogForceSaveButton = document.getElementById(
+    "dialog-force-save-button"
+);
+const dialogDeleteButton = document.getElementById(
+    "dialog-delete-button"
+);
+const dialogConfirmDeleteButton = document.getElementById(
+    "dialog-confirm-delete-button"
+);
+const dialogForceDeleteButton = document.getElementById(
+    "dialog-force-delete-button"
+);
+const dialogCancelEditButton = document.getElementById(
+    "dialog-cancel-edit-button"
+);
+const dialogCloseButton = document.getElementById("dialog-close-button");
+const dialogDuplicateButton = document.getElementById(
+    "dialog-duplicate-button"
+);
+const dialogBeforeButton = document.getElementById(
+    "dialog-before-button"
+);
+const dialogAfterButton = document.getElementById(
+    "dialog-after-button"
+);
 const sidebar = document.getElementById("sidebar");
 const menuToggle = document.getElementById("menu-toggle");
 const statusText = document.getElementById("status-text");
 
 let navigationDays = [];
 let selectedDate = null;
+let activeEntry = null;
+let dialogMode = "view";
+let dialogBusy = false;
+let pendingForcedUpdate = null;
+let pendingForcedDelete = null;
 
 function getEventPresentation(eventType) {
     return EVENT_TYPES[eventType] || {
         icon: "•",
         title: eventType || "Unbekanntes Ereignis"
     };
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 function formatTimestamp(timestamp) {
@@ -70,8 +120,12 @@ function formatTimestamp(timestamp) {
 }
 
 function formatPosition(entry) {
-    if (entry.lat === null || entry.lat === undefined ||
-        entry.lon === null || entry.lon === undefined) {
+    if (
+        entry.lat === null ||
+        entry.lat === undefined ||
+        entry.lon === null ||
+        entry.lon === undefined
+    ) {
         return null;
     }
 
@@ -103,10 +157,86 @@ function setStatus(text) {
     statusText.textContent = text;
 }
 
+function setDialogBusy(isBusy) {
+    dialogBusy = isBusy;
+
+    dialogSaveButton.disabled = isBusy;
+    dialogForceSaveButton.disabled = isBusy;
+    dialogDeleteButton.disabled = isBusy;
+    dialogConfirmDeleteButton.disabled = isBusy;
+    dialogForceDeleteButton.disabled = isBusy;
+    dialogCancelEditButton.disabled = isBusy;
+    dialogEditButton.disabled = isBusy;
+    dialogDuplicateButton.disabled = isBusy;
+    dialogBeforeButton.disabled = isBusy;
+    dialogAfterButton.disabled = isBusy;
+    dialogCloseButton.disabled = isBusy;
+
+    const fields = dialogContent.querySelectorAll(
+        "input, select, textarea, button"
+    );
+
+    fields.forEach(field => {
+        field.disabled = isBusy;
+    });
+}
+
+function resetDialogActions() {
+    dialogEditButton.hidden = false;
+    dialogDeleteButton.hidden = false;
+    dialogSaveButton.hidden = true;
+    dialogForceSaveButton.hidden = true;
+    dialogConfirmDeleteButton.hidden = true;
+    dialogForceDeleteButton.hidden = true;
+    dialogCancelEditButton.hidden = true;
+    dialogDuplicateButton.hidden = false;
+    dialogBeforeButton.hidden = false;
+    dialogAfterButton.hidden = false;
+    dialogCloseButton.hidden = false;
+
+    pendingForcedUpdate = null;
+    pendingForcedDelete = null;
+    setDialogBusy(false);
+}
+
+function setEditDialogActions() {
+    dialogEditButton.hidden = true;
+    dialogDeleteButton.hidden = true;
+    dialogSaveButton.hidden = false;
+    dialogForceSaveButton.hidden = true;
+    dialogConfirmDeleteButton.hidden = true;
+    dialogForceDeleteButton.hidden = true;
+    dialogCancelEditButton.hidden = false;
+    dialogDuplicateButton.hidden = true;
+    dialogBeforeButton.hidden = true;
+    dialogAfterButton.hidden = true;
+    dialogCloseButton.hidden = true;
+
+    pendingForcedUpdate = null;
+    pendingForcedDelete = null;
+    setDialogBusy(false);
+}
+
+function setDeleteDialogActions(showForce = false) {
+    dialogEditButton.hidden = true;
+    dialogDeleteButton.hidden = true;
+    dialogSaveButton.hidden = true;
+    dialogForceSaveButton.hidden = true;
+    dialogConfirmDeleteButton.hidden = showForce;
+    dialogForceDeleteButton.hidden = !showForce;
+    dialogCancelEditButton.hidden = false;
+    dialogDuplicateButton.hidden = true;
+    dialogBeforeButton.hidden = true;
+    dialogAfterButton.hidden = true;
+    dialogCloseButton.hidden = true;
+
+    setDialogBusy(false);
+}
+
 function renderNavigation() {
     dayNavigation.replaceChildren();
 
-    navigationDays.forEach((day, index) => {
+    navigationDays.forEach(day => {
         const link = document.createElement("a");
         const isActive = day.date === selectedDate;
 
@@ -119,14 +249,20 @@ function renderNavigation() {
 
         link.href = `#day-${day.date}`;
         link.innerHTML = `
-            <span>${day.weekday} ${day.title}</span>
-            <span class="nav-count">${day.count}</span>
+            <span>${escapeHtml(day.weekday)} ${escapeHtml(day.title)}</span>
+            <span class="nav-count">${escapeHtml(day.count)}</span>
         `;
 
         link.addEventListener("click", async event => {
             event.preventDefault();
-            await loadDay(day.date);
-            sidebar.classList.remove("open");
+
+            try {
+                await loadDay(day.date);
+                sidebar.classList.remove("open");
+            } catch (error) {
+                console.error("Tag konnte nicht geladen werden", error);
+                setStatus("Fehler beim Laden des Logbuchtages");
+            }
         });
 
         dayNavigation.appendChild(link);
@@ -139,11 +275,13 @@ function createEventElement(entry) {
     element.tabIndex = 0;
 
     element.innerHTML = `
-        <div class="entry-time">${entry.time}</div>
-        <div class="entry-icon" aria-hidden="true">${entry.icon}</div>
+        <div class="entry-time">${escapeHtml(entry.time)}</div>
+        <div class="entry-icon" aria-hidden="true">
+            ${escapeHtml(entry.icon)}
+        </div>
         <div>
-            <h3 class="entry-title">${entry.title}</h3>
-            <p class="entry-comment">${entry.comment}</p>
+            <h3 class="entry-title">${escapeHtml(entry.title)}</h3>
+            <p class="entry-comment">${escapeHtml(entry.comment)}</p>
         </div>
     `;
 
@@ -171,8 +309,12 @@ function createDaySection(day, entries) {
     toggle.setAttribute("aria-expanded", "true");
     toggle.innerHTML = `
         <span class="day-chevron" aria-hidden="true">▶</span>
-        <strong>${day.weekday} ${day.title}</strong>
-        <span class="day-count">${entries.length} Einträge</span>
+        <strong>
+            ${escapeHtml(day.weekday)} ${escapeHtml(day.title)}
+        </strong>
+        <span class="day-count">
+            ${entries.length} Einträge
+        </span>
     `;
 
     const body = document.createElement("div");
@@ -198,19 +340,38 @@ function createDaySection(day, entries) {
     return section;
 }
 
+async function fetchJson(url, options = {}) {
+    const response = await fetch(url, options);
+
+    let data;
+
+    try {
+        data = await response.json();
+    } catch (error) {
+        throw new Error(
+            `Ungültige Serverantwort (HTTP ${response.status})`
+        );
+    }
+
+    if (!response.ok) {
+        throw new Error(
+            data.message || `HTTP ${response.status}`
+        );
+    }
+
+    return data;
+}
+
 async function loadSummary() {
     setStatus("Logbuchtage werden geladen …");
 
-    const response = await fetch(`${AVNAV_BASE_URL}/api/summary`);
-
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await fetchJson(`${AVNAV_BASE_URL}/api/summary`);
 
     if (data.status !== "OK") {
-        throw new Error(data.message || "Zusammenfassung konnte nicht geladen werden");
+        throw new Error(
+            data.message ||
+            "Zusammenfassung konnte nicht geladen werden"
+        );
     }
 
     navigationDays = data.days || [];
@@ -222,7 +383,14 @@ async function loadSummary() {
         return;
     }
 
-    const initialDate = selectedDate || navigationDays[0].date;
+    const selectedStillExists = navigationDays.some(
+        day => day.date === selectedDate
+    );
+
+    const initialDate = selectedStillExists
+        ? selectedDate
+        : navigationDays[0].date;
+
     await loadDay(initialDate);
 }
 
@@ -233,15 +401,9 @@ async function loadDay(dateValue) {
     setStatus(`Logbuch vom ${dateValue} wird geladen …`);
     dayList.replaceChildren();
 
-    const response = await fetch(
+    const data = await fetchJson(
         `${AVNAV_BASE_URL}/api/day?date=${encodeURIComponent(dateValue)}`
     );
-
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
 
     if (data.status !== "OK") {
         throw new Error(data.message || "Tag konnte nicht geladen werden");
@@ -259,54 +421,746 @@ async function loadDay(dateValue) {
     dayList.appendChild(createDaySection(day, entries));
     renderNavigation();
 
-    setStatus(`${day.weekday} ${day.title} · ${entries.length} Einträge`);
+    setStatus(
+        `${day.weekday} ${day.title} · ${entries.length} Einträge`
+    );
 }
 
-function showEventDialog(entry) {
-    document.getElementById("dialog-time").textContent = entry.time;
-    document.getElementById("dialog-title").textContent =
-        `${entry.icon} ${entry.title}`;
+function createDetailParagraph(label, value) {
+    const paragraph = document.createElement("p");
+    const strong = document.createElement("strong");
 
-    const positionText = entry.position
-        ? `<p><strong>Position:</strong> ${entry.position}</p>`
-        : "<p><strong>Position:</strong> nicht vorhanden</p>";
+    strong.textContent = `${label}: `;
+    paragraph.appendChild(strong);
+    paragraph.appendChild(
+        document.createTextNode(
+            value === null || value === undefined || value === ""
+                ? "-"
+                : String(value)
+        )
+    );
 
-    const navigationDetails = [];
+    return paragraph;
+}
+
+function renderEventDetails(entry) {
+    dialogContent.replaceChildren();
+
+    const comment = document.createElement("p");
+    comment.className = "dialog-entry-comment";
+    comment.textContent = entry.text || "Kein Kommentar vorhanden.";
+    dialogContent.appendChild(comment);
+
+    dialogContent.appendChild(
+        createDetailParagraph(
+            "Position",
+            entry.position || "nicht vorhanden"
+        )
+    );
 
     if (entry.sog !== null && entry.sog !== undefined) {
-        navigationDetails.push(
-            `<p><strong>SOG:</strong> ${entry.sog}</p>`
+        dialogContent.appendChild(
+            createDetailParagraph("SOG", entry.sog)
         );
     }
 
     if (entry.cog !== null && entry.cog !== undefined) {
-        navigationDetails.push(
-            `<p><strong>COG:</strong> ${entry.cog}</p>`
+        dialogContent.appendChild(
+            createDetailParagraph("COG", entry.cog)
         );
     }
 
     if (entry.heading !== null && entry.heading !== undefined) {
-        navigationDetails.push(
-            `<p><strong>Heading:</strong> ${entry.heading}</p>`
+        dialogContent.appendChild(
+            createDetailParagraph("Heading", entry.heading)
         );
     }
 
-    document.getElementById("dialog-content").innerHTML = `
-        <p>${entry.comment}</p>
-        ${positionText}
-        ${navigationDetails.join("")}
-        <p><strong>Event-Typ:</strong> ${entry.type}</p>
-        <p><strong>Zeitstempel:</strong> ${entry.timestamp || "-"}</p>
-        <p><strong>Positionsquelle:</strong> ${entry.position_source || "-"}</p>
-        <p><strong>ID:</strong> ${entry.id || "-"}</p>
-    `;
+    dialogContent.appendChild(
+        createDetailParagraph("Event-Typ", entry.type)
+    );
+    dialogContent.appendChild(
+        createDetailParagraph("Zeitstempel", entry.timestamp)
+    );
+    dialogContent.appendChild(
+        createDetailParagraph(
+            "Positionsquelle",
+            entry.position_source
+        )
+    );
+    dialogContent.appendChild(
+        createDetailParagraph("ID", entry.id)
+    );
+}
+
+function showEventDialog(entry) {
+    activeEntry = normalizeEntry(entry);
+    dialogMode = "view";
+
+    document.getElementById("dialog-time").textContent = activeEntry.time;
+    document.getElementById("dialog-title").textContent =
+        `${activeEntry.icon} ${activeEntry.title}`;
+
+    renderEventDetails(activeEntry);
+    resetDialogActions();
 
     if (typeof dialog.showModal === "function") {
-        dialog.showModal();
+        if (!dialog.open) {
+            dialog.showModal();
+        }
     } else {
         dialog.setAttribute("open", "");
     }
 }
+
+function renderDeleteConfirmation(entry, warningMessage = "") {
+    dialogContent.innerHTML = `
+        <div id="edit-message"
+             class="edit-message warning"
+             role="alert"
+             ${warningMessage ? "" : "hidden"}>
+            ${escapeHtml(warningMessage)}
+        </div>
+
+        <div class="delete-confirmation">
+            <p class="delete-confirmation-note">
+                Dieser Eintrag wird dauerhaft aus dem Logbuch entfernt.
+            </p>
+
+            <div class="delete-confirmation-summary">
+                <h3>
+                    ${escapeHtml(entry.icon)}
+                    ${escapeHtml(entry.title)}
+                </h3>
+
+                <p>
+                    <strong>Zeit:</strong>
+                    ${escapeHtml(entry.time)}
+                </p>
+
+                <p>
+                    <strong>Datum:</strong>
+                    ${escapeHtml(
+                        String(entry.timestamp || "").slice(0, 10) || "-"
+                    )}
+                </p>
+
+                <p class="delete-confirmation-comment">
+                    ${escapeHtml(entry.text || "Kein Kommentar vorhanden.")}
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+function startDeleteConfirmation() {
+    if (!activeEntry || dialogBusy) {
+        return;
+    }
+
+    dialogMode = "delete-confirm";
+    pendingForcedDelete = null;
+
+    document.getElementById("dialog-time").textContent =
+        "Löschbestätigung";
+    document.getElementById("dialog-title").textContent =
+        "Eintrag wirklich löschen?";
+
+    renderDeleteConfirmation(activeEntry);
+    setDeleteDialogActions(false);
+}
+
+function cancelDeleteConfirmation() {
+    if (!activeEntry || dialogBusy) {
+        return;
+    }
+
+    dialogMode = "view";
+    pendingForcedDelete = null;
+
+    document.getElementById("dialog-time").textContent =
+        activeEntry.time;
+    document.getElementById("dialog-title").textContent =
+        `${activeEntry.icon} ${activeEntry.title}`;
+
+    renderEventDetails(activeEntry);
+    resetDialogActions();
+}
+
+async function sendEntryDelete(entryId, force = false) {
+    const parameters = new URLSearchParams();
+
+    parameters.set("id", entryId);
+    parameters.set("force", force ? "true" : "false");
+
+    return fetchJson(
+        `${AVNAV_BASE_URL}/api/entry/delete?${parameters.toString()}`
+    );
+}
+
+async function deleteActiveEntry(force = false) {
+    if (!activeEntry || dialogBusy) {
+        return;
+    }
+
+    const entryId = pendingForcedDelete || activeEntry.id;
+
+    setDialogBusy(true);
+    showEditMessage("Eintrag wird gelöscht …", "information");
+
+    try {
+        const data = await sendEntryDelete(entryId, force);
+
+        if (data.status === "WARNING") {
+            pendingForcedDelete = entryId;
+            dialogMode = "delete-warning";
+
+            renderDeleteConfirmation(
+                activeEntry,
+                warningMessageFromResponse(data)
+            );
+
+            setDeleteDialogActions(true);
+            return;
+        }
+
+        if (data.status !== "OK") {
+            throw new Error(
+                data.message || "Eintrag konnte nicht gelöscht werden."
+            );
+        }
+
+        const deletedDate = String(
+            (data.deleted && data.deleted.timestamp) ||
+            activeEntry.timestamp ||
+            ""
+        ).slice(0, 10);
+
+        pendingForcedDelete = null;
+        setStatus("Logbucheintrag wurde gelöscht");
+
+        if (deletedDate) {
+            selectedDate = deletedDate;
+        }
+
+        if (dialog.open && typeof dialog.close === "function") {
+            dialog.close();
+        } else {
+            dialog.removeAttribute("open");
+        }
+
+        dialogMode = "view";
+        activeEntry = null;
+        resetDialogActions();
+
+        await loadSummary();
+    } catch (error) {
+        console.error("Eintrag konnte nicht gelöscht werden", error);
+
+        showEditMessage(
+            error.message || "Eintrag konnte nicht gelöscht werden.",
+            "error"
+        );
+
+        setDialogBusy(false);
+    }
+}
+
+function timestampToLocalParts(timestamp) {
+    const date = new Date(timestamp);
+
+    if (Number.isNaN(date.getTime())) {
+        return {
+            date: "",
+            time: ""
+        };
+    }
+
+    const pad = value => String(value).padStart(2, "0");
+
+    return {
+        date: [
+            date.getFullYear(),
+            pad(date.getMonth() + 1),
+            pad(date.getDate())
+        ].join("-"),
+        time: [
+            pad(date.getHours()),
+            pad(date.getMinutes())
+        ].join(":")
+    };
+}
+
+function buildEventTypeOptions(selectedType) {
+    return Object.entries(EVENT_TYPES)
+        .map(([value, presentation]) => {
+            const selected = value === selectedType ? " selected" : "";
+
+            return `
+                <option value="${escapeHtml(value)}"${selected}>
+                    ${escapeHtml(presentation.icon)}
+                    ${escapeHtml(presentation.title)}
+                </option>
+            `;
+        })
+        .join("");
+}
+
+function renderEditForm(entry) {
+    const localParts = timestampToLocalParts(entry.timestamp);
+
+    dialogContent.innerHTML = `
+        <div id="edit-message"
+             class="edit-message"
+             role="alert"
+             hidden>
+        </div>
+
+        <div class="edit-form">
+            <label class="edit-field">
+                <span>Eventtyp</span>
+                <select id="edit-event-type">
+                    ${buildEventTypeOptions(entry.event_type)}
+                </select>
+            </label>
+
+            <div class="edit-date-time">
+                <label class="edit-field">
+                    <span>Datum</span>
+                    <input id="edit-date"
+                           type="date"
+                           value="${escapeHtml(localParts.date)}"
+                           required>
+                </label>
+
+                <label class="edit-field">
+                    <span>Uhrzeit</span>
+                    <input id="edit-time"
+                           type="time"
+                           value="${escapeHtml(localParts.time)}"
+                           required>
+                </label>
+            </div>
+
+            <label class="edit-field">
+                <span>Logbuchtext</span>
+                <textarea id="edit-text"
+                          rows="6">${escapeHtml(entry.text || "")}</textarea>
+            </label>
+
+            <div class="edit-static-details">
+                <p>
+                    <strong>Position:</strong>
+                    ${escapeHtml(entry.position || "nicht vorhanden")}
+                </p>
+                <p>
+                    <strong>ID:</strong>
+                    <span class="entry-id">${
+                        dialogMode === "edit"
+                            ? escapeHtml(entry.id || "-")
+                            : "wird beim Speichern neu erzeugt"
+                    }</span>
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+function startEditing() {
+    if (!activeEntry || dialogBusy) {
+        return;
+    }
+
+    dialogMode = "edit";
+    pendingForcedUpdate = null;
+
+    document.getElementById("dialog-time").textContent =
+        "Eintrag bearbeiten";
+    document.getElementById("dialog-title").textContent =
+        `${activeEntry.icon} ${activeEntry.title}`;
+
+    renderEditForm(activeEntry);
+    setEditDialogActions();
+
+    const textField = document.getElementById("edit-text");
+
+    if (textField) {
+        textField.focus();
+        textField.setSelectionRange(
+            textField.value.length,
+            textField.value.length
+        );
+    }
+}
+
+function openCreateEditor(mode, entry, heading) {
+    if (!activeEntry || dialogBusy) {
+        return;
+    }
+
+    dialogMode = mode;
+    pendingForcedUpdate = null;
+
+    document.getElementById("dialog-time").textContent = heading;
+
+    const presentation = getEventPresentation(entry.event_type);
+    document.getElementById("dialog-title").textContent =
+        `${presentation.icon} ${presentation.title}`;
+
+    renderEditForm(entry);
+    setEditDialogActions();
+
+    const textField = document.getElementById("edit-text");
+
+    if (textField) {
+        textField.focus();
+
+        if (mode === "duplicate") {
+            textField.setSelectionRange(
+                textField.value.length,
+                textField.value.length
+            );
+        }
+    }
+}
+
+function startDuplicating() {
+    const duplicate = normalizeEntry({
+        ...activeEntry,
+        id: null
+    });
+
+    openCreateEditor(
+        "duplicate",
+        duplicate,
+        "Eintrag duplizieren"
+    );
+}
+
+function shiftedEntry(seconds) {
+    const sourceTime = new Date(activeEntry.timestamp);
+
+    if (Number.isNaN(sourceTime.getTime())) {
+        throw new Error("Zeitstempel des Eintrags ist ungültig.");
+    }
+
+    sourceTime.setSeconds(sourceTime.getSeconds() + seconds);
+
+    return normalizeEntry({
+        ...activeEntry,
+        id: null,
+        timestamp: sourceTime.toISOString().replace(/\.\d{3}Z$/, "Z"),
+        event_type: "manual",
+        text: "",
+        lat: null,
+        lon: null,
+        sog: null,
+        cog: null,
+        heading: null,
+        position_source: "unknown"
+    });
+}
+
+function startInsertBefore() {
+    try {
+        openCreateEditor(
+            "insert-before",
+            shiftedEntry(-60),
+            "Eintrag davor hinzufügen"
+        );
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function startInsertAfter() {
+    try {
+        openCreateEditor(
+            "insert-after",
+            shiftedEntry(60),
+            "Eintrag danach hinzufügen"
+        );
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function cancelEditing() {
+    if (!activeEntry || dialogBusy) {
+        return;
+    }
+
+    if (
+        dialogMode === "delete-confirm" ||
+        dialogMode === "delete-warning"
+    ) {
+        cancelDeleteConfirmation();
+        return;
+    }
+
+    dialogMode = "view";
+    pendingForcedUpdate = null;
+
+    document.getElementById("dialog-time").textContent =
+        activeEntry.time;
+    document.getElementById("dialog-title").textContent =
+        `${activeEntry.icon} ${activeEntry.title}`;
+
+    renderEventDetails(activeEntry);
+    resetDialogActions();
+}
+
+function showEditMessage(message, type = "error") {
+    const messageElement = document.getElementById("edit-message");
+
+    if (!messageElement) {
+        return;
+    }
+
+    messageElement.textContent = message;
+    messageElement.className = `edit-message ${type}`;
+    messageElement.hidden = false;
+}
+
+function clearEditMessage() {
+    const messageElement = document.getElementById("edit-message");
+
+    if (!messageElement) {
+        return;
+    }
+
+    messageElement.textContent = "";
+    messageElement.className = "edit-message";
+    messageElement.hidden = true;
+}
+
+function collectEditPayload() {
+    const eventTypeElement = document.getElementById("edit-event-type");
+    const dateElement = document.getElementById("edit-date");
+    const timeElement = document.getElementById("edit-time");
+    const textElement = document.getElementById("edit-text");
+
+    if (
+        !eventTypeElement ||
+        !dateElement ||
+        !timeElement ||
+        !textElement
+    ) {
+        throw new Error("Bearbeitungsformular ist nicht vollständig.");
+    }
+
+    const dateValue = dateElement.value;
+    const timeValue = timeElement.value;
+
+    if (!dateValue) {
+        throw new Error("Bitte ein Datum angeben.");
+    }
+
+    if (!timeValue) {
+        throw new Error("Bitte eine Uhrzeit angeben.");
+    }
+
+    const localTimestamp = new Date(`${dateValue}T${timeValue}:00`);
+
+    if (Number.isNaN(localTimestamp.getTime())) {
+        throw new Error("Datum oder Uhrzeit ist ungültig.");
+    }
+
+    const timestamp = localTimestamp
+        .toISOString()
+        .replace(/\.\d{3}Z$/, "Z");
+
+    const payload = {
+        event_type: eventTypeElement.value,
+        text: textElement.value,
+        timestamp: timestamp
+    };
+
+    if (dialogMode === "edit") {
+        payload.id = activeEntry.id;
+    }
+
+    return payload;
+}
+
+function warningMessageFromResponse(data) {
+    if (Array.isArray(data.warnings) && data.warnings.length > 0) {
+        return data.warnings
+            .map(warning => warning.message)
+            .filter(Boolean)
+            .join("\n");
+    }
+
+    return data.message || "Die Änderung erzeugt eine Warnung.";
+}
+
+async function sendEntryUpdate(payload, force = false) {
+    const parameters = new URLSearchParams();
+
+    parameters.set("id", payload.id);
+    parameters.set("event_type", payload.event_type);
+    parameters.set("text", payload.text);
+    parameters.set("timestamp", payload.timestamp);
+    parameters.set("force", force ? "true" : "false");
+
+    return fetchJson(
+        `${AVNAV_BASE_URL}/api/entry/update?${parameters.toString()}`
+    );
+}
+
+async function sendEntryCreate(payload, force = false) {
+    const parameters = new URLSearchParams();
+
+    parameters.set("event_type", payload.event_type);
+    parameters.set("text", payload.text);
+    parameters.set("timestamp", payload.timestamp);
+    parameters.set("force", force ? "true" : "false");
+    parameters.set("resolve_position", "true");
+
+    return fetchJson(
+        `${AVNAV_BASE_URL}/api/add?${parameters.toString()}`
+    );
+}
+
+async function saveEditedEntry(force = false) {
+    if (!activeEntry || dialogBusy) {
+        return;
+    }
+
+    clearEditMessage();
+
+    let payload;
+
+    try {
+        payload = force && pendingForcedUpdate
+            ? pendingForcedUpdate
+            : collectEditPayload();
+    } catch (error) {
+        showEditMessage(error.message || String(error), "error");
+        return;
+    }
+
+    setDialogBusy(true);
+    showEditMessage("Eintrag wird gespeichert …", "information");
+
+    try {
+        const createsEntry = dialogMode !== "edit";
+        const data = createsEntry
+            ? await sendEntryCreate(payload, force)
+            : await sendEntryUpdate(payload, force);
+
+        if (data.status === "WARNING") {
+            pendingForcedUpdate = payload;
+
+            showEditMessage(
+                warningMessageFromResponse(data),
+                "warning"
+            );
+
+            dialogForceSaveButton.hidden = false;
+            dialogSaveButton.hidden = true;
+            setDialogBusy(false);
+            return;
+        }
+
+        if (data.status !== "OK") {
+            throw new Error(
+                data.message || "Eintrag konnte nicht gespeichert werden."
+            );
+        }
+
+        pendingForcedUpdate = null;
+
+        const savedEntry = normalizeEntry(data.entry || {
+            ...activeEntry,
+            ...payload
+        });
+
+        activeEntry = savedEntry;
+
+        const newDate = String(savedEntry.timestamp || "").slice(0, 10);
+
+        if (newDate) {
+            selectedDate = newDate;
+        }
+
+        showEditMessage("Eintrag wurde gespeichert.", "success");
+        setStatus(
+            dialogMode === "edit"
+                ? "Logbucheintrag wurde aktualisiert"
+                : "Neuer Logbucheintrag wurde gespeichert"
+        );
+
+        if (dialog.open && typeof dialog.close === "function") {
+            dialog.close();
+        } else {
+            dialog.removeAttribute("open");
+        }
+
+        dialogMode = "view";
+        resetDialogActions();
+
+        await loadSummary();
+    } catch (error) {
+        console.error("Eintrag konnte nicht gespeichert werden", error);
+
+        showEditMessage(
+            error.message || "Eintrag konnte nicht gespeichert werden.",
+            "error"
+        );
+
+        setDialogBusy(false);
+    }
+}
+
+dialogEditButton.addEventListener("click", startEditing);
+dialogDuplicateButton.addEventListener("click", startDuplicating);
+dialogBeforeButton.addEventListener("click", startInsertBefore);
+dialogAfterButton.addEventListener("click", startInsertAfter);
+
+dialogDeleteButton.addEventListener(
+    "click",
+    startDeleteConfirmation
+);
+
+dialogConfirmDeleteButton.addEventListener("click", () => {
+    deleteActiveEntry(false);
+});
+
+dialogForceDeleteButton.addEventListener("click", () => {
+    deleteActiveEntry(true);
+});
+
+dialogCancelEditButton.addEventListener("click", cancelEditing);
+
+dialogSaveButton.addEventListener("click", () => {
+    saveEditedEntry(false);
+});
+
+dialogForceSaveButton.addEventListener("click", () => {
+    saveEditedEntry(true);
+});
+
+dialog.addEventListener("cancel", event => {
+    if (dialogBusy) {
+        event.preventDefault();
+        return;
+    }
+
+    dialogMode = "view";
+    activeEntry = null;
+    pendingForcedUpdate = null;
+    pendingForcedDelete = null;
+    resetDialogActions();
+});
+
+dialog.addEventListener("close", () => {
+    dialogMode = "view";
+    activeEntry = null;
+    pendingForcedUpdate = null;
+    pendingForcedDelete = null;
+    resetDialogActions();
+});
 
 menuToggle.addEventListener("click", () => {
     sidebar.classList.toggle("open");

@@ -57,10 +57,70 @@
             <div id="dialog-content" class="dialog-content"></div>
 
             <div class="dialog-actions">
-                <button type="button" disabled>Bearbeiten</button>
-                <button type="button" disabled>Duplizieren</button>
-                <button type="button" disabled>Danach einfügen</button>
-                <button value="close">Schließen</button>
+                <button id="dialog-edit-button"
+                        class="dialog-primary-action"
+                        type="button">
+                    Bearbeiten
+                </button>
+
+                <button id="dialog-delete-button"
+                        class="dialog-danger-action"
+                        type="button">
+                    Löschen
+                </button>
+
+                <button id="dialog-save-button"
+                        class="dialog-primary-action"
+                        type="button"
+                        hidden>
+                    Speichern
+                </button>
+
+                <button id="dialog-force-save-button"
+                        class="dialog-warning-action"
+                        type="button"
+                        hidden>
+                    Trotzdem speichern
+                </button>
+
+                <button id="dialog-confirm-delete-button"
+                        class="dialog-danger-action"
+                        type="button"
+                        hidden>
+                    Löschen
+                </button>
+
+                <button id="dialog-force-delete-button"
+                        class="dialog-danger-action"
+                        type="button"
+                        hidden>
+                    Trotzdem löschen
+                </button>
+
+                <button id="dialog-cancel-edit-button"
+                        type="button"
+                        hidden>
+                    Abbrechen
+                </button>
+
+                <button id="dialog-duplicate-button"
+                        type="button">
+                    Duplizieren
+                </button>
+
+                <button id="dialog-before-button"
+                        type="button">
+                    Davor einfügen
+                </button>
+
+                <button id="dialog-after-button"
+                        type="button">
+                    Danach einfügen
+                </button>
+
+                <button id="dialog-close-button" value="close">
+                    Schließen
+                </button>
             </div>
         </form>
     </dialog>

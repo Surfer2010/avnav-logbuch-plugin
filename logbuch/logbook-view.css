@@ -296,6 +296,175 @@ button {
     padding: 0.55rem 0.8rem;
 }
 
+
+.dialog-entry-comment {
+    margin-top: 0;
+    white-space: pre-wrap;
+}
+
+.dialog-primary-action {
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--surface);
+    font-weight: 700;
+}
+
+.dialog-warning-action {
+    border: 1px solid #b66a00;
+    background: #b66a00;
+    color: #fff;
+    font-weight: 700;
+}
+
+.dialog-danger-action {
+    border: 1px solid #b43b3b;
+    background: #b43b3b;
+    color: #fff;
+    font-weight: 700;
+}
+
+.dialog-danger-action:hover:not(:disabled),
+.dialog-danger-action:focus-visible:not(:disabled) {
+    background: #963030;
+    border-color: #963030;
+}
+
+.delete-confirmation {
+    display: grid;
+    gap: 1rem;
+}
+
+.delete-confirmation-summary {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--surface-secondary);
+}
+
+.delete-confirmation-summary h3 {
+    margin: 0 0 0.35rem;
+}
+
+.delete-confirmation-summary p {
+    margin: 0.25rem 0;
+}
+
+.delete-confirmation-comment {
+    margin-top: 0.75rem !important;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    white-space: pre-wrap;
+}
+
+.delete-confirmation-note {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.dialog-actions button[hidden] {
+    display: none;
+}
+
+.dialog-actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.edit-form {
+    display: grid;
+    gap: 1rem;
+}
+
+.edit-field {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.edit-field > span {
+    font-weight: 700;
+}
+
+.edit-field input,
+.edit-field select,
+.edit-field textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 0.4rem;
+    background: var(--surface-secondary);
+    color: var(--text);
+    font: inherit;
+}
+
+.edit-field textarea {
+    min-height: 8rem;
+    line-height: 1.45;
+    resize: vertical;
+}
+
+.edit-field input:focus,
+.edit-field select:focus,
+.edit-field textarea:focus {
+    border-color: var(--accent);
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 1px;
+}
+
+.edit-date-time {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.75rem;
+}
+
+.edit-message {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.45rem;
+    white-space: pre-line;
+}
+
+.edit-message[hidden] {
+    display: none;
+}
+
+.edit-message.information {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.edit-message.success {
+    border-color: #2c8a4b;
+    background: rgb(44 138 75 / 14%);
+}
+
+.edit-message.warning {
+    border-color: #b66a00;
+    background: rgb(182 106 0 / 14%);
+}
+
+.edit-message.error {
+    border-color: #b43b3b;
+    background: rgb(180 59 59 / 14%);
+}
+
+.edit-static-details {
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.edit-static-details p {
+    margin: 0.5rem 0 0;
+}
+
+.entry-id {
+    overflow-wrap: anywhere;
+}
+
 @media (max-width: 700px) {
     :root {
         --header-height: 66px;
@@ -325,6 +494,18 @@ button {
     .log-entry {
         grid-template-columns: 54px 30px 1fr;
         padding: 0.7rem;
+    }
+
+    .edit-date-time {
+        grid-template-columns: 1fr;
+    }
+
+    .dialog-actions {
+        justify-content: stretch;
+    }
+
+    .dialog-actions button {
+        flex: 1 1 auto;
     }
 }
 

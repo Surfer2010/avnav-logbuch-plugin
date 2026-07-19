@@ -101,7 +101,14 @@ class Plugin(object):
         }
 
         self.base_dir = self._get_base_dir()
-        self.log_dir = self._get_config('logDir', os.path.join(self.base_dir, 'logbuch'))
+        self.log_dir = self._get_config(
+            'logDir',
+            os.path.join(self.base_dir, 'logbuch')
+        )
+        self.track_dir = self._get_config(
+            'trackDir',
+            os.path.join(self.base_dir, 'tracks')
+        )
 
         # Die Export-Tools werden durch tools/install_or_update.sh hier installiert.
         self.tools_dir = self._get_config('toolsDir', os.path.join(self.base_dir, 'logbuch-tools'))
@@ -318,9 +325,50 @@ class Plugin(object):
     def _now_utc(self):
         return datetime.datetime.utcnow().replace(microsecond=0).isoformat() + 'Z'
 
+    def _normalize_timestamp(self, value=None):
+        # Ohne übergebenen Wert wird der aktuelle UTC-Zeitstempel verwendet.
+        if value is None or str(value).strip() == '':
+            return self._now_utc()
+
+        value = str(value).strip()
+
+        try:
+            if value.endswith('Z'):
+                parsed = datetime.datetime.strptime(
+                    value,
+                    '%Y-%m-%dT%H:%M:%SZ'
+                )
+                parsed = parsed.replace(tzinfo=datetime.timezone.utc)
+            else:
+                parsed = datetime.datetime.fromisoformat(value)
+
+                # Zeitstempel ohne Zeitzone werden als UTC behandelt.
+                if parsed.tzinfo is None:
+                    parsed = parsed.replace(tzinfo=datetime.timezone.utc)
+
+            parsed = parsed.astimezone(datetime.timezone.utc)
+
+            return (
+                parsed.replace(tzinfo=None, microsecond=0).isoformat()
+                + 'Z'
+            )
+
+        except (TypeError, ValueError):
+            raise ValueError(
+                'invalid timestamp format, expected ISO 8601'
+            )
+
+    def _log_file(self, timestamp=None):
+        normalized = self._normalize_timestamp(timestamp)
+        day = normalized[:10]
+
+        return os.path.join(
+            self.log_dir,
+            'logbuch-%s.jsonl' % day
+        )
+
     def _today_file(self):
-        day = datetime.datetime.utcnow().strftime('%Y-%m-%d')
-        return os.path.join(self.log_dir, 'logbuch-%s.jsonl' % day)
+        return self._log_file()
 
     def _to_float(self, value):
         try:
@@ -344,6 +392,198 @@ class Plugin(object):
                 pass
 
         return None
+
+    def _timestamp_datetime(self, value):
+        normalized = self._normalize_timestamp(value)
+
+        return datetime.datetime.strptime(
+            normalized,
+            '%Y-%m-%dT%H:%M:%SZ'
+        ).replace(tzinfo=datetime.timezone.utc)
+
+    def _read_avt_points(self, timestamp):
+        normalized = self._normalize_timestamp(timestamp)
+        path = os.path.join(
+            self.track_dir,
+            normalized[:10] + '.avt'
+        )
+
+        points = []
+
+        if not os.path.exists(path):
+            return points, path
+
+        try:
+            with open(path, 'r', encoding='utf-8') as handle:
+                for line in handle:
+                    line = line.strip()
+
+                    if not line or line.startswith('#'):
+                        continue
+
+                    parts = line.split(',')
+
+                    if len(parts) < 5:
+                        continue
+
+                    try:
+                        point_time = self._timestamp_datetime(parts[0])
+                        point = {
+                            'timestamp': point_time,
+                            'lat': float(parts[1]),
+                            'lon': float(parts[2]),
+                            'cog': float(parts[3]),
+                            'sog': float(parts[4]),
+                        }
+
+                        if len(parts) > 5:
+                            point['distance'] = self._to_float(parts[5])
+
+                        points.append(point)
+                    except (TypeError, ValueError):
+                        continue
+        except OSError:
+            return [], path
+
+        points.sort(key=lambda item: item['timestamp'])
+        return points, path
+
+    def _interpolate_angle(self, first, second, fraction):
+        if first is None or second is None:
+            return first if fraction < 0.5 else second
+
+        difference = ((second - first + 180.0) % 360.0) - 180.0
+        return (first + difference * fraction) % 360.0
+
+    def _resolve_track_position(self, timestamp):
+        target = self._timestamp_datetime(timestamp)
+        points, path = self._read_avt_points(timestamp)
+
+        unknown = {
+            'lat': None,
+            'lon': None,
+            'sog': None,
+            'cog': None,
+            'heading': None,
+            'position_source': 'unknown',
+            'track_file': path,
+            'track_time_distance': None,
+        }
+
+        if not points:
+            return unknown
+
+        previous = None
+        following = None
+
+        for point in points:
+            if point['timestamp'] == target:
+                return {
+                    'lat': point.get('lat'),
+                    'lon': point.get('lon'),
+                    'sog': point.get('sog'),
+                    'cog': point.get('cog'),
+                    'heading': None,
+                    'position_source': 'avt_exact',
+                    'track_file': path,
+                    'track_time_distance': 0,
+                }
+
+            if point['timestamp'] < target:
+                previous = point
+                continue
+
+            following = point
+            break
+
+        if previous is not None and following is not None:
+            total_seconds = (
+                following['timestamp'] - previous['timestamp']
+            ).total_seconds()
+
+            if 0 < total_seconds <= 1800:
+                elapsed_seconds = (
+                    target - previous['timestamp']
+                ).total_seconds()
+
+                fraction = elapsed_seconds / total_seconds
+
+                return {
+                    'lat': previous['lat']
+                           + (following['lat'] - previous['lat']) * fraction,
+                    'lon': previous['lon']
+                           + (following['lon'] - previous['lon']) * fraction,
+                    'sog': previous.get('sog')
+                           + (
+                               following.get('sog') - previous.get('sog')
+                           ) * fraction
+                           if previous.get('sog') is not None
+                           and following.get('sog') is not None
+                           else None,
+                    'cog': self._interpolate_angle(
+                        previous.get('cog'),
+                        following.get('cog'),
+                        fraction
+                    ),
+                    'heading': None,
+                    'position_source': 'avt_interpolated',
+                    'track_file': path,
+                    'track_time_distance': int(
+                        min(elapsed_seconds, total_seconds - elapsed_seconds)
+                    ),
+                }
+
+        candidates = [
+            point for point in (previous, following)
+            if point is not None
+        ]
+
+        if candidates:
+            nearest = min(
+                candidates,
+                key=lambda point: abs(
+                    (point['timestamp'] - target).total_seconds()
+                )
+            )
+            distance = abs(
+                (nearest['timestamp'] - target).total_seconds()
+            )
+
+            if distance <= 900:
+                return {
+                    'lat': nearest.get('lat'),
+                    'lon': nearest.get('lon'),
+                    'sog': nearest.get('sog'),
+                    'cog': nearest.get('cog'),
+                    'heading': None,
+                    'position_source': 'avt_nearest',
+                    'track_file': path,
+                    'track_time_distance': int(distance),
+                }
+
+        return unknown
+
+    def _apply_track_position(self, entry):
+        position = self._resolve_track_position(entry.get('timestamp'))
+
+        entry['lat'] = position.get('lat')
+        entry['lon'] = position.get('lon')
+        entry['sog'] = position.get('sog')
+        entry['cog'] = position.get('cog')
+        entry['heading'] = position.get('heading')
+        entry['position_source'] = position.get(
+            'position_source',
+            'unknown'
+        )
+
+        details = dict(entry.get('details') or {})
+        details['track_file'] = position.get('track_file')
+        details['track_time_distance'] = position.get(
+            'track_time_distance'
+        )
+        entry['details'] = details
+
+        return entry
 
     def _get_navigation_data(self):
         lat = self._get_single_value(['gps.lat', 'gps.latitude', 'nav.gps.lat', 'navigation.position.latitude'])
@@ -383,7 +623,14 @@ class Plugin(object):
 
         return text
 
-    def _build_entry(self, event_type, text, lat=None, lon=None):
+    def _build_entry(
+        self,
+        event_type,
+        text,
+        lat=None,
+        lon=None,
+        timestamp=None
+    ):
         nav = self._get_navigation_data()
 
         if lat is not None:
@@ -395,7 +642,7 @@ class Plugin(object):
         return {
             'schema_version': 1,
             'id': str(uuid.uuid4()),
-            'timestamp': self._now_utc(),
+            'timestamp': self._normalize_timestamp(timestamp),
             'event_type': event_type or 'manual',
             'text': self._sanitize_text(text),
             'lat': nav.get('lat'),
@@ -448,11 +695,586 @@ class Plugin(object):
 
         return normalized
 
+    def _entry_sort_key(self, entry):
+        """Erzeugt einen stabilen chronologischen Sortierschlüssel."""
+        timestamp = str(entry.get('timestamp') or '')
+        entry_id = str(entry.get('id') or '')
+        return timestamp, entry_id
+
+    def _load_all_entries(self):
+        """Lädt alle gültigen Logbucheinträge chronologisch sortiert."""
+        entries = []
+
+        if not os.path.isdir(self.log_dir):
+            return entries
+
+        prefix = 'logbuch-'
+        suffix = '.jsonl'
+
+        for filename in sorted(os.listdir(self.log_dir)):
+            if not filename.startswith(prefix) or not filename.endswith(suffix):
+                continue
+
+            date_value = filename[len(prefix):-len(suffix)]
+
+            try:
+                datetime.datetime.strptime(date_value, '%Y-%m-%d')
+            except (TypeError, ValueError):
+                continue
+
+            path = os.path.join(self.log_dir, filename)
+
+            try:
+                with open(path, 'r', encoding='utf-8') as handle:
+                    for line_number, line in enumerate(handle, 1):
+                        line = line.strip()
+
+                        if not line:
+                            continue
+
+                        try:
+                            entry = self._normalize_entry(json.loads(line))
+                        except Exception as error:
+                            try:
+                                self.api.error(
+                                    'Invalid logbook entry in %s line %s: %s'
+                                    % (path, line_number, str(error))
+                                )
+                            except Exception:
+                                pass
+                            continue
+
+                        if entry is not None:
+                            entries.append(entry)
+
+            except (OSError, UnicodeError) as error:
+                try:
+                    self.api.error(
+                        'Unable to read logbook file %s: %s'
+                        % (path, str(error))
+                    )
+                except Exception:
+                    pass
+
+        entries.sort(key=self._entry_sort_key)
+        return entries
+
+    def _entry_date(self, entry):
+        """Bestimmt den Dateinamen-Tag eines Eintrags aus seinem Zeitstempel."""
+        timestamp = self._normalize_timestamp(entry.get('timestamp'))
+        return timestamp[:10]
+
+    def _save_all_entries(self, entries):
+        """
+        Schreibt die vollständige Historie neu.
+
+        Die Einträge werden chronologisch sortiert, nach Tagen gruppiert und
+        zunächst in temporäre Dateien geschrieben. Erst danach werden die
+        bisherigen Tagesdateien ersetzt.
+        """
+        if not os.path.isdir(self.log_dir):
+            os.makedirs(self.log_dir)
+
+        normalized_entries = []
+
+        for entry in entries:
+            normalized = self._normalize_entry(entry)
+
+            if normalized is None:
+                continue
+
+            normalized['timestamp'] = self._normalize_timestamp(
+                normalized.get('timestamp')
+            )
+            normalized_entries.append(normalized)
+
+        normalized_entries.sort(key=self._entry_sort_key)
+
+        grouped = {}
+
+        for entry in normalized_entries:
+            date_value = self._entry_date(entry)
+            grouped.setdefault(date_value, []).append(entry)
+
+        prefix = 'logbuch-'
+        suffix = '.jsonl'
+        existing_paths = []
+
+        for filename in os.listdir(self.log_dir):
+            if not filename.startswith(prefix) or not filename.endswith(suffix):
+                continue
+
+            date_value = filename[len(prefix):-len(suffix)]
+
+            try:
+                datetime.datetime.strptime(date_value, '%Y-%m-%d')
+            except (TypeError, ValueError):
+                continue
+
+            existing_paths.append(os.path.join(self.log_dir, filename))
+
+        temporary_paths = {}
+        written_paths = []
+
+        try:
+            for date_value, day_entries in grouped.items():
+                final_path = os.path.join(
+                    self.log_dir,
+                    'logbuch-%s.jsonl' % date_value
+                )
+                temporary_path = final_path + '.tmp'
+
+                with open(temporary_path, 'w', encoding='utf-8') as handle:
+                    for entry in day_entries:
+                        handle.write(
+                            json.dumps(
+                                entry,
+                                ensure_ascii=False,
+                                sort_keys=True
+                            )
+                        )
+                        handle.write('\n')
+
+                    handle.flush()
+                    os.fsync(handle.fileno())
+
+                temporary_paths[final_path] = temporary_path
+
+            for final_path, temporary_path in temporary_paths.items():
+                os.replace(temporary_path, final_path)
+                written_paths.append(final_path)
+
+            written_set = set(written_paths)
+
+            for old_path in existing_paths:
+                if old_path not in written_set and os.path.exists(old_path):
+                    os.unlink(old_path)
+
+        except Exception:
+            for temporary_path in temporary_paths.values():
+                try:
+                    if os.path.exists(temporary_path):
+                        os.unlink(temporary_path)
+                except Exception:
+                    pass
+            raise
+
+        return {
+            'entries': normalized_entries,
+            'files': sorted(written_paths)
+        }
+
+    def _empty_state(self):
+        return {
+            'motor': False,
+            'sail': False,
+            'anchor': False,
+        }
+
+    def _known_event_types(self):
+        return set(
+            ['manual', 'trip_start', 'trip_end']
+            + list(self.START_EVENTS.keys())
+            + list(self.END_EVENTS.keys())
+        )
+
+    def _find_entry(self, entry_id, entries=None):
+        """Sucht einen Eintrag anhand seiner stabilen ID."""
+        entry_id = str(entry_id or '').strip()
+
+        if not entry_id:
+            return None, None
+
+        if entries is None:
+            entries = self._load_all_entries()
+
+        for index, entry in enumerate(entries):
+            if str(entry.get('id') or '') == entry_id:
+                return index, entry
+
+        return None, None
+
+    def _warning_signature(self, warning):
+        return (
+            str(warning.get('entry_id') or ''),
+            str(warning.get('code') or ''),
+            str(warning.get('state_name') or ''),
+            str(warning.get('event_type') or ''),
+        )
+
+    def _new_history_warnings(self, before, after):
+        """
+        Liefert nur Warnungen, die durch eine Aenderung neu entstanden sind.
+
+        Bereits vorhandene Inkonsistenzen in alten Logbuchdateien blockieren
+        dadurch keine neuen Eintraege oder Korrekturen.
+        """
+        before_signatures = set(
+            self._warning_signature(item)
+            for item in before
+        )
+
+        return [
+            item for item in after
+            if self._warning_signature(item) not in before_signatures
+        ]
+
+    def _validate_history(self, entries):
+        """
+        Prueft die chronologische Ereignishistorie.
+
+        Inkonsistenzen werden als Warnungen zurueckgegeben. Die Funktion
+        veraendert weder Eintraege noch Dateien.
+        """
+        warnings = []
+        state = self._empty_state()
+        seen_ids = set()
+
+        normalized_entries = []
+
+        for raw_entry in entries:
+            entry = self._normalize_entry(raw_entry)
+
+            if entry is None:
+                continue
+
+            try:
+                entry['timestamp'] = self._normalize_timestamp(
+                    entry.get('timestamp')
+                )
+            except ValueError:
+                warnings.append({
+                    'code': 'invalid_timestamp',
+                    'entry_id': str(entry.get('id') or ''),
+                    'timestamp': entry.get('timestamp'),
+                    'event_type': entry.get('event_type'),
+                    'message': 'Ungueltiger Zeitstempel.',
+                })
+                continue
+
+            normalized_entries.append(entry)
+
+        normalized_entries.sort(key=self._entry_sort_key)
+
+        for entry in normalized_entries:
+            entry_id = str(entry.get('id') or '')
+            event_type = str(entry.get('event_type') or 'manual')
+            timestamp = entry.get('timestamp')
+
+            if entry_id in seen_ids:
+                warnings.append({
+                    'code': 'duplicate_id',
+                    'entry_id': entry_id,
+                    'timestamp': timestamp,
+                    'event_type': event_type,
+                    'message': 'Doppelte Eintrags-ID: %s' % entry_id,
+                })
+            else:
+                seen_ids.add(entry_id)
+
+            if event_type not in self._known_event_types():
+                warnings.append({
+                    'code': 'unknown_event_type',
+                    'entry_id': entry_id,
+                    'timestamp': timestamp,
+                    'event_type': event_type,
+                    'message': 'Unbekannter Eventtyp: %s' % event_type,
+                })
+                continue
+
+            if event_type in self.START_EVENTS:
+                state_name = self.START_EVENTS[event_type]
+
+                if state.get(state_name):
+                    warnings.append({
+                        'code': 'duplicate_start',
+                        'entry_id': entry_id,
+                        'timestamp': timestamp,
+                        'event_type': event_type,
+                        'state_name': state_name,
+                        'message': '%s ist zu diesem Zeitpunkt bereits aktiv.'
+                                   % self.STATE_LABELS[state_name]['on'],
+                    })
+
+                state[state_name] = True
+
+            elif event_type in self.END_EVENTS:
+                state_name = self.END_EVENTS[event_type]
+
+                if not state.get(state_name):
+                    warnings.append({
+                        'code': 'end_without_start',
+                        'entry_id': entry_id,
+                        'timestamp': timestamp,
+                        'event_type': event_type,
+                        'state_name': state_name,
+                        'message': '%s ist zu diesem Zeitpunkt bereits inaktiv.'
+                                   % self.STATE_LABELS[state_name]['off'],
+                    })
+
+                state[state_name] = False
+
+        return warnings
+
+    def _recalculate_states(self, entries):
+        """
+        Sortiert die Historie und berechnet fuer jeden Eintrag den Zustand
+        nach Anwendung dieses Ereignisses neu.
+        """
+        normalized_entries = []
+
+        for raw_entry in entries:
+            entry = self._normalize_entry(raw_entry)
+
+            if entry is None:
+                continue
+
+            entry['timestamp'] = self._normalize_timestamp(
+                entry.get('timestamp')
+            )
+            normalized_entries.append(entry)
+
+        normalized_entries.sort(key=self._entry_sort_key)
+
+        state = self._empty_state()
+
+        for entry in normalized_entries:
+            event_type = entry.get('event_type')
+
+            if event_type in self.START_EVENTS:
+                state[self.START_EVENTS[event_type]] = True
+
+            elif event_type in self.END_EVENTS:
+                state[self.END_EVENTS[event_type]] = False
+
+            entry['state'] = dict(state)
+
+        return normalized_entries
+
+    def _refresh_runtime_state(self, entries=None):
+        """
+        Aktualisiert den im Plugin veroeffentlichten Zustand aus der gesamten
+        Historie. Der Zustand wird nicht mehr am UTC-Tageswechsel zurueckgesetzt.
+        """
+        if entries is None:
+            entries = self._load_all_entries()
+
+        entries = self._recalculate_states(entries)
+
+        if entries:
+            self.state = dict(entries[-1].get('state') or self._empty_state())
+        else:
+            self.state = self._empty_state()
+
+        today = datetime.datetime.utcnow().strftime('%Y-%m-%d')
+
+        self.count = sum(
+            1 for entry in entries
+            if str(entry.get('timestamp') or '').startswith(today)
+        )
+
+        self._publish_state()
+
+        try:
+            self.api.addData(self.LOG_COUNT, self.count)
+
+            if entries:
+                self.api.addData(
+                    self.LAST_EVENT,
+                    entries[-1].get('event_type')
+                )
+        except Exception:
+            pass
+
+        return entries
+
+    def _save_history_change(
+        self,
+        old_entries,
+        new_entries,
+        force=False
+    ):
+        """
+        Validiert, berechnet und speichert eine geaenderte Historie.
+        """
+        old_warnings = self._validate_history(old_entries)
+        new_warnings = self._validate_history(new_entries)
+        introduced_warnings = self._new_history_warnings(
+            old_warnings,
+            new_warnings
+        )
+
+        hard_warnings = [
+            warning for warning in introduced_warnings
+            if warning.get('code') in (
+                'unknown_event_type',
+                'invalid_timestamp',
+                'duplicate_id',
+            )
+        ]
+
+        if hard_warnings:
+            return {
+                'status': 'ERROR',
+                'message': hard_warnings[0].get('message'),
+                'warnings': hard_warnings,
+                'requires_force': False,
+            }
+
+        if introduced_warnings and not force:
+            return {
+                'status': 'WARNING',
+                'message': introduced_warnings[0].get('message'),
+                'warnings': introduced_warnings,
+                'requires_force': True,
+            }
+
+        recalculated = self._recalculate_states(new_entries)
+        save_result = self._save_all_entries(recalculated)
+        self._refresh_runtime_state(recalculated)
+
+        return {
+            'status': 'OK',
+            'entries': recalculated,
+            'files': save_result.get('files', []),
+            'warnings': introduced_warnings,
+            'all_warnings': new_warnings,
+            'state': dict(self.state),
+        }
+
+    def _update_entry(
+        self,
+        entry_id,
+        event_type=None,
+        text=None,
+        timestamp=None,
+        lat=None,
+        lon=None,
+        force=False
+    ):
+        with self.lock:
+            entries = self._load_all_entries()
+            index, original = self._find_entry(entry_id, entries)
+
+            if original is None:
+                return {
+                    'status': 'ERROR',
+                    'message': 'Eintrag nicht gefunden: %s' % entry_id,
+                }
+
+            updated = dict(original)
+
+            if event_type is not None:
+                event_type = str(event_type).strip() or 'manual'
+
+                if event_type not in self._known_event_types():
+                    return {
+                        'status': 'ERROR',
+                        'message': 'Unbekannter Eventtyp: %s' % event_type,
+                    }
+
+                updated['event_type'] = event_type
+
+            if text is not None:
+                updated['text'] = self._sanitize_text(text)
+
+            timestamp_changed = False
+
+            if timestamp is not None:
+                try:
+                    normalized_timestamp = self._normalize_timestamp(timestamp)
+                    timestamp_changed = (
+                        normalized_timestamp
+                        != self._normalize_timestamp(
+                            original.get('timestamp')
+                        )
+                    )
+                    updated['timestamp'] = normalized_timestamp
+                except ValueError as error:
+                    return {
+                        'status': 'ERROR',
+                        'message': str(error),
+                    }
+
+            if lat is not None:
+                updated['lat'] = self._to_float(lat)
+
+            if lon is not None:
+                updated['lon'] = self._to_float(lon)
+
+            if updated.get('lat') is not None and updated.get('lon') is not None:
+                if lat is not None or lon is not None:
+                    updated['position_source'] = 'manual'
+            elif lat is not None or lon is not None:
+                updated['position_source'] = 'unknown'
+
+            if timestamp_changed and lat is None and lon is None:
+                updated = self._apply_track_position(updated)
+
+            updated = self._normalize_entry(updated)
+            entries[index] = updated
+
+            result = self._save_history_change(
+                self._load_all_entries(),
+                entries,
+                force=force
+            )
+
+            if result.get('status') != 'OK':
+                result['entry'] = updated
+                return result
+
+            _, saved_entry = self._find_entry(entry_id, result['entries'])
+
+            return {
+                'status': 'OK',
+                'message': 'Eintrag aktualisiert.',
+                'entry': saved_entry,
+                'warnings': result.get('warnings', []),
+                'all_warnings': result.get('all_warnings', []),
+                'state': dict(self.state),
+                'files': result.get('files', []),
+            }
+
+    def _delete_entry(self, entry_id, force=False):
+        with self.lock:
+            old_entries = self._load_all_entries()
+            index, original = self._find_entry(entry_id, old_entries)
+
+            if original is None:
+                return {
+                    'status': 'ERROR',
+                    'message': 'Eintrag nicht gefunden: %s' % entry_id,
+                }
+
+            new_entries = list(old_entries)
+            del new_entries[index]
+
+            result = self._save_history_change(
+                old_entries,
+                new_entries,
+                force=force
+            )
+
+            if result.get('status') != 'OK':
+                result['entry'] = original
+                return result
+
+            return {
+                'status': 'OK',
+                'message': 'Eintrag geloescht.',
+                'deleted': original,
+                'warnings': result.get('warnings', []),
+                'all_warnings': result.get('all_warnings', []),
+                'state': dict(self.state),
+                'files': result.get('files', []),
+            }
+
     def _append_jsonl(self, entry):
         if not os.path.isdir(self.log_dir):
             os.makedirs(self.log_dir)
 
-        path = self._today_file()
+        path = self._log_file(entry.get('timestamp'))
         line = json.dumps(entry, ensure_ascii=False, sort_keys=True)
 
         with open(path, 'a') as f:
@@ -484,24 +1306,8 @@ class Plugin(object):
         return entries
 
     def _rebuild_state_from_log(self):
-        # Beim Neustart wird der aktuelle Status aus der heutigen JSONL-Datei rekonstruiert.
-        self.state = {
-            'motor': False,
-            'sail': False,
-            'anchor': False,
-        }
-
-        entries = self._read_today_entries()
-        self.count = len(entries)
-
-        for entry in entries:
-            event_type = entry.get('event_type')
-
-            if event_type in self.START_EVENTS:
-                self.state[self.START_EVENTS[event_type]] = True
-
-            if event_type in self.END_EVENTS:
-                self.state[self.END_EVENTS[event_type]] = False
+        # Der aktuelle Zustand wird aus der gesamten Historie rekonstruiert.
+        self._refresh_runtime_state(self._load_all_entries())
 
     def _publish_state(self):
         try:
@@ -588,48 +1394,76 @@ class Plugin(object):
         except Exception as e:
             return False, str(e)
 
-    def _save_entry(self, event_type, text, lat=None, lon=None, force=False):
-        valid, message = self._validate_event(event_type)
+    def _save_entry(
+        self,
+        event_type,
+        text,
+        lat=None,
+        lon=None,
+        force=False,
+        timestamp=None,
+        resolve_position=False
+    ):
+        event_type = str(event_type or 'manual').strip()
 
-        if not valid:
-            if not force or str(message).startswith('Unbekannter Eventtyp'):
-                return {
-                    'status': 'ERROR',
-                    'message': message,
-                    'event_type': event_type,
-                    'state': dict(self.state)
-                }
+        if event_type not in self._known_event_types():
+            return {
+                'status': 'ERROR',
+                'message': 'Unbekannter Eventtyp: %s' % event_type,
+                'requires_force': False,
+            }
 
-            text = self._sanitize_text(text)
-            force_note = 'Nachtrag/Override: %s' % message
-            if text:
-                text = text + ' | ' + force_note
-            else:
-                text = force_note
+        try:
+            entry = self._normalize_entry(
+                self._build_entry(
+                    event_type,
+                    text,
+                    lat,
+                    lon,
+                    timestamp
+                )
+            )
 
-        entry = self._normalize_entry(
-            self._build_entry(event_type, text, lat, lon)
-        )
+            if resolve_position:
+                entry = self._apply_track_position(entry)
+        except ValueError as error:
+            return {
+                'status': 'ERROR',
+                'message': str(error),
+                'requires_force': False,
+            }
 
         with self.lock:
-            self._apply_event_to_state(event_type)
-            entry['state'] = dict(self.state)
+            old_entries = self._load_all_entries()
+            new_entries = list(old_entries)
+            new_entries.append(entry)
 
-            path = self._append_jsonl(entry)
-            self.count += 1
+            result = self._save_history_change(
+                old_entries,
+                new_entries,
+                force=force
+            )
 
-            try:
-                self.api.addData(self.LOG_COUNT, self.count)
-                self.api.addData(self.LAST_EVENT, entry.get('event_type'))
-            except Exception:
-                pass
+            if result.get('status') != 'OK':
+                result['entry'] = entry
+                result['event_type'] = event_type
+                result['state'] = dict(self.state)
+                return result
 
-        influx_ok, influx_msg = self._write_influx(entry)
+            _, saved_entry = self._find_entry(
+                entry.get('id'),
+                result.get('entries', [])
+            )
+
+        influx_ok, influx_msg = self._write_influx(saved_entry)
 
         return {
             'status': 'OK',
-            'entry': entry,
-            'file': path,
+            'entry': saved_entry,
+            'file': self._log_file(saved_entry.get('timestamp')),
+            'files': result.get('files', []),
+            'warnings': result.get('warnings', []),
+            'all_warnings': result.get('all_warnings', []),
             'state': dict(self.state),
             'influx': {
                 'enabled': self.influx_enabled,
@@ -977,9 +1811,87 @@ class Plugin(object):
                 lat = self._get_arg(args, 'lat', None)
                 lon = self._get_arg(args, 'lon', None)
 
-                force = self._as_bool(self._get_arg(args, 'force', 'false'))
+                force = self._as_bool(
+                    self._get_arg(args, 'force', 'false')
+                )
+                timestamp = self._get_arg(args, 'timestamp', None)
+                resolve_position = self._as_bool(
+                    self._get_arg(args, 'resolve_position', 'false')
+                )
 
-                return self._save_entry(event_type, text, lat, lon, force)
+                self.api.log(
+                    "DEBUG api/add args=%s timestamp=%r"
+                    % (repr(args), timestamp)
+                )
+
+                return self._save_entry(
+                    event_type,
+                    text,
+                    lat,
+                    lon,
+                    force,
+                    timestamp,
+                    resolve_position
+                )
+
+            if url in (
+                'entry/update',
+                'api/entry/update',
+                'updateEntry',
+                'api/updateEntry'
+            ):
+                entry_id = self._get_arg(
+                    args,
+                    'id',
+                    self._get_arg(args, 'entry_id', '')
+                )
+
+                if not entry_id:
+                    return {
+                        'status': 'ERROR',
+                        'message': 'Eintrags-ID fehlt.'
+                    }
+
+                force = self._as_bool(
+                    self._get_arg(args, 'force', 'false')
+                )
+
+                return self._update_entry(
+                    entry_id=entry_id,
+                    event_type=self._get_arg(args, 'event_type', None),
+                    text=self._get_arg(args, 'text', None),
+                    timestamp=self._get_arg(args, 'timestamp', None),
+                    lat=self._get_arg(args, 'lat', None),
+                    lon=self._get_arg(args, 'lon', None),
+                    force=force
+                )
+
+            if url in (
+                'entry/delete',
+                'api/entry/delete',
+                'deleteEntry',
+                'api/deleteEntry'
+            ):
+                entry_id = self._get_arg(
+                    args,
+                    'id',
+                    self._get_arg(args, 'entry_id', '')
+                )
+
+                if not entry_id:
+                    return {
+                        'status': 'ERROR',
+                        'message': 'Eintrags-ID fehlt.'
+                    }
+
+                force = self._as_bool(
+                    self._get_arg(args, 'force', 'false')
+                )
+
+                return self._delete_entry(
+                    entry_id=entry_id,
+                    force=force
+                )
 
             if url in ('status', 'api/status'):
                 return {
