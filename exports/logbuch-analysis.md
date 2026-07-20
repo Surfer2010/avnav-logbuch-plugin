@@ -1,4 +1,4 @@
-# AVNav Logbook Auswertung
+# AVNav Logbuch Auswertung
 
 ## Zusammenfassung
 

@@ -1,5 +1,7 @@
 console.log("logbuch plugin loaded");
 
+var LOGBUCH_VERSION = "2.0.0";
+
 /*
  * AVNav Logbuch Frontend
  *
@@ -256,7 +258,7 @@ function openLogbuchOverlay() {
 
             '</div>' +
 
-            '<div class="logbuchVersion">v__LOGBUCH_VERSION__</div>' +
+            '<div class="logbuchVersion">v' + escapeHtml(LOGBUCH_VERSION) + '</div>' +
 
         '</div>';
 

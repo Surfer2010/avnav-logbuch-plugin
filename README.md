@@ -300,27 +300,6 @@ AVNav stellt das Plugin danach unter folgendem Pfad bereit:
 /plugins/user-logbuch/
 ```
 
-### Migration von Versionen vor v1.4.1
+### Einheitliche Benennung
 
-Version `v1.4.1` enthält Breaking Changes bei internen Pfaden und Dateinamen:
-
-```text
-logbook/                       -> logbuch/
-logbook-tools/                 -> logbuch-tools/
-logbook-YYYY-MM-DD.jsonl       -> logbuch-YYYY-MM-DD.jsonl
-```
-
-Für bestehende Installationen sollte das Update-Script verwendet werden, da es diese Altlasten automatisch migriert:
-
-```bash
-cd /tmp
-wget https://github.com/Surfer2010/avnav-logbuch-plugin/releases/download/v1.4.1/logbuch-v1.4.1.zip
-unzip logbuch-v1.4.1.zip
-cd logbuch/tools
-chmod +x install_or_update.sh
-sudo ./install_or_update.sh
-```
-
-Das Script verschiebt bestehende Daten automatisch in die neue Struktur und legt Backups unter dem AVNav-Datenverzeichnis ab.
-
-Siehe LICENSE Datei im Repository.
+Das Projekt verwendet ausschließlich `Logbuch` beziehungsweise `logbuch`. Alte englische Namen, Pfade und Dateinamen werden nicht unterstützt. Vor einem Update müssen bestehende Installationen auf die aktuelle Verzeichnis- und Dateistruktur gebracht werden.

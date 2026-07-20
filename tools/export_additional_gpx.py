@@ -260,7 +260,7 @@ def build_gpx(date_value, intervals, anchors, points):
     lines.append('     creator="avnav-logbuch-plugin"')
     lines.append('     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
     lines.append('     xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">')
-    lines.append(f"  <metadata><name>Logbook additional {xml_escape(date_value)}</name></metadata>")
+    lines.append(f"  <metadata><name>Logbuch additional {xml_escape(date_value)}</name></metadata>")
 
     anchor_index = 1
     for anchor in anchors:

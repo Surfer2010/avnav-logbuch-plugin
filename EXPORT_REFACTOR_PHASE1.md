@@ -24,7 +24,7 @@ Je Kategorie werden Strecke, Zeit, Höchstgeschwindigkeit und Durchschnittsgesch
 ## Kompatibilität
 
 - Produktivpfad `logbuch/` bleibt maßgeblich.
-- Für vorhandene Testdaten wird zusätzlich der alte Ordner `logbook/` gelesen.
+- Für vorhandene Testdaten wird zusätzlich der alte Ordner `logbuch/` gelesen.
 - Bestehende CLI-Parameter und Ausgabedateinamen bleiben erhalten.
 - `plugin.py` kann die Skripte weiterhin unverändert aufrufen.
 

@@ -3,14 +3,14 @@
 from pathlib import Path
 
 from exportlib.read_events import read_events
-from exportlib.build_logbook_document import build_document
+from exportlib.build_logbuch_document import build_document
 
 from renderers.render_markdown import render_markdown
 from renderers.render_html import render_html
 
 
 def export(
-    logbook_dir,
+    logbuch_dir,
     output_dir,
     start_date,
     end_date,
@@ -21,7 +21,7 @@ def export(
     Exportiert Logbuchdaten in die gewünschten Ausgabeformate.
 
     Parameter:
-        logbook_dir : Verzeichnis mit den JSONL-Dateien
+        logbuch_dir : Verzeichnis mit den JSONL-Dateien
         output_dir  : Zielverzeichnis
         start_date  : datetime.date
         end_date    : datetime.date
@@ -30,7 +30,7 @@ def export(
     """
 
     events = read_events(
-        logbook_dir=logbook_dir,
+        logbuch_dir=logbuch_dir,
         start_date=start_date,
         end_date=end_date,
     )
@@ -46,7 +46,7 @@ def export(
     written_files = []
 
     if "markdown" in formats:
-        md_path = output_dir / "logbook.md"
+        md_path = output_dir / "logbuch.md"
 
         md_path.write_text(
             render_markdown(document),
@@ -56,7 +56,7 @@ def export(
         written_files.append(md_path)
 
     if "html" in formats:
-        html_path = output_dir / "logbook.html"
+        html_path = output_dir / "logbuch.html"
 
         html_path.write_text(
             render_html(document),

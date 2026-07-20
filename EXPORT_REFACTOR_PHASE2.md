@@ -10,7 +10,7 @@
 ## Test
 
 ```bash
-cd ~/avnav-logbook-plugin
+cd ~/avnav-logbuch-plugin
 PYTHONPATH=tools python3 -m unittest tools/test_navigation_analysis.py
 
 PYTHONPATH=tools python3 tools/export_additional_kmz.py \

@@ -39,8 +39,14 @@ rsync -a --delete \
   "$ROOT/tools/" \
   "$PACKAGE_TOOLS/"
 
-sed -i "s/v__LOGBUCH_VERSION__/v$VERSION/g" \
+sed -i "s/var LOGBUCH_VERSION = \"[^\"]*\";/var LOGBUCH_VERSION = \"$VERSION\";/" \
+  "$ROOT/logbuch/plugin.js" \
   "$PACKAGE_ROOT/plugin.js"
+
+if grep -RIn --exclude-dir="__pycache__" -E "__[A-Z0-9_]*VERSION[A-Z0-9_]*__" "$PACKAGE_ROOT"; then
+  echo "ERROR: unresolved version placeholder found" >&2
+  exit 1
+fi
 
 chmod +x "$PACKAGE_TOOLS/install_or_update.sh"
 chmod +x "$PACKAGE_TOOLS/export_additional_kmz.py"

@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from exportlib.navigation_analysis import analyze_day
-from exportlib.read_events import find_logbook_file, read_logbook_file
+from exportlib.read_events import find_logbuch_file, read_logbuch_file
 from exportlib.read_tracks import read_gpx_points
 
 
@@ -19,23 +19,23 @@ def normalize_date(value):
     return dt
 
 
-def load_day(logbook_dir, tracks_dir, date_value):
+def load_day(logbuch_dir, tracks_dir, date_value):
     day = date_value if isinstance(date_value, datetime) else normalize_date(str(date_value))
-    logbook_dir = Path(logbook_dir)
-    logbook_file = find_logbook_file(logbook_dir, day)
-    if logbook_file is None and logbook_dir.name == "logbuch":
-        logbook_file = find_logbook_file(logbook_dir.with_name("logbook"), day)
-    if logbook_file is None:
-        raise FileNotFoundError(f"No logbook file found for {day:%Y-%m-%d}")
+    logbuch_dir = Path(logbuch_dir)
+    logbuch_file = find_logbuch_file(logbuch_dir, day)
+    if logbuch_file is None and logbuch_dir.name == "logbuch":
+        logbuch_file = find_logbuch_file(logbuch_dir.with_name("logbuch"), day)
+    if logbuch_file is None:
+        raise FileNotFoundError(f"No logbuch file found for {day:%Y-%m-%d}")
     gpx_file = Path(tracks_dir) / f"{day:%Y-%m-%d}.gpx"
-    events = read_logbook_file(logbook_file)
+    events = read_logbuch_file(logbuch_file)
     track_points, track_warnings = read_gpx_points(gpx_file)
     model = analyze_day(events, track_points)
     model.update({
         "date": day,
         "date_dash": day.strftime("%Y-%m-%d"),
         "date_compact": day.strftime("%Y%m%d"),
-        "logbook_file": logbook_file,
+        "logbuch_file": logbuch_file,
         "gpx_file": gpx_file,
     })
     model["warnings"] = track_warnings + model["warnings"]

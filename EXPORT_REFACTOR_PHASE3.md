@@ -25,7 +25,7 @@ Statische, selbständige Kartenansicht für den späteren HTML-Tagesexport.
 ## Test
 
 ```bash
-cd ~/avnav-logbook-plugin
+cd ~/avnav-logbuch-plugin
 PYTHONPATH=tools python3 -m unittest tools/test_static_map.py
 ```
 
@@ -38,7 +38,7 @@ from exportlib.export_model import load_day
 from renderers.render_static_map import render_static_map
 
 model = load_day(
-    Path('testdata/avnav-data/logbook'),
+    Path('testdata/avnav-data/logbuch'),
     Path('testdata/avnav-data/tracks'),
     '2026-06-01',
 )

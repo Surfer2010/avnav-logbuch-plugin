@@ -70,30 +70,36 @@ echo "Source plugin directory: ${SOURCE_DIR}"
 echo "Tools source directory: ${TOOLS_SOURCE_DIR}"
 echo "Backup directory: ${BACKUP_DIR}"
 
+EXISTING_VERSION=""
+FORCE_LEGACY_VERSION="no"
+if [ -f "${TARGET_DIR}/plugin.json" ]; then
+    EXISTING_VERSION="$(python3 - "${TARGET_DIR}/plugin.json" <<'PY_VERSION'
+import json
+import sys
+try:
+    with open(sys.argv[1], "r", encoding="utf-8") as handle:
+        print(json.load(handle).get("version", ""))
+except Exception:
+    print("")
+PY_VERSION
+)"
+    if python3 - "${EXISTING_VERSION}" <<'PY_CHECK'
+import sys
+try:
+    parts = [int(value) for value in sys.argv[1].split(".")[:2]]
+    while len(parts) < 2:
+        parts.append(0)
+    raise SystemExit(0 if tuple(parts) <= (1, 9) else 1)
+except Exception:
+    raise SystemExit(1)
+PY_CHECK
+    then
+        FORCE_LEGACY_VERSION="yes"
+    fi
+fi
+
 mkdir -p "${PLUGIN_PARENT_DIR}"
 mkdir -p "${BACKUP_DIR}"
-
-if [ -d "${AVNAV_DATA_DIR}/logbook" ] && [ ! -d "${AVNAV_DATA_DIR}/logbuch" ]; then
-    echo "Migrating data directory: ${AVNAV_DATA_DIR}/logbook -> ${AVNAV_DATA_DIR}/logbuch"
-    mv "${AVNAV_DATA_DIR}/logbook" "${AVNAV_DATA_DIR}/logbuch"
-fi
-
-if [ -d "${AVNAV_DATA_DIR}/logbook-tools" ] && [ ! -d "${AVNAV_DATA_DIR}/logbuch-tools" ]; then
-    echo "Migrating tools directory: ${AVNAV_DATA_DIR}/logbook-tools -> ${AVNAV_DATA_DIR}/logbuch-tools"
-    mv "${AVNAV_DATA_DIR}/logbook-tools" "${AVNAV_DATA_DIR}/logbuch-tools"
-fi
-
-if [ -d "${AVNAV_DATA_DIR}/logbuch" ]; then
-    for OLD_FILE in "${AVNAV_DATA_DIR}"/logbuch/logbook-*.jsonl; do
-        if [ -e "${OLD_FILE}" ]; then
-            NEW_FILE="$(dirname "${OLD_FILE}")/$(basename "${OLD_FILE}" | sed 's/^logbook-/logbuch-/')"
-            if [ ! -e "${NEW_FILE}" ]; then
-                echo "Migrating log file: ${OLD_FILE} -> ${NEW_FILE}"
-                mv "${OLD_FILE}" "${NEW_FILE}"
-            fi
-        fi
-    done
-fi
 
 if [ -d "${TARGET_DIR}" ]; then
     BACKUP_PATH="${BACKUP_DIR}/logbuch.backup.${STAMP}"
@@ -101,43 +107,11 @@ if [ -d "${TARGET_DIR}" ]; then
     cp -a "${TARGET_DIR}" "${BACKUP_PATH}"
 fi
 
-if [ -d "${PLUGIN_PARENT_DIR}/logbook" ]; then
-    LEGACY_BACKUP="${BACKUP_DIR}/logbook.legacy.${STAMP}"
-    echo "Moving legacy plugin to backup: ${LEGACY_BACKUP}"
-    mv "${PLUGIN_PARENT_DIR}/logbook" "${LEGACY_BACKUP}"
-fi
-
-if [ -d "${PLUGIN_PARENT_DIR}/user-logbuch" ]; then
-    LEGACY_USER_LOGBUCH_BACKUP="${BACKUP_DIR}/user-logbuch.legacy.${STAMP}"
-    echo "Moving legacy user-logbuch plugin directory to backup: ${LEGACY_USER_LOGBUCH_BACKUP}"
-    mv "${PLUGIN_PARENT_DIR}/user-logbuch" "${LEGACY_USER_LOGBUCH_BACKUP}"
-fi
-
-if [ -d "${PLUGIN_PARENT_DIR}/user-logbook" ]; then
-    LEGACY_ID_BACKUP="${BACKUP_DIR}/user-logbook.legacy.${STAMP}"
-    echo "Moving legacy plugin-id directory to backup: ${LEGACY_ID_BACKUP}"
-    mv "${PLUGIN_PARENT_DIR}/user-logbook" "${LEGACY_ID_BACKUP}"
-fi
-
-for LEGACY_DISABLED in \
-    "${PLUGIN_PARENT_DIR}"/logbook.disabled* \
-    "${PLUGIN_PARENT_DIR}"/user-logbook.disabled*; do
-    if [ -e "${LEGACY_DISABLED}" ]; then
-        LEGACY_DISABLED_BACKUP="${BACKUP_DIR}/$(basename "${LEGACY_DISABLED}").${STAMP}"
-        echo "Moving disabled legacy plugin to backup: ${LEGACY_DISABLED_BACKUP}"
-        mv "${LEGACY_DISABLED}" "${LEGACY_DISABLED_BACKUP}"
-    fi
-done
-
 if [ -f "${AVNAV_DATA_DIR}/avnav_server.xml" ]; then
     CONFIG_BACKUP="${BACKUP_DIR}/avnav_server.xml.backup.${STAMP}"
     echo "Creating config backup: ${CONFIG_BACKUP}"
     cp -a "${AVNAV_DATA_DIR}/avnav_server.xml" "${CONFIG_BACKUP}"
 fi
-
-rm -rf "${PLUGIN_PARENT_DIR}/logbook" 2>/dev/null || true
-rm -rf "${PLUGIN_PARENT_DIR}/user-logbuch" 2>/dev/null || true
-rm -rf "${PLUGIN_PARENT_DIR}/user-logbook" 2>/dev/null || true
 
 rm -rf "${TARGET_DIR}"
 mkdir -p "${TARGET_DIR}"
@@ -157,17 +131,43 @@ chmod -R 755 "${TOOLS_TARGET_DIR}"
 chmod -R 755 "${TARGET_DIR}"
 
 echo "Checking Python syntax..."
-python3 -m py_compile "${TARGET_DIR}/plugin.py"
+python3 -m py_compile "${TARGET_DIR}/plugin.py" "${TARGET_DIR}/migration.py"
 
-if [ "${RESTART_AVNAV}" = "yes" ]; then
-    echo "Restarting AVNav..."
+MIGRATED="$(python3 - "${TARGET_DIR}" "${AVNAV_DATA_DIR}" "${PLUGIN_PARENT_DIR}" "${FORCE_LEGACY_VERSION}" <<'PY_MIGRATE'
+import sys
+sys.path.insert(0, sys.argv[1])
+from migration import migrate
+
+force = sys.argv[4] == "yes"
+changed = migrate(
+    sys.argv[2],
+    plugin_parent_dir=sys.argv[3],
+    force_legacy_version=force,
+    logger=print,
+)
+print("yes" if changed else "no")
+PY_MIGRATE
+)"
+MIGRATED="$(printf '%s\n' "${MIGRATED}" | tail -n 1)"
+
+if [ "${MIGRATED}" = "yes" ] && [ -n "${BACKUP_PATH:-}" ] && [ -d "${BACKUP_PATH}" ]; then
+    echo "Removing temporary legacy plugin backup: ${BACKUP_PATH}"
+    rm -rf "${BACKUP_PATH}"
+fi
+
+if [ "${MIGRATED}" = "yes" ] && [ "${RESTART_AVNAV}" = "yes" ]; then
+    echo "Restarting AVNav once after migration..."
     if command -v systemctl >/dev/null 2>&1; then
-        sudo systemctl restart avnav
+        systemctl restart avnav
+    elif command -v service >/dev/null 2>&1; then
+        service avnav restart
     else
-        echo "WARNING: systemctl not found. Please restart AVNav manually."
+        echo "WARNING: no supported service manager found for the one-time restart."
     fi
+elif [ "${MIGRATED}" = "yes" ]; then
+    echo "Migration completed; restart suppressed by --no-restart."
 else
-    echo "Skipping AVNav restart because --no-restart was used."
+    echo "No migration required; AVNav restart skipped."
 fi
 
 echo "Installation/update finished."
@@ -177,4 +177,4 @@ echo ""
 echo "Useful checks:"
 echo "  find ${PLUGIN_PARENT_DIR} -maxdepth 2 -name plugin.json -print -exec cat {} \\;"
 echo "  curl http://localhost:8080/plugins/logbuch/plugin.js | head"
-echo "  curl http://localhost:8080/plugins/user-logbook/plugin.js | head"
+echo "  curl http://localhost:8080/plugins/user-logbuch/plugin.js | head"

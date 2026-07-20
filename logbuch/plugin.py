@@ -12,12 +12,16 @@ from __future__ import absolute_import
 
 import json
 import os
+import sys
 import time
 import datetime
 import threading
 import traceback
 import subprocess
 import uuid
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from migration import migrate, restart_avnav_once
 
 try:
     from avnav_api import AVNApi  # noqa: F401
@@ -138,7 +142,7 @@ class Plugin(object):
             self.api.registerEditableParameters([], self._editable_parameters_changed)
 
 
-    def _list_logbook_days(self):
+    def _list_logbuch_days(self):
         """Listet vorhandene Logbuchtage, neuester Tag zuerst."""
         days = []
 
@@ -210,7 +214,7 @@ class Plugin(object):
         days.sort(key=lambda item: item['date'], reverse=True)
         return days
 
-    def _read_logbook_day(self, date_value):
+    def _read_logbuch_day(self, date_value):
         """Liest die JSONL-Einträge eines bestimmten Tages."""
         try:
             datetime.datetime.strptime(date_value, '%Y-%m-%d')
@@ -267,18 +271,28 @@ class Plugin(object):
 
     def stop(self):
         try:
-            self.api.setStatus('Logbook', 'stopped')
+            self.api.setStatus('Logbuch', 'stopped')
         except Exception:
             pass
 
     def run(self):
         try:
+            plugin_parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            migrated = migrate(
+                self.base_dir,
+                plugin_parent_dir=plugin_parent_dir,
+                logger=self.api.log,
+            )
+            if migrated:
+                restart_avnav_once(logger=self.api.log)
+                return
+
             if not os.path.isdir(self.log_dir):
                 os.makedirs(self.log_dir)
 
             if hasattr(self.api, "registerUserApp"):
                 app_url = self.api.getBaseUrl() + "/index.html"
-                app_icon = os.path.join("icons", "logbook.svg")
+                app_icon = os.path.join("icons", "logbuch.svg")
 
                 try:
                     self.api.registerUserApp(
@@ -299,14 +313,14 @@ class Plugin(object):
             self._rebuild_state_from_log()
 
             self.api.log('Logbuch plugin started, log_dir=%s' % self.log_dir)
-            self.api.setStatus('Logbook', 'running')
+            self.api.setStatus('Logbuch', 'running')
             self.api.addData(self.LOG_STATUS, 'running')
             self.api.addData(self.LOG_COUNT, self.count)
             self._publish_state()
 
         except Exception as e:
             self.api.error('Logbuch plugin startup error: %s' % str(e))
-            self.api.setStatus('Logbook', 'error')
+            self.api.setStatus('Logbuch', 'error')
 
             try:
                 self.api.addData(self.LOG_STATUS, 'error')
@@ -737,7 +751,7 @@ class Plugin(object):
                         except Exception as error:
                             try:
                                 self.api.error(
-                                    'Invalid logbook entry in %s line %s: %s'
+                                    'Invalid logbuch entry in %s line %s: %s'
                                     % (path, line_number, str(error))
                                 )
                             except Exception:
@@ -750,7 +764,7 @@ class Plugin(object):
             except (OSError, UnicodeError) as error:
                 try:
                     self.api.error(
-                        'Unable to read logbook file %s: %s'
+                        'Unable to read logbuch file %s: %s'
                         % (path, str(error))
                     )
                 except Exception:
@@ -1534,7 +1548,7 @@ class Plugin(object):
             return
 
         try:
-            self.api.log('Logbook export job started: %s' % job_id)
+            self.api.log('Logbuch export job started: %s' % job_id)
 
             proc = subprocess.Popen(
                 job['command'],
@@ -1581,7 +1595,7 @@ class Plugin(object):
                 else:
                     job['message'] = 'Export fehlgeschlagen.'
 
-            self.api.log('Logbook export job finished: %s status=%s' % (job_id, job['status']))
+            self.api.log('Logbuch export job finished: %s status=%s' % (job_id, job['status']))
 
         except Exception as e:
             job['status'] = 'ERROR'
@@ -1590,7 +1604,7 @@ class Plugin(object):
             job['finished'] = self._now_utc()
 
             try:
-                self.api.error('Logbook export job error: %s\n%s' % (str(e), traceback.format_exc()))
+                self.api.error('Logbuch export job error: %s\n%s' % (str(e), traceback.format_exc()))
             except Exception:
                 pass
 
@@ -1968,7 +1982,7 @@ class Plugin(object):
             if url in ('summary', 'api/summary'):
                 return {
                     'status': 'OK',
-                    'days': self._list_logbook_days()
+                    'days': self._list_logbuch_days()
                 }
 
             if url in ('day', 'api/day'):
@@ -1988,7 +2002,7 @@ class Plugin(object):
                         'message': 'invalid date format, expected YYYY-MM-DD'
                     }
 
-                entries = self._read_logbook_day(date_value)
+                entries = self._read_logbuch_day(date_value)
 
                 return {
                     'status': 'OK',
@@ -2036,7 +2050,7 @@ class Plugin(object):
             }
 
         except Exception as e:
-            self.api.error('Logbook API error: %s\n%s' % (str(e), traceback.format_exc()))
+            self.api.error('Logbuch API error: %s\n%s' % (str(e), traceback.format_exc()))
 
             return {
                 'status': 'ERROR',

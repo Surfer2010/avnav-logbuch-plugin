@@ -84,3 +84,12 @@
 - Positionsauflösung und Winkelinterpolation für Kursdaten
 - Erweiterung der Add-API um die optionale Positionsauflösung
 - Erneute Positionsbestimmung beim Ändern eines Zeitstempels
+
+## 2.0.0 – Einheitliche Logbuch-Struktur
+
+- Vollständige Umstellung auf die Benennung `logbuch`.
+- Einmalige automatische Migration für Installationen bis Version 1.9.x.
+- Vorhandene JSONL-Rohdaten werden in das neue Verzeichnis und Namensformat verschoben.
+- Alte Plugin-, Daten- und Werkzeugverzeichnisse werden nach der Datenübernahme entfernt.
+- AVNav wird ausschließlich nach dieser einmaligen Migration neu gestartet.
+- Spätere Updates innerhalb der 2.x-Reihe lösen weder Migration noch Neustart aus.

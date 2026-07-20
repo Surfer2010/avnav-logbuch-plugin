@@ -33,7 +33,7 @@ def main():
         raise SystemExit("Enddatum liegt vor Startdatum.")
 
     avnav_data = detect_avnav_data_dir(args.avnav_data)
-    logbook_dir = get_logbuch_dir(avnav_data)
+    logbuch_dir = get_logbuch_dir(avnav_data)
     tracks_dir = get_tracks_dir(avnav_data)
     models = []
     warnings = []
@@ -41,7 +41,7 @@ def main():
 
     for day in daterange(start_date, end_date):
         try:
-            model = load_day(logbook_dir, tracks_dir, day)
+            model = load_day(logbuch_dir, tracks_dir, day)
         except FileNotFoundError as error:
             print(f"SKIP: {error}")
             continue

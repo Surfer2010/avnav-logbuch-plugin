@@ -67,13 +67,13 @@ def normalize_event(entry):
     return event
 
 
-def find_logbook_file(logbook_dir, date_value):
+def find_logbuch_file(logbuch_dir, date_value):
     date_dash = date_value.strftime("%Y-%m-%d")
     date_compact = date_value.strftime("%Y%m%d")
 
     candidates = [
-        Path(logbook_dir) / f"{date_compact}_logbuch.jsonl",
-        Path(logbook_dir) / f"logbuch-{date_dash}.jsonl",
+        Path(logbuch_dir) / f"{date_compact}_logbuch.jsonl",
+        Path(logbuch_dir) / f"logbuch-{date_dash}.jsonl",
     ]
 
     for path in candidates:
@@ -83,7 +83,7 @@ def find_logbook_file(logbook_dir, date_value):
     return None
 
 
-def read_logbook_file(path):
+def read_logbuch_file(path):
     events = []
 
     with Path(path).open("r", encoding="utf-8") as handle:
@@ -101,7 +101,7 @@ def read_logbook_file(path):
 
             except Exception as error:
                 print(
-                    f"WARNING: invalid logbook line "
+                    f"WARNING: invalid logbuch line "
                     f"{path}:{line_number}: {error}"
                 )
 
@@ -110,15 +110,15 @@ def read_logbook_file(path):
     return events
 
 
-def read_events(logbook_dir, start_date, end_date):
+def read_events(logbuch_dir, start_date, end_date):
     events = []
     current = start_date
 
     while current <= end_date:
-        path = find_logbook_file(logbook_dir, current)
+        path = find_logbuch_file(logbuch_dir, current)
 
         if path is not None:
-            events.extend(read_logbook_file(path))
+            events.extend(read_logbuch_file(path))
 
         current += timedelta(days=1)
 

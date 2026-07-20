@@ -31,9 +31,9 @@ JSONL
 
 ## Geplante API
 
-- GET /api/logbook/summary
-- GET /api/logbook/day
-- GET /api/logbook/status
-- POST /api/logbook/event
-- PUT /api/logbook/event
-- DELETE /api/logbook/event
+- GET /api/logbuch/summary
+- GET /api/logbuch/day
+- GET /api/logbuch/status
+- POST /api/logbuch/event
+- PUT /api/logbuch/event
+- DELETE /api/logbuch/event

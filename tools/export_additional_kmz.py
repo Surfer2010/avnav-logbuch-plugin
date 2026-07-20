@@ -26,7 +26,7 @@ def main():
 
     print_detected_paths(avnav_data)
     print(f"Date: {model['date_dash']}")
-    print(f"Logbuch file: {model['logbook_file']}")
+    print(f"Logbuch file: {model['logbuch_file']}")
     print(f"GPX file: {model['gpx_file']}")
     print(f"Output: {output_file}")
     print(f"Logbuch entries: {len(model['events'])}")
