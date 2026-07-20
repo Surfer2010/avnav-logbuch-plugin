@@ -5,38 +5,58 @@ VERSION="${1:-}"
 
 if [ -z "$VERSION" ]; then
   echo "Usage: $0 <version>"
-  echo "Example: $0 1.6.2"
+  echo "Example: $0 1.9.0"
   exit 1
 fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+DIST_ROOT="$ROOT/dist"
+PACKAGE_ROOT="$DIST_ROOT/logbuch"
+PACKAGE_TOOLS="$PACKAGE_ROOT/tools"
+ZIP_FILE="$DIST_ROOT/logbuch-v$VERSION.zip"
 
 sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$VERSION\"/" \
   "$ROOT/logbuch/plugin.json"
 
-mkdir -p "$ROOT/dist/logbuch"
+rm -rf "$PACKAGE_ROOT"
+mkdir -p "$PACKAGE_ROOT"
 
 rsync -a --delete \
   --exclude "__pycache__/" \
   --exclude "*.pyc" \
   --exclude "*.bak*" \
   "$ROOT/logbuch/" \
-  "$ROOT/dist/logbuch/"
+  "$PACKAGE_ROOT/"
+
+mkdir -p "$PACKAGE_TOOLS"
+
+rsync -a --delete \
+  --exclude "__pycache__/" \
+  --exclude "*.pyc" \
+  --exclude "*.bak*" \
+  --exclude "test_*.py" \
+  --exclude "release.sh" \
+  "$ROOT/tools/" \
+  "$PACKAGE_TOOLS/"
 
 sed -i "s/v__LOGBUCH_VERSION__/v$VERSION/g" \
-  "$ROOT/dist/logbuch/plugin.js"
+  "$PACKAGE_ROOT/plugin.js"
 
-mkdir -p "$ROOT/dist/logbuch/tools"
-cp "$ROOT/tools/install_or_update.sh" "$ROOT/dist/logbuch/tools/install_or_update.sh"
-chmod +x "$ROOT/dist/logbuch/tools/install_or_update.sh"
+chmod +x "$PACKAGE_TOOLS/install_or_update.sh"
+chmod +x "$PACKAGE_TOOLS/export_additional_kmz.py"
+chmod +x "$PACKAGE_TOOLS/export_trip_kmz.py"
+chmod +x "$PACKAGE_TOOLS/export_daily_html.py"
 
-cd "$ROOT/dist"
-rm -f "logbuch-v$VERSION.zip"
-zip -qr "logbuch-v$VERSION.zip" logbuch
+cd "$DIST_ROOT"
+rm -f "$ZIP_FILE"
+zip -qr "$ZIP_FILE" logbuch
 
 echo "Release package created:"
-echo "$ROOT/dist/logbuch-v$VERSION.zip"
+echo "$ZIP_FILE"
 
-grep -n '"version"' "$ROOT/logbuch/plugin.json" "$ROOT/dist/logbuch/plugin.json"
-grep -n "logbuchVersion" "$ROOT/dist/logbuch/plugin.js"
-ls -lh "$ROOT/dist/logbuch-v$VERSION.zip"
+grep -n '"version"' \
+  "$ROOT/logbuch/plugin.json" \
+  "$PACKAGE_ROOT/plugin.json"
+
+grep -n "logbuchVersion" "$PACKAGE_ROOT/plugin.js" || true
+ls -lh "$ZIP_FILE"

@@ -1,3 +1,48 @@
+# AVNav Logbuch Plugin v1.9.0
+
+## HTML-Tagesbericht
+
+- Neuer HTML-Tagesexport direkt aus jeder Tagesansicht
+- Bericht wird bei Bedarf erzeugt und unmittelbar heruntergeladen
+- Keine dauerhafte Sammlung bereits erzeugter HTML-Dateien
+- DIN-A4-optimiertes Layout mit 8 mm Seitenrand
+- Kompakte Tagesstatistik für Segel-, Motor- und Gesamtfahrt
+- Strecke, Zeit, Höchstgeschwindigkeit und Durchschnittsgeschwindigkeit
+- Dezente Tabellenflächen und vollständig hervorgehobene Gesamtzeile
+- Darstellung der Logbucheinträge, Ankerplätze und Notizen
+- Vorbereitung für spätere Schiffs-, Crew- und Törndaten
+
+## Kartenansicht
+
+- Statische SVG-Karte direkt in der HTML-Datei eingebettet
+- Farbige Trackabschnitte für Motor, Segel und unbekannten Zustand
+- Start-, Ziel-, Anker- und Logbuchmarker
+- Optionaler OSM- und OpenSeaMap-Hintergrund
+- Lokaler Kartenkachel-Cache
+- Vollständig funktionsfähiger Offline-Fallback mit blau strukturierter Fläche
+- HTML-Export wird auch ohne Internetverbindung und Kartenhintergrund erzeugt
+- Keine zusätzliche verpflichtende Python-Abhängigkeit
+
+## Gemeinsame Export-Engine
+
+- Gemeinsame Navigations- und Statistikbasis für HTML-, Tages-KMZ- und Törn-KMZ-Export
+- Eindeutige Klassifizierung der Tracksegmente
+- Keine doppelte Zählung bei gleichzeitig aktivem Motor und Segel
+- Gesamtstrecke basiert auf dem vollständigen gültigen Track
+- Höchst- und Durchschnittsgeschwindigkeiten ergänzt
+- Unbekannte Trackabschnitte werden separat ausgewertet
+- Tages- und Törn-KMZ deutlich bereinigt und auf gemeinsame Module umgestellt
+- Alte doppelte Berechnungslogik entfernt
+
+## Qualitätssicherung
+
+- Unit-Tests für Zustandsrekonstruktion und Navigation
+- Unit-Tests für statische Kartenprojektion
+- Unit-Tests für den HTML-Tagesexport
+- Bereinigung einer fehlerhaften Warnung beim ersten Statusereignis
+- Release-Paket enthält nun die vollständige Export-Engine und alle Renderer
+
+
 # v1.8.0
 
 ## Neue Funktionen
