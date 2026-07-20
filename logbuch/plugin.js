@@ -673,8 +673,14 @@ function openLogbuchExportOverlay() {
                 '<label for="logbuchExportTo">Bis</label>' +
                 '<input type="date" id="logbuchExportTo" value="' + today + '">' +
 
+                '<label for="logbuchExportFormat">Format</label>' +
+                '<select id="logbuchExportFormat">' +
+                    '<option value="kmz">KMZ</option>' +
+                    '<option value="html">HTML-Tagesbericht</option>' +
+                '</select>' +
+
                 '<div class="logbuchExportHint">' +
-                    'Gleiches Datum = Tages-KMZ, Zeitraum = Törn-KMZ' +
+                    'HTML ist nur für einen einzelnen Tag verfügbar.' +
                 '</div>' +
 
                 '<div class="logbuchExportButtons">' +
@@ -719,6 +725,7 @@ function openLogbuchExportOverlay() {
 
         var fromDate = document.getElementById("logbuchExportFrom").value;
         var toDate = document.getElementById("logbuchExportTo").value;
+        var format = document.getElementById("logbuchExportFormat").value;
 
         if (!isValidDateString(fromDate) || !isValidDateString(toDate)) {
             setLogbuchStatus("Ungültiges Exportdatum", "error");
@@ -730,7 +737,17 @@ function openLogbuchExportOverlay() {
             return;
         }
 
+        if (format === "html" && fromDate !== toDate) {
+            setLogbuchStatus("HTML-Export ist nur für einen einzelnen Tag verfügbar", "error");
+            return;
+        }
+
         overlay.remove();
+
+        if (format === "html") {
+            exportTodayHtml(fromDate);
+            return;
+        }
 
         if (fromDate === toDate) {
             exportTodayKmz(fromDate);
@@ -888,6 +905,16 @@ function openLogbuchForceOverlay(type, text, message) {
     }, false);
 }
 
+function exportTodayHtml(date) {
+    setLogbuchStatus("HTML Export startet...", "info");
+
+    startExportRequest(
+        AVNAV_BASE_URL + "/api/exportHtml?date=" + encodeURIComponent(date),
+        "HTML Exportfehler",
+        true
+    );
+}
+
 function exportTodayKmz(date) {
     setLogbuchStatus("KMZ Export startet...", "info");
 
@@ -906,7 +933,7 @@ function exportTodayKmz(date) {
                 return;
             }
 
-            monitorExportJob(data.job.id);
+            monitorExportJob(data.job.id, downloadWhenReady === true);
         })
         .catch(function(err) {
             console.error(err);
@@ -954,7 +981,7 @@ function exportTripKmzSinceTripStart() {
     );
 }
 
-function startExportRequest(url, errorMessage) {
+function startExportRequest(url, errorMessage, downloadWhenReady) {
     fetch(url)
         .then(function(response) {
             return response.json();
@@ -965,7 +992,7 @@ function startExportRequest(url, errorMessage) {
                 return;
             }
 
-            monitorExportJob(data.job.id);
+            monitorExportJob(data.job.id, downloadWhenReady);
         })
         .catch(function(err) {
             console.error(err);
@@ -973,7 +1000,7 @@ function startExportRequest(url, errorMessage) {
         });
 }
 
-function monitorExportJob(jobId) {
+function monitorExportJob(jobId, downloadWhenReady) {
     var pollCount = 0;
 
     var timer = setInterval(function() {
@@ -1011,6 +1038,15 @@ function monitorExportJob(jobId) {
 
                 if (job.status === "OK") {
                     setLogbuchStatus("Export fertig", "success");
+                    if (downloadWhenReady && job.downloadUrl) {
+                        var link = document.createElement("a");
+                        link.href = job.downloadUrl;
+                        link.download = job.downloadName || "logbuch.html";
+                        link.style.display = "none";
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                    }
                     return;
                 }
 

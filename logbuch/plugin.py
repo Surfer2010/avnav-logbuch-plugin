@@ -1553,6 +1553,24 @@ class Plugin(object):
             if proc.returncode == 0:
                 job['status'] = 'OK'
                 job['message'] = 'Export fertig.'
+
+                if job.get('deleteAfterDownload') and job.get('outputFile'):
+                    def remove_transient_export(path=job.get('outputFile')):
+                        try:
+                            if path and os.path.exists(path):
+                                os.unlink(path)
+                        except Exception as cleanup_error:
+                            try:
+                                self.api.log('Transient export cleanup failed: %s' % cleanup_error)
+                            except Exception:
+                                pass
+
+                    cleanup_timer = threading.Timer(
+                        int(job.get('deleteDelaySeconds', 300)),
+                        remove_transient_export,
+                    )
+                    cleanup_timer.daemon = True
+                    cleanup_timer.start()
             else:
                 job['status'] = 'ERROR'
 
@@ -1603,6 +1621,45 @@ class Plugin(object):
         return {
             'status': 'OK',
             'message': 'KMZ export started.',
+            'job': job
+        }
+
+    def _export_html_async(self, date_value):
+        date_dash = self._dash_date(date_value)
+        date_compact = self._compact_date(date_value)
+
+        script = os.path.join(self.tools_dir, 'export_daily_html.py')
+        token = str(uuid.uuid4()).replace('-', '')[:10]
+        filename = '%s_logbuch_%s.html' % (date_compact, token)
+        download_name = 'logbuch-%s.html' % date_dash
+        output_file = os.path.join(self.base_dir, 'overlays', filename)
+
+        if not os.path.exists(script):
+            return {
+                'status': 'ERROR',
+                'message': 'Export script not found: %s' % script
+            }
+
+        command = [
+            'python3',
+            script,
+            '--date',
+            date_dash,
+            '--avnav-data',
+            self.base_dir,
+            '--output',
+            output_file
+        ]
+
+        job = self._start_export_job('daily-html', command, output_file)
+        job['downloadUrl'] = '/overlays/%s' % filename
+        job['downloadName'] = download_name
+        job['deleteAfterDownload'] = True
+        job['deleteDelaySeconds'] = 300
+
+        return {
+            'status': 'OK',
+            'message': 'HTML export started.',
             'job': job
         }
 
@@ -1943,6 +2000,15 @@ class Plugin(object):
             if url in ('exportKmz', 'api/exportKmz'):
                 date_value = self._get_arg(args, 'date', '')
                 return self._export_kmz_async(date_value)
+
+            if url in ('exportHtml', 'api/exportHtml'):
+                date_value = self._get_arg(args, 'date', '')
+                if not date_value:
+                    return {
+                        'status': 'ERROR',
+                        'message': 'date required'
+                    }
+                return self._export_html_async(date_value)
 
             if url in ('exportTripKmz', 'api/exportTripKmz'):
                 from_date = self._get_arg(args, 'from', self._get_arg(args, 'fromDate', ''))

@@ -144,6 +144,13 @@ button {
     scroll-margin-top: 1rem;
 }
 
+.day-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.55rem;
+    align-items: stretch;
+}
+
 .day-toggle {
     width: 100%;
     display: flex;
@@ -156,6 +163,32 @@ button {
     color: var(--text);
     text-align: left;
     cursor: pointer;
+}
+
+
+.day-export-button {
+    padding: 0.75rem 0.95rem;
+    border: 1px solid var(--border);
+    border-radius: 0.55rem;
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.day-export-button:hover {
+    background: var(--surface-hover, #eef3f6);
+}
+
+.day-export-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+@media (max-width: 640px) {
+    .day-header { grid-template-columns: 1fr; }
+    .day-export-button { width: 100%; }
 }
 
 .day-toggle strong {

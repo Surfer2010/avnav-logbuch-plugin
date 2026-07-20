@@ -298,10 +298,65 @@ function createEventElement(entry) {
     return element;
 }
 
+
+async function downloadDailyHtml(dateValue, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = "Export läuft …";
+    statusText.textContent = `HTML-Tagesbericht für ${dateValue} wird erzeugt …`;
+
+    try {
+        const start = await fetchJson(
+            `${AVNAV_BASE_URL}/api/exportHtml?date=${encodeURIComponent(dateValue)}`
+        );
+        const jobId = start.job && start.job.id;
+        if (!jobId) {
+            throw new Error(start.message || "Export konnte nicht gestartet werden.");
+        }
+
+        for (let attempt = 0; attempt < 120; attempt += 1) {
+            await new Promise(resolve => window.setTimeout(resolve, 500));
+            const result = await fetchJson(
+                `${AVNAV_BASE_URL}/api/exportStatus?job=${encodeURIComponent(jobId)}`
+            );
+            const job = result.job;
+            if (!job || job.status === "RUNNING") {
+                continue;
+            }
+            if (job.status !== "OK") {
+                throw new Error(job.message || "HTML-Export fehlgeschlagen.");
+            }
+            if (!job.downloadUrl) {
+                throw new Error("Download-Adresse fehlt.");
+            }
+
+            const link = document.createElement("a");
+            link.href = job.downloadUrl;
+            link.download = job.downloadName || `logbuch-${dateValue}.html`;
+            link.style.display = "none";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            statusText.textContent = `HTML-Tagesbericht für ${dateValue} wurde heruntergeladen.`;
+            return;
+        }
+        throw new Error("Zeitüberschreitung beim HTML-Export.");
+    } catch (error) {
+        console.error(error);
+        statusText.textContent = error.message || "HTML-Export fehlgeschlagen.";
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
 function createDaySection(day, entries) {
     const section = document.createElement("section");
     section.id = `day-${day.date}`;
     section.className = "day-section open";
+
+    const header = document.createElement("div");
+    header.className = "day-header";
 
     const toggle = document.createElement("button");
     toggle.className = "day-toggle";
@@ -316,6 +371,18 @@ function createDaySection(day, entries) {
             ${entries.length} Einträge
         </span>
     `;
+
+    const exportButton = document.createElement("button");
+    exportButton.className = "day-export-button";
+    exportButton.type = "button";
+    exportButton.textContent = "HTML herunterladen";
+    exportButton.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        downloadDailyHtml(day.date, exportButton);
+    });
+
+    header.append(toggle, exportButton);
 
     const body = document.createElement("div");
     body.className = "day-body";
@@ -336,7 +403,7 @@ function createDaySection(day, entries) {
         toggle.setAttribute("aria-expanded", String(isOpen));
     });
 
-    section.append(toggle, body);
+    section.append(header, body);
     return section;
 }
 
