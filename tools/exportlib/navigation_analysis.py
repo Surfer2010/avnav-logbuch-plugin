@@ -29,10 +29,22 @@ def build_state_timeline(events):
     warnings = []
 
     if events:
-        stored = events[0].get("state") or {}
+        first_event = events[0]
+        stored = first_event.get("state") or {}
         for key in state:
             if isinstance(stored.get(key), bool):
                 state[key] = stored[key]
+
+        # Das gespeicherte state-Feld beschreibt den Zustand nach dem Ereignis.
+        # Für die Rekonstruktion benötigen wir unmittelbar vor dem ersten
+        # Ereignis jedoch den vorherigen Zustand. Dadurch erzeugt z. B. ein
+        # erster motor_on-Eintrag mit state.motor=true keine falsche
+        # "already active"-Warnung.
+        first_type = first_event.get("event_type")
+        if first_type in START_EVENTS:
+            state[START_EVENTS[first_type]] = False
+        elif first_type in END_EVENTS:
+            state[END_EVENTS[first_type]] = True
 
     for event in events:
         event_type = event.get("event_type")
