@@ -117,7 +117,7 @@ Für jeden Tag kann ein eigenständiger HTML-Bericht erzeugt werden. Dieser enth
 - statische Kartenansicht
 - farblich getrennte Trackabschnitte
 
-Der Bericht bleibt auch ohne Internetverbindung verwendbar.
+Der Bericht bleibt auch ohne Internetverbindung verwendbar und kann auf jedes beliebige Endgerät heruntergeladen werden.
 
 #### KMZ-Export
 
