@@ -1,6 +1,5 @@
 # AVNav Logbuch Plugin
 
-
 <picture>
   <source
     media="(prefers-color-scheme: dark)"
@@ -15,64 +14,83 @@
     height="128">
 </picture>
 
-Zielsetzung
-1. Unser erstes Ziel ist es hier ein Plugin für die Segelsoftware AVNav zu erstellen, das Events (Segel hoch/runter, Motor an/aus, Anker ab/auf, ....) festhält um eine Art digitales Logbuch im rudimentärsten Sinne zu erhalten. Dabei geht es um private Ausflüge und eine Intuitive Bedienung/Erstellung der Einträge während man unterwegs ist, ohne "zum Kartentisch" hinunter zu müssen.
-2. Ein Digitales Logbuch zu erstellen, das die Tagestrips oder ganze Törns in ein praktikables Format exportieren kann. Dazu kommen konfortable Zusammenfassungen, Statistiken und Kartenansichten.
-
-Funktionen (bold)
-- Widgets/Buttons in der Kartenansicht von AVNav hinterlegen um Events schnell zu loggen
-- Events aller Art mit Zeitstempel und GEO-Koordinaten festhalten (vordefiniert sind Segel hoch/runter, Motor an/aus, Anker ab/auf, Törn Start/Ende)
-- gespeicherte Events in unterschiedlichen Zeitfenstern und Formate exportieren (kmz, html, csv, json) (siehe UserApp/-Seite)
-- UserApp/-Seite registrieren über die das digitale Logbuch eingesehen, bearbeitet und ergänzt werden kann
-  
-Umsetzung:
-- Dateneingabe
-  Daten werden über 
-- Datenspeicherung
-- Datenausgabe und Export
-
-- Interne Datenhaltung
-
-Installation und Updates
-
-Sonstiges
-
-
 Elektronisches Bord- und Törnlogbuch für [AVNav](https://www.wellenvogel.net/software/avnav/).
 
-Das Plugin erfasst Motor-, Segel- und Ankerzustände direkt aus der AVNav-Kartenansicht, ergänzt sie um Navigationsdaten und bereitet daraus Tagesansichten, Törnauswertungen und Kartenexporte auf.
+Das Plugin erfasst Ereignisse und Zustandsänderungen direkt aus der AVNav-Kartenansicht, ergänzt sie um verfügbare Navigationsdaten und bereitet daraus Tagesansichten, Törnauswertungen und Kartenexporte auf.
 
 Die Daten bleiben vollständig lokal auf dem AVNav-System.
 
 ---
 
+## Zielsetzung
+
+### 1. Ereignisse während der Fahrt einfach erfassen
+
+Das Plugin soll typische Bordereignisse wie Motor an oder aus, Segel gesetzt oder geborgen sowie Anker fallen oder auf unmittelbar während der Fahrt festhalten.
+
+Die Bedienung erfolgt über frei platzierbare AVNav-Widgets und ein eigenes Overlay. Dadurch können Einträge direkt im Cockpit über Tablet oder Touchscreen erstellt werden, ohne dafür zum Kartentisch wechseln zu müssen.
+
+### 2. Tagesfahrten und Törns dokumentieren
+
+Aus den gespeicherten Ereignissen und Navigationsdaten entsteht ein digitales Logbuch für einzelne Tagesfahrten und mehrtägige Törns.
+
+Die Daten können in praktikable Formate exportiert und durch Statistiken, Kartenansichten und chronologische Zusammenfassungen ergänzt werden.
+
+---
+
 ## Funktionen
 
-### Logbucheinträge direkt in AVNav
+- frei platzierbare Widgets und Aktionsschaltflächen in der AVNav-Kartenansicht
+- eigenes Overlay für Logbucheinträge und Statusänderungen
+- Erfassung von Ereignissen mit Zeitstempel und GPS-Position
+- Speicherung verfügbarer Navigationsdaten wie Kurs und Geschwindigkeit
+- vordefinierte Ereignisse für Motor, Segel, Anker sowie Törnstart und Törnende
+- Erfassung freier Textnotizen
+- chronologische Tages- und Törnansicht
+- Bearbeiten, Löschen, Duplizieren und nachträgliches Einfügen von Einträgen
+- Rekonstruktion des aktuellen Motor-, Segel- und Ankerstatus
+- Positionsbestimmung oder Interpolation aus vorhandenen AVNav-Trackdaten
+- Export als HTML, KMZ, CSV und JSON
+- gemeinsame Berechnungsgrundlage für Tagesberichte und Törnauswertungen
+- vollständig lokale und offene Datenhaltung
 
-Über frei platzierbare Widgets und ein eigenes Overlay können während der Fahrt Einträge erfasst werden:
+---
+
+## Umsetzung
+
+### Dateneingabe
+
+Daten werden über frei platzierbare Widgets in der AVNav-Kartenansicht sowie über die registrierte Logbuch-UserApp erfasst.
+
+Direkt verfügbar sind:
 
 - Motor an und aus
 - Segel gesetzt und geborgen
 - Anker fallen und auf
-- Freitextnotizen
 - Törn starten und beenden
+- Freitextnotizen
+
+Die Bedienung ist für Tablet, Touchscreen und den Einsatz im Cockpit optimiert.
+
+### Datenspeicherung
 
 Zu jedem Eintrag speichert das Plugin – soweit verfügbar:
 
 - Zeitstempel
+- Ereignistyp
 - GPS-Position
 - Kurs
 - Geschwindigkeit
-- aktuellen Motor-, Segel- und Ankerstatus
+- Motorstatus
+- Segelstatus
+- Ankerstatus
+- zusätzliche Notizen und Ereignisdaten
 
-Die Bedienung ist für Tablet, Touchscreen und Cockpit optimiert.
+Die Rohdaten werden lokal in einem offenen JSONL-Format gespeichert. Eine verpflichtende Cloud oder externe Datenübertragung ist nicht vorgesehen.
 
----
+### Datenausgabe und Export
 
-## Tages- und Törnansicht
-
-Das Logbuch stellt alle Ereignisse chronologisch dar und rekonstruiert daraus den aktuellen Bordzustand.
+Die Logbuch-UserApp zeigt alle Ereignisse chronologisch an und rekonstruiert daraus den jeweiligen Bordzustand.
 
 Vorhandene Einträge können:
 
@@ -84,30 +102,24 @@ Vorhandene Einträge können:
 
 werden.
 
-Bei nachträglichen Einträgen kann die Position aus den vorhandenen AVNav-Trackdaten bestimmt oder interpoliert werden.
+Für nachträglich erfasste Ereignisse kann die Position aus den vorhandenen AVNav-Trackdaten übernommen oder interpoliert werden.
 
----
+#### HTML-Tagesbericht
 
-## Exporte und Auswertungen
-
-### HTML-Tagesbericht
-
-Für jeden Tag kann ein eigenständiger HTML-Bericht erzeugt werden.
-
-Enthalten sind unter anderem:
+Für jeden Tag kann ein eigenständiger HTML-Bericht erzeugt werden. Dieser enthält unter anderem:
 
 - Tagesstatistik
 - Motor-, Segel- und Gesamtstrecke
 - Fahrzeiten
 - Durchschnitts- und Höchstgeschwindigkeit
-- Ereignistabelle
+- chronologische Ereignistabelle
 - Notizen und Ankerplätze
 - statische Kartenansicht
 - farblich getrennte Trackabschnitte
 
 Der Bericht bleibt auch ohne Internetverbindung verwendbar.
 
-### KMZ-Export
+#### KMZ-Export
 
 Das Plugin erzeugt Kartenoverlays für:
 
@@ -121,71 +133,36 @@ Das Plugin erzeugt Kartenoverlays für:
 
 Die KMZ-Dateien können unter anderem in AVNav, Google Earth und anderen KML/KMZ-kompatiblen Anwendungen verwendet werden.
 
-### Weitere Exportgrundlagen
+#### CSV- und JSON-Export
 
-Die gemeinsame Export-Engine bildet die Grundlage für:
+CSV und JSON stellen die erfassten Rohdaten in maschinenlesbarer Form bereit. Dadurch können die Einträge außerhalb des Plugins weiterverarbeitet, archiviert oder in andere Systeme übernommen werden.
 
-- HTML
-- Tages-KMZ
-- Törn-KMZ
-- GPX
-- zukünftige JSON- und CSV-Rohdatenexporte
+### Interne Datenhaltung
 
----
+Die Datenhaltung und die Exportfunktionen verwenden eine gemeinsame Berechnungsbasis. Dadurch greifen Tagesansicht, HTML-Bericht, Kartenexporte und Törnauswertungen auf dieselben rekonstruierten Zustände und Streckenabschnitte zurück.
 
-## Besonderheiten
+Wesentliche Eigenschaften:
 
 - vollständig lokale Datenhaltung
-- keine verpflichtende Cloud
-- direkte Integration in AVNav
-- frei platzierbare AVNav-Widgets
-- Touch- und Cockpitbedienung
-- asynchrone Exporte im Hintergrund
 - offene JSONL-Rohdaten
 - nachvollziehbare Statusrekonstruktion
-- gemeinsame Berechnungsbasis für alle Exporte
-- Open Source
+- gemeinsame Export-Engine
+- asynchrone Exporte im Hintergrund
+- keine verpflichtende Cloud
 
 ---
 
-## Screenshots
+## Installation und Updates
 
-### AVNav-Widgets
-
-<!-- Screenshot einfügen:
-![AVNav Logbuch Widgets](docs/images/logbuch-widgets.png)
--->
-
-### Logbuchansicht
-
-<!-- Screenshot einfügen:
-![Logbuch Tagesansicht](docs/images/logbuch-tagesansicht.png)
--->
-
-### HTML-Tagesbericht
-
-<!-- Screenshot einfügen:
-![HTML Tagesbericht](docs/images/logbuch-html-export.png)
--->
-
-### Karten- und Törnexport
-
-<!-- Screenshot einfügen:
-![KMZ Törnexport](docs/images/logbuch-kmz-export.png)
--->
-
----
-
-# Installation
-
-## Installation über ein Release-ZIP
+### Installation über ein Release-ZIP
 
 Die aktuelle ZIP-Datei kann auf der GitHub-Releases-Seite heruntergeladen werden.
 
-Das ZIP enthält bereits den vollständigen Pluginordner:
+Das ZIP enthält den vollständigen Pluginordner:
 
 ```text
 logbuch/
+```
 
 Je nach AVNav-Installation kann das ZIP direkt über die Pluginverwaltung hochgeladen oder manuell in das Pluginverzeichnis entpackt werden.
 
@@ -207,27 +184,18 @@ Nach einer manuellen Installation muss AVNav einmal neu gestartet werden:
 sudo systemctl restart avnav
 ```
 
----
-
-## Installation über das Repository
+### Installation über das Repository
 
 ```bash
 cd /tmp
 git clone https://github.com/Surfer2010/avnav-logbuch-plugin.git
 cd avnav-logbuch-plugin
-
 sudo bash tools/install_or_update.sh
 ```
 
 Das Installationsskript erkennt den AVNav-Datenpfad, installiert das Plugin und kopiert die zugehörigen Werkzeuge.
 
----
-
-# Update
-
-## Update innerhalb der Version 2.x
-
-Repository aktualisieren:
+### Update innerhalb der Version 2.x
 
 ```bash
 cd ~/avnav-logbuch-plugin
@@ -237,17 +205,17 @@ sudo bash tools/install_or_update.sh
 
 Updates innerhalb der Version-2.x-Reihe führen keine erneute Namensmigration und keinen migrationsbedingten Neustart aus.
 
-## Update von Version 1.9.x oder älter
+### Update von Version 1.9.x oder älter
 
 Version 2.0.0 führte eine einmalige Umstellung aller internen Namen und Pfade von `logbook` auf `logbuch` durch.
 
 Beim ersten Update werden:
 
-* vorhandene JSONL-Rohdaten übernommen
-* alte Dateinamen umgestellt
-* alte Plugin- und Datenpfade entfernt
-* ein Migrationsmarker angelegt
-* AVNav einmal neu gestartet
+- vorhandene JSONL-Rohdaten übernommen
+- alte Dateinamen umgestellt
+- alte Plugin- und Datenpfade entfernt
+- ein Migrationsmarker angelegt
+- AVNav einmal neu gestartet
 
 Vor diesem einmaligen Versionssprung wird eine Sicherung der vorhandenen JSONL-Dateien empfohlen.
 
@@ -261,462 +229,37 @@ Ab Version 2.0 wird ausschließlich die neue Benennung verwendet.
 
 ---
 
-# Datenhaltung
+## Sonstiges
 
-## Rohdaten
+- Open Source
+- direkte Integration in AVNav
+- Touch- und Cockpitbedienung
+- lokale Datenspeicherung
+- offene Exportformate
+- geeignet für private Tagesfahrten und mehrtägige Törns
 
-Die eigentlichen Logbuchdaten werden tageweise im JSONL-Format gespeichert:
+### Screenshots
 
-```text
-/var/lib/avnav/logbuch/logbuch-YYYY-MM-DD.jsonl
-```
+#### AVNav-Widgets
 
-Jede Zeile enthält einen eigenständigen Logbucheintrag.
+<!--
+![AVNav Logbuch Widgets](docs/images/logbuch-widgets.png)
+-->
 
-Typische Inhalte:
+#### Logbuchansicht
 
-* eindeutige ID
-* Ereignistyp
-* Zeitstempel
-* Position
-* Kurs
-* Geschwindigkeit
-* Zusatzdaten
-* Statusinformationen
-* Freitext
+<!--
+![Logbuch Tagesansicht](docs/images/logbuch-tagesansicht.png)
+-->
 
-Die JSONL-Dateien sind die maßgebliche Datenbasis. Exporte können daraus erneut erzeugt werden.
+#### HTML-Tagesbericht
 
-## Weitere AVNav-Daten
+<!--
+![HTML Tagesbericht](docs/images/logbuch-html-export.png)
+-->
 
-Für Auswertungen verwendet das Plugin zusätzlich vorhandene AVNav-Daten:
+#### Karten- und Törnexport
 
-```text
-tracks/
-overlays/
-logbuch/
-logbuch-tools/
-plugins/logbuch/
-```
-
-Bedeutung:
-
-| Verzeichnis        | Inhalt                       |
-| ------------------ | ---------------------------- |
-| `logbuch/`         | dauerhafte JSONL-Rohdaten    |
-| `tracks/`          | AVNav-Trackdaten             |
-| `overlays/`        | erzeugte KMZ-Overlays        |
-| `plugins/logbuch/` | installiertes Plugin         |
-| `logbuch-tools/`   | Export- und Analysewerkzeuge |
-
----
-
-# Verarbeitung
-
-Der vereinfachte Datenfluss lautet:
-
-```text
-AVNav / GPS / NMEA
-        │
-        ▼
-Logbucheintrag mit Zeit und Position
-        │
-        ▼
-Tagesweise JSONL-Rohdaten
-        │
-        ├── Tagesansicht
-        ├── Törnansicht
-        ├── Statusrekonstruktion
-        ├── HTML-Bericht
-        ├── Tages-KMZ
-        ├── Törn-KMZ
-        └── weitere Exportformate
-```
-
-## Statusrekonstruktion
-
-Motor-, Segel- und Ankerzustände werden chronologisch aus den gespeicherten Ereignissen rekonstruiert.
-
-Dadurch können auch nachträglich eingefügte oder bearbeitete Einträge berücksichtigt werden.
-
-Ungültige Zustandsfolgen werden erkannt und dem Benutzer als Warnung angezeigt.
-
-## Trackauswertung
-
-Für Strecken- und Kartenberechnungen werden vorhandene AVNav-Trackdaten ausgewertet.
-
-Die gemeinsame Export-Engine:
-
-* ordnet Trackabschnitte Motor, Segel oder unbekannt zu
-* verhindert doppelte Streckenzählung
-* berechnet Distanz und Fahrzeit
-* bestimmt Durchschnitts- und Höchstgeschwindigkeit
-* erzeugt eine einheitliche Datengrundlage für alle Exporte
-
-## Asynchrone Exporte
-
-Aufwendige Exporte laufen im Hintergrund. AVNav bleibt während der Verarbeitung bedienbar.
-
-Der Status eines Exportauftrags kann über die Plugin-Schnittstelle abgefragt werden.
-
----
-
-# Entwicklungsstand
-
-Das Plugin wird aktiv weiterentwickelt.
-
-Aktuelle Schwerpunkte:
-
-* Stabilität und Datenintegrität
-* bessere Dokumentation
-* zusätzliche Rohdatenexporte
-* Wetter- und Temperaturauswertungen
-* erweiterte Törnstatistiken
-* Boots-, Crew- und Segelprofile
-* verbesserte Berichte und Visualisierungen
-
----
-
-# Versionierung
-
-Das Projekt verwendet [Semantic Versioning 2.0.0](https://semver.org/):
-
-* **MAJOR:** inkompatible Struktur-, Speicher- oder API-Änderungen
-* **MINOR:** neue rückwärtskompatible Funktionen
-* **PATCH:** rückwärtskompatible Fehlerkorrekturen
-
----
-
-# Lizenz
-
-Dieses Projekt steht unter der in [`LICENSE`](LICENSE) angegebenen Open-Source-Lizenz.
-
-```
-
-Für die GitHub-Startseite würde ich zusätzlich direkt unter der Einleitung eine breite Übersichtsaufnahme der Logbuchansicht platzieren. Die drei weiteren Screenshots können kompakt unter „Screenshots“ folgen.
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# AVNav Logbuch Plugin
-
-Erweitertes elektronisches Logbuch für AVNav mit Overlay, direkten Aktions-Widgets, GPX/KMZ-Export und Törn-Auswertung.
-
----
-
-# Funktionen
-
-## Elektronisches Logbuch direkt in AVNav
-
-Das Plugin ergänzt AVNav um ein einfach bedienbares Bord- und Törnlogbuch.
-
-Direkt aus der Kartenansicht können folgende Zustände erfasst werden:
-
-- Motor an / aus (logbuch_b_motor...)
-- Segel gesetzt / geborgen (logbuch_b_anker...)
-- Anker fallen / auf (logbuch_b_segel...)
-- (nur im Overlay) Freitext-Notizen
-- (nur im Overlay) Törn Start / Ende
-<img width="159" height="427" alt="grafik" src="https://github.com/user-attachments/assets/6c4cb255-21cb-40f9-9bbd-8df0a332e7a7" />
-
-
-Alle Einträge werden zusammen mit Zeit und GPS-Position gespeichert.
-
----
-# Installation
-```
-cd /tmp
-
-rm -rf avnav-logbuch-plugin
-
-git clone https://github.com/Surfer2010/avnav-logbuch-plugin.git
-
-cd avnav-logbuch-plugin
-
-cp logbuch/plugin.py /home/pi/avnav/data/plugins/user-logbuch/plugin.py
-cp logbuch/plugin.js /home/pi/avnav/data/plugins/user-logbuch/plugin.js
-cp logbuch/plugin.css /home/pi/avnav/data/plugins/user-logbuch/plugin.css
-
-rm -rf /home/pi/avnav/data/logbuch-tools
-mkdir -p /home/pi/avnav/data/logbuch-tools
-
-cp -a tools/. /home/pi/avnav/data/logbuch-tools/
-
-sudo chown -R pi:pi /home/pi/avnav/data/plugins/user-logbuch
-sudo chown -R pi:pi /home/pi/avnav/data/logbuch-tools
-
-sudo systemctl restart avnav
-```
----
-
-# Overlay Bedienung
-
-Das Plugin besitzt ein eigenes Overlay innerhalb von AVNav. (logbuch_b_popup)
-<img width="1118" height="674" alt="grafik" src="https://github.com/user-attachments/assets/54ffef2a-71cd-46ca-b713-f300efe80401" />
-
-Das Overlay ermöglicht:
-
-- schnelle Logbucheinträge
-- Freitextnotizen
-- Statuswechsel
-- Törnverwaltung
-- KMZ-Export direkt aus AVNav
-
-Optimiert für:
-
-- Tablet Bedienung
-- Touchscreens
-- Cockpit Nutzung
-- Einhandbedienung unter Fahrt
-
----
-
-# Frei platzierbare AVNav Widgets
-
-Zusätzlich zum Overlay stellt das Plugin kompakte AVNav-Widgets bereit.
-
-Diese können frei im AVNav Layout platziert werden:
-
-- `logbuch_b_motor_an`
-- `logbuch_b_motor_aus`
-- `logbuch_b_segel_hoch`
-- `logbuch_b_segel_runter`
-- `logbuch_b_anker_ab`
-- `logbuch_b_anker_auf`
-- `logbuch_b_popup`
-
-Die Widgets orientieren sich optisch an der nativen AVNav Benutzeroberfläche.
-
----
-
-# GPX und Navigationsdaten
-
-Zu jedem Eintrag werden Navigationsdaten gespeichert:
-
-- Position
-- Kurs
-- Geschwindigkeit
-- Zeitstempel
-
-Zusätzlich können GPX-Daten ergänzt und ausgewertet werden.
-
----
-
-# KMZ Export
-
-Das Plugin kann automatisch KMZ Overlays erzeugen.
-
-Die Dateien können direkt in AVNav als Overlay angezeigt werden.
-
-Exportiert werden unter anderem:
-
-- Motorstrecken
-- Segelstrecken
-- Ankerpositionen
-- Logbuchnotizen
-- Törnabschnitte
-- Distanz
-- Dauer
-- Durchschnittsgeschwindigkeit
-- Zeitachsen (KML TimeSpan)
-
-Die KMZ-Dateien sind kompatibel mit:
-
-- AVNav
-- Google Earth
-- OpenCPN
-- KML/KMZ kompatiblen Kartenprogrammen
-
----
-
-# Törn Export
-
-Mehrtägige Törns können automatisch zusammengefasst werden.
-
-Möglichkeiten:
-
-- Export der letzten 7 Tage
-- Export zwischen Törn Start und Törn Ende
-- automatisches Überschreiben vorhandener Törn-KMZ Dateien
-
----
-
-# Verzeichnisstruktur
-
-Standardmäßig nutzt das Plugin:
-
-```text
-/home/pi/avnav/data/
-````
-
-Wichtige Verzeichnisse:
-
-```text
-logbuch/
-tracks/
-overlays/
-plugins/
-logbuch-tools/
-```
-
----
-
-# Asynchrone Exporte
-
-KMZ-Exporte laufen asynchron im Hintergrund.
-
-Dadurch bleibt AVNav während des Exports vollständig bedienbar.
-
-Der aktuelle Status kann direkt über die Plugin API abgefragt werden.
-
----
-
-# Ziel des Projekts
-
-Das Ziel ist ein modernes, leicht bedienbares und vollständig lokales Bordlogbuch für Segler und Motorbootfahrer.
-
-Fokus:
-
-* einfache Bedienung
-* Offlinefähigkeit
-* Integration in AVNav
-* offene Datenformate
-* langfristige Archivierung
-* vollständige lokale Datenhaltung
-
----
-
-# Roadmap / Ausblick
-
-Geplante Erweiterungen:
-
-## GeoJSON Export
-
-Zusätzlicher Export für:
-
-* Grafana Geomap
-* MediaWiki Karten
-* Leaflet/OpenLayers
-* Webkarten
-* APIs
-
----
-
-## Automatische Törnauswertung
-
-Geplant:
-
-* Hafen-Erkennung
-* Ankerplatz-Erkennung
-* Heatmaps
-* Distanzstatistiken
-* Segel-/Motor-Anteile
-* automatische Tageszusammenfassungen
-
----
-
-## Erweiterte Visualisierung
-
-Geplant:
-
-* Törn-Zeitleisten
-* Wetterintegration
-* Kartenmarker
-* Live Status Widgets
-* Dashboard Integration
-
----
-
-## Statistik und Analyse
-
-Mögliche spätere Funktionen:
-
-* Motorstunden
-* Segelstunden
-* Hafenstatistik
-* Nachtfahrten
-* Durchschnittsgeschwindigkeit
-* Langzeitstatistiken
-
----
-
-# Entwicklungsstand
-
-Das Projekt befindet sich aktiv in Entwicklung.
-
-Der aktuelle Fokus liegt auf:
-
-* Stabilität
-* AVNav Integration
-* Overlay Bedienung
-* Exportfunktionen
-* Touchoptimierung
-
----
-
-## Versioning
-
-This project follows Semantic Versioning 2.0.0:
-
-- MAJOR: incompatible API or storage changes
-- MINOR: new backwards compatible features
-- PATCH: backwards compatible bugfixes
-
-Stable releases should be safe to update within the same MAJOR version.
-
----
-
-# Lizenz
-
-## Installation ab v1.4.1
-
-### Standardinstallation über AVNav
-
-Für neue Installationen wird das Release-ZIP direkt in AVNav hochgeladen:
-
-```text
-logbuch-v1.4.1.zip
-```
-
-Das ZIP enthält bereits den korrekten Pluginordner:
-
-```text
-logbuch/
-```
-
-Ein separates Installationsscript ist für eine Neuinstallation nicht nötig.
-
-### Manuelle Installation per CLI
-
-```bash
-cd /home/pi/avnav/data/plugins
-unzip /pfad/zu/logbuch-v1.4.1.zip
-sudo systemctl restart avnav
-```
-
-AVNav stellt das Plugin danach unter folgendem Pfad bereit:
-
-```text
-/plugins/user-logbuch/
-```
-
-### Einheitliche Benennung
-
-Das Projekt verwendet ausschließlich `Logbuch` beziehungsweise `logbuch`. Alte englische Namen, Pfade und Dateinamen werden nicht unterstützt. Vor einem Update müssen bestehende Installationen auf die aktuelle Verzeichnis- und Dateistruktur gebracht werden.
+<!--
+![KMZ Törnexport](docs/images/logbuch-kmz-export.png)
+-->
