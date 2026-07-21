@@ -1,4 +1,3 @@
-````markdown
 # AVNav Logbuch Plugin
 
 Elektronisches Bord- und Törnlogbuch für [AVNav](https://www.wellenvogel.net/software/avnav/).
@@ -149,7 +148,6 @@ Das ZIP enthält bereits den vollständigen Pluginordner:
 
 ```text
 logbuch/
-````
 
 Je nach AVNav-Installation kann das ZIP direkt über die Pluginverwaltung hochgeladen oder manuell in das Pluginverzeichnis entpackt werden.
 
