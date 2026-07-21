@@ -1,4 +1,6 @@
 # AVNav Logbuch Plugin
+<img width="1024" height="998" alt="logbuch-logo-1024px" src="https://github.com/user-attachments/assets/e7b9f58e-3772-4301-a677-3e098fc6a444" />
+
 
 Elektronisches Bord- und Törnlogbuch für [AVNav](https://www.wellenvogel.net/software/avnav/).
 
