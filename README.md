@@ -15,6 +15,29 @@
     height="128">
 </picture>
 
+Zielsetzung
+1. Unser erstes Ziel ist es hier ein Plugin für die Segelsoftware AVNav zu erstellen, das Events (Segel hoch/runter, Motor an/aus, Anker ab/auf, ....) festhält um eine Art digitales Logbuch im rudimentärsten Sinne zu erhalten. Dabei geht es um private Ausflüge und eine Intuitive Bedienung/Erstellung der Einträge während man unterwegs ist, ohne "zum Kartentisch" hinunter zu müssen.
+2. Ein Digitales Logbuch zu erstellen, das die Tagestrips oder ganze Törns in ein praktikables Format exportieren kann. Dazu kommen konfortable Zusammenfassungen, Statistiken und Kartenansichten.
+
+Funktionen (bold)
+- Widgets/Buttons in der Kartenansicht von AVNav hinterlegen um Events schnell zu loggen
+- Events aller Art mit Zeitstempel und GEO-Koordinaten festhalten (vordefiniert sind Segel hoch/runter, Motor an/aus, Anker ab/auf, Törn Start/Ende)
+- gespeicherte Events in unterschiedlichen Zeitfenstern und Formate exportieren (kmz, html, csv, json) (siehe UserApp/-Seite)
+- UserApp/-Seite registrieren über die das digitale Logbuch eingesehen, bearbeitet und ergänzt werden kann
+  
+Umsetzung:
+- Dateneingabe
+  Daten werden über 
+- Datenspeicherung
+- Datenausgabe und Export
+
+- Interne Datenhaltung
+
+Installation und Updates
+
+Sonstiges
+
+
 Elektronisches Bord- und Törnlogbuch für [AVNav](https://www.wellenvogel.net/software/avnav/).
 
 Das Plugin erfasst Motor-, Segel- und Ankerzustände direkt aus der AVNav-Kartenansicht, ergänzt sie um Navigationsdaten und bereitet daraus Tagesansichten, Törnauswertungen und Kartenexporte auf.
