@@ -25,6 +25,7 @@ rsync -a --delete \
   --exclude "__pycache__/" \
   --exclude "*.pyc" \
   --exclude "*.bak*" \
+  --exclude "plugin.mjs.before-*" \
   "$ROOT/logbuch/" \
   "$PACKAGE_ROOT/"
 
@@ -40,8 +41,8 @@ rsync -a --delete \
   "$PACKAGE_TOOLS/"
 
 sed -i "s/var LOGBUCH_VERSION = \"[^\"]*\";/var LOGBUCH_VERSION = \"$VERSION\";/" \
-  "$ROOT/logbuch/plugin.js" \
-  "$PACKAGE_ROOT/plugin.js"
+  "$ROOT/logbuch/plugin.mjs" \
+  "$PACKAGE_ROOT/plugin.mjs"
 
 if grep -RIn --exclude-dir="__pycache__" -E "__[A-Z0-9_]*VERSION[A-Z0-9_]*__" "$PACKAGE_ROOT"; then
   echo "ERROR: unresolved version placeholder found" >&2
@@ -64,5 +65,5 @@ grep -n '"version"' \
   "$ROOT/logbuch/plugin.json" \
   "$PACKAGE_ROOT/plugin.json"
 
-grep -n "logbuchVersion" "$PACKAGE_ROOT/plugin.js" || true
+grep -n "LOGBUCH_VERSION" "$PACKAGE_ROOT/plugin.mjs" || true
 ls -lh "$ZIP_FILE"

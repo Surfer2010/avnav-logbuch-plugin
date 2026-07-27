@@ -1,3 +1,26 @@
+## AVNav Logbuch Plugin 2.0.1-beta5
+
+Diese Beta-Version nutzt die neuen Möglichkeiten der AVNav-Beta-Oberfläche.
+
+### Neuerungen
+
+- Nativer AVNav-Dialog zum schnellen Erfassen von Logbucheinträgen
+- Direkte Aktionen für Motor, Segel und Anker
+- Freie Notizen ohne zusätzliche Ereignisabfrage
+- Zugriff auf das digitale Logbuch direkt aus dem Eingabedialog
+- Separater Logbuchzugriff im AVNav-Menü
+- Nur der schnelle Eintragsbutton verbleibt in der Hauptbuttonleiste
+- Digitales Logbuch kann als AVNav-Vollbilddialog eingebettet geöffnet werden
+- Vorbereitung der Trennung zwischen Ereigniserfassung und Logbuchverwaltung
+
+### Bedienkonzept
+
+Der Eintragsdialog dient ausschließlich der schnellen Erfassung während der Navigation. Exporte, Törnverwaltung und Auswertungen verbleiben auf der vollständigen Logbuchseite.
+
+### Hinweis
+
+Diese Version ist für die aktuelle AVNav-Beta vorgesehen und wird als Vorabversion veröffentlicht.
+
 # AVNav Logbuch Plugin v1.9.0
 
 ## HTML-Tagesbericht

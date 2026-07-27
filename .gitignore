@@ -16,3 +16,4 @@ export-test/
 *.bak-*
 __pycache__/
 *.pyc
+logbuch/plugin.mjs.before-*

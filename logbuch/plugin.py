@@ -115,7 +115,10 @@ class Plugin(object):
         )
 
         # Die Export-Tools werden durch tools/install_or_update.sh hier installiert.
-        self.tools_dir = self._get_config('toolsDir', os.path.join(self.base_dir, 'logbuch-tools'))
+        self.tools_dir = self._get_config(
+            'toolsDir',
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tools')
+        )
 
         # Testwerte für LXC ohne echtes GPS.
         self.test_lat = self._get_config('testLat', '')
