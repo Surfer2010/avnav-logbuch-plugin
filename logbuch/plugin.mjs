@@ -13,7 +13,7 @@ export default function initializeLogbuch(avnavApi) {
         baseUrl: AVNAV_BASE_URL
     });
 
-    var LOGBUCH_VERSION = "2.0.1-beta6";
+    var LOGBUCH_VERSION = "2.0.1-beta6-entry-only";
 
     function openNativeEntryDialog(event) {
         if (typeof avnavApi.showDialog !== "function") {

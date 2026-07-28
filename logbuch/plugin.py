@@ -293,25 +293,8 @@ class Plugin(object):
             if not os.path.isdir(self.log_dir):
                 os.makedirs(self.log_dir)
 
-            if hasattr(self.api, "registerUserApp"):
-                app_url = self.api.getBaseUrl() + "/index.html"
-                app_icon = os.path.join("icons", "logbuch.svg")
-
-                try:
-                    self.api.registerUserApp(
-                        app_url,
-                        app_icon,
-                        title="Logbuch",
-                        name="logbuch-view",
-                        shortText="Logbuch",
-                        longText="Digitales Logbuch",
-                    )
-                except TypeError:
-                    self.api.registerUserApp(
-                        app_url,
-                        app_icon,
-                        "Logbuch",
-                    )
+            # Entry-only variant:
+            # no separate AVNav UserApp registration.
 
             self._rebuild_state_from_log()
 
