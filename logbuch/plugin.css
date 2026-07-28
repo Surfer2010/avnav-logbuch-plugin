@@ -644,3 +644,84 @@
 .logbuchBox {
     position: relative;
 }
+
+/* Native AVNav entry dialog */
+.logbuchNativeEntryDialog {
+    box-sizing: border-box;
+    width: min(30rem, 100%);
+    min-width: 24rem;
+    padding: 0.25rem;
+}
+
+.logbuchNativeGroup {
+    margin: 0 0 0.9rem;
+}
+
+.logbuchNativeGroup h3 {
+    margin: 0 0 0.4rem;
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.logbuchNativeActionGrid,
+.logbuchNativeNoteActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.logbuchNativeEntryDialog button {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 2.8rem;
+    padding: 0.55rem 0.75rem;
+    font-weight: 600;
+}
+
+.logbuchNativeWideAction {
+    margin-top: 0.7rem;
+}
+
+.logbuchNativeNoteArea {
+    margin-top: 0.7rem;
+}
+
+.logbuchNativeNoteArea[hidden] {
+    display: none;
+}
+
+.logbuchNativeNoteArea textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 6rem;
+    padding: 0.65rem;
+    resize: vertical;
+    font: inherit;
+}
+
+.logbuchNativeNoteActions {
+    margin-top: 0.55rem;
+}
+
+.logbuchNativeStatus {
+    min-height: 1.3rem;
+    margin-top: 0.65rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.logbuchNativeStatusError {
+    color: #b00020;
+}
+
+@media (max-width: 480px) {
+    .logbuchNativeEntryDialog {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .logbuchNativeActionGrid,
+    .logbuchNativeNoteActions {
+        grid-template-columns: 1fr;
+    }
+}

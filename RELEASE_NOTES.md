@@ -1,3 +1,23 @@
+## AVNav Logbuch Plugin 2.0.1-beta6
+
+Kleines Folge-Release für die neue AVNav-Beta-Oberfläche.
+
+### Änderungen
+
+- Eingabedialog symmetrisch und kompakter gestaltet
+- Motor-, Segel- und Ankerbuttons einheitlich angeordnet
+- KMZ-Tagesexport auf die vollständige Logbuchseite verschoben
+- Exportfunktion aus dem alten Eingabe-Overlay entfernt
+- Doppelte Buttonregistrierungen entfernt
+- In der Navigationsleiste bleibt nur „Logbucheintrag“
+- Das vollständige Logbuch bleibt als UserApp erreichbar
+- Eigenes Feder-Logo für den Button „Logbucheintrag“
+- Bisheriges Logo bleibt für das vollständige Logbuch erhalten
+
+### Hinweis
+
+Diese Version ist für die aktuelle AVNav-Beta vorgesehen und wird als Vorabversion veröffentlicht.
+
 ## AVNav Logbuch Plugin 2.0.1-beta5
 
 Diese Beta-Version nutzt die neuen Möglichkeiten der AVNav-Beta-Oberfläche.

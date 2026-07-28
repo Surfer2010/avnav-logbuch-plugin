@@ -13,7 +13,7 @@ export default function initializeLogbuch(avnavApi) {
         baseUrl: AVNAV_BASE_URL
     });
 
-    var LOGBUCH_VERSION = "2.0.1-beta5";
+    var LOGBUCH_VERSION = "2.0.1-beta6";
 
     function openNativeEntryDialog(event) {
         if (typeof avnavApi.showDialog !== "function") {
@@ -28,11 +28,11 @@ export default function initializeLogbuch(avnavApi) {
             Math.random().toString(36).slice(2);
 
         var dialogHtml =
-            '<div id="' + dialogId + '" style="padding:8px 4px;">' +
+            '<div id="' + dialogId + '" class="logbuchNativeEntryDialog">' +
 
-                '<div style="margin-bottom:12px;">' +
-                    '<div style="margin-bottom:5px;font-weight:bold;">Motor</div>' +
-                    '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+                '<section class="logbuchNativeGroup">' +
+                    '<h3>Motor</h3>' +
+                    '<div class="logbuchNativeActionGrid">' +
                         '<button type="button" data-logbuch-action="motor_on">' +
                             'Motor an' +
                         '</button>' +
@@ -40,11 +40,11 @@ export default function initializeLogbuch(avnavApi) {
                             'Motor aus' +
                         '</button>' +
                     '</div>' +
-                '</div>' +
+                '</section>' +
 
-                '<div style="margin-bottom:12px;">' +
-                    '<div style="margin-bottom:5px;font-weight:bold;">Segel</div>' +
-                    '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+                '<section class="logbuchNativeGroup">' +
+                    '<h3>Segel</h3>' +
+                    '<div class="logbuchNativeActionGrid">' +
                         '<button type="button" data-logbuch-action="sail_set">' +
                             'Segel setzen' +
                         '</button>' +
@@ -52,11 +52,11 @@ export default function initializeLogbuch(avnavApi) {
                             'Segel bergen' +
                         '</button>' +
                     '</div>' +
-                '</div>' +
+                '</section>' +
 
-                '<div style="margin-bottom:12px;">' +
-                    '<div style="margin-bottom:5px;font-weight:bold;">Anker</div>' +
-                    '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+                '<section class="logbuchNativeGroup">' +
+                    '<h3>Anker</h3>' +
+                    '<div class="logbuchNativeActionGrid">' +
                         '<button type="button" data-logbuch-action="anchor_down">' +
                             'Anker fallen' +
                         '</button>' +
@@ -64,27 +64,22 @@ export default function initializeLogbuch(avnavApi) {
                             'Anker auf' +
                         '</button>' +
                     '</div>' +
-                '</div>' +
+                '</section>' +
 
-                '<div style="margin-bottom:12px;">' +
+                '<div class="logbuchNativeWideAction">' +
                     '<button type="button" data-logbuch-action="show-note">' +
                         'Freie Notiz' +
                     '</button>' +
                 '</div>' +
 
-                '<div data-logbuch-note-area="1" style="display:none;margin-bottom:12px;">' +
+                '<div data-logbuch-note-area="1" ' +
+                    'class="logbuchNativeNoteArea" hidden>' +
                     '<textarea ' +
                         'data-logbuch-note-text="1" ' +
                         'rows="4" ' +
-                        'placeholder="Notiz eingeben" ' +
-                        'style="' +
-                            'box-sizing:border-box;' +
-                            'width:100%;' +
-                            'min-width:260px;' +
-                            'resize:vertical;' +
-                        '"' +
-                    '></textarea>' +
-                    '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">' +
+                        'placeholder="Notiz eingeben">' +
+                    '</textarea>' +
+                    '<div class="logbuchNativeNoteActions">' +
                         '<button type="button" data-logbuch-action="save-note">' +
                             'Notiz speichern' +
                         '</button>' +
@@ -94,21 +89,14 @@ export default function initializeLogbuch(avnavApi) {
                     '</div>' +
                 '</div>' +
 
-                '<div style="margin-top:16px;">' +
+                '<div class="logbuchNativeWideAction">' +
                     '<button type="button" data-logbuch-action="open-logbook">' +
                         'Digitales Logbuch öffnen' +
                     '</button>' +
                 '</div>' +
 
-                '<div ' +
-                    'data-logbuch-status="1" ' +
-                    'role="status" ' +
-                    'style="' +
-                        'min-height:20px;' +
-                        'margin-top:12px;' +
-                        'font-weight:bold;' +
-                    '"' +
-                '></div>' +
+                '<div data-logbuch-status="1" ' +
+                    'class="logbuchNativeStatus" role="status"></div>' +
             '</div>';
 
         avnavApi.showDialog(
@@ -161,12 +149,17 @@ export default function initializeLogbuch(avnavApi) {
 
                     window.clearTimeout(statusTimer);
                     statusElement.textContent = message || "";
-                    statusElement.style.color = isError ? "#b00020" : "";
+                    statusElement.classList.toggle(
+                        "logbuchNativeStatusError",
+                        Boolean(isError)
+                    );
 
                     if (message) {
                         statusTimer = window.setTimeout(function() {
                             statusElement.textContent = "";
-                            statusElement.style.color = "";
+                            statusElement.classList.remove(
+                                "logbuchNativeStatusError"
+                            );
                         }, 3000);
                     }
                 }
@@ -193,14 +186,14 @@ export default function initializeLogbuch(avnavApi) {
                     );
 
                     if (action === "show-note") {
-                        noteArea.style.display = "block";
+                        noteArea.hidden = false;
                         noteText.focus();
                         return;
                     }
 
                     if (action === "cancel-note") {
                         noteText.value = "";
-                        noteArea.style.display = "none";
+                        noteArea.hidden = true;
                         showStatus("");
                         return;
                     }
@@ -224,7 +217,7 @@ export default function initializeLogbuch(avnavApi) {
                         lockActions();
                         saveLogbuchEntryWithText("manual", text);
                         noteText.value = "";
-                        noteArea.style.display = "none";
+                        noteArea.hidden = true;
                         showStatus("Notiz gespeichert");
                         return;
                     }
@@ -311,44 +304,18 @@ export default function initializeLogbuch(avnavApi) {
             return;
         }
 
-        var entryButton = {
-            shortText: "Eintrag",
-            longText: "Logbucheintrag erfassen",
-            icon: "icons/logbuch.svg",
-            onClick: function(event) {
-                openNativeEntryDialog(event);
-            }
-        };
-
-        var logbookButton = {
-            name: "logbuch-view-menu",
-            shortText: "Logbuch",
-            longText: "Digitales Logbuch öffnen",
-            icon: "icons/logbuch.svg",
-            onClick: function(event) {
-                openNativeLogbookDialog(event);
-            }
-        };
-
         avnavApi.registerUserButton(
-            Object.assign({}, entryButton, {
-                name: "logbuch-entry-nav"
-            }),
+            {
+                name: "logbuch-entry-nav",
+                shortText: "Logbucheintrag",
+                longText: "Logbucheintrag",
+                icon: "icons/logbucheintrag.png",
+                onClick: function(event) {
+                    openNativeEntryDialog(event);
+                }
+            },
             "navpage"
         );
-
-        avnavApi.registerUserButton(
-            Object.assign({}, entryButton, {
-                name: "logbuch-entry-dashboard"
-            }),
-            "gpspage"
-        );
-
-        /*
-         * Ohne Seitenzuordnung: Logbuch bleibt im AVNav-Menü erreichbar,
-         * erscheint aber nicht als eigener Button in der Seitenleiste.
-         */
-        avnavApi.registerUserButton(logbookButton);
     }
 
     /*
@@ -574,10 +541,6 @@ export default function initializeLogbuch(avnavApi) {
 
                         '<div class="logbuchExportRow">' +
 
-                            '<button type="button" id="logbuchOpenExport" class="logbuchMiniButton">' +
-                                'Export' +
-                            '</button>' +
-
                             '<button type="button" id="logbuchTripStart" class="logbuchMiniButton">' +
                                 'Törn Start' +
                             '</button>' +
@@ -682,12 +645,6 @@ export default function initializeLogbuch(avnavApi) {
             e.preventDefault();
             e.stopPropagation();
             overlay.remove();
-        }, false);
-
-        document.getElementById("logbuchOpenExport").addEventListener("click", function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            openLogbuchExportOverlay();
         }, false);
 
         document.getElementById("logbuchTripStart").addEventListener("click", function(e) {

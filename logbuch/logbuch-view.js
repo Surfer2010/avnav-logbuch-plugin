@@ -350,6 +350,81 @@ async function downloadDailyHtml(dateValue, button) {
     }
 }
 
+
+async function downloadDailyKmz(dateValue, button) {
+    const originalText = button.textContent;
+
+    button.disabled = true;
+    button.textContent = "Export läuft …";
+    setStatus(`KMZ für ${dateValue} wird erzeugt …`);
+
+    try {
+        const start = await fetchJson(
+            `${AVNAV_BASE_URL}/api/exportKmz?date=${
+                encodeURIComponent(dateValue)
+            }`
+        );
+
+        const jobId = start.job && start.job.id;
+
+        if (!jobId) {
+            throw new Error(
+                start.message ||
+                "KMZ-Export konnte nicht gestartet werden."
+            );
+        }
+
+        for (let attempt = 0; attempt < 120; attempt += 1) {
+            await new Promise(resolve =>
+                window.setTimeout(resolve, 500)
+            );
+
+            const result = await fetchJson(
+                `${AVNAV_BASE_URL}/api/exportStatus?job=${
+                    encodeURIComponent(jobId)
+                }`
+            );
+
+            const job = result.job;
+
+            if (!job || job.status === "RUNNING") {
+                continue;
+            }
+
+            if (job.status !== "OK") {
+                throw new Error(
+                    job.message || "KMZ-Export fehlgeschlagen."
+                );
+            }
+
+            if (!job.downloadUrl) {
+                throw new Error("Download-Adresse fehlt.");
+            }
+
+            const link = document.createElement("a");
+            link.href = job.downloadUrl;
+            link.download =
+                job.downloadName || `logbuch-${dateValue}.kmz`;
+            link.hidden = true;
+
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            setStatus(`KMZ für ${dateValue} wurde heruntergeladen.`);
+            return;
+        }
+
+        throw new Error("Zeitüberschreitung beim KMZ-Export.");
+    } catch (error) {
+        console.error(error);
+        setStatus(error.message || "KMZ-Export fehlgeschlagen.");
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
 function createDaySection(day, entries) {
     const section = document.createElement("section");
     section.id = `day-${day.date}`;
@@ -372,17 +447,33 @@ function createDaySection(day, entries) {
         </span>
     `;
 
-    const exportButton = document.createElement("button");
-    exportButton.className = "day-export-button";
-    exportButton.type = "button";
-    exportButton.textContent = "HTML herunterladen";
-    exportButton.addEventListener("click", event => {
+    const exportActions = document.createElement("div");
+    exportActions.className = "day-export-actions";
+
+    const htmlExportButton = document.createElement("button");
+    htmlExportButton.className = "day-export-button";
+    htmlExportButton.type = "button";
+    htmlExportButton.textContent = "HTML";
+    htmlExportButton.title = "HTML-Tagesbericht herunterladen";
+    htmlExportButton.addEventListener("click", event => {
         event.preventDefault();
         event.stopPropagation();
-        downloadDailyHtml(day.date, exportButton);
+        downloadDailyHtml(day.date, htmlExportButton);
     });
 
-    header.append(toggle, exportButton);
+    const kmzExportButton = document.createElement("button");
+    kmzExportButton.className = "day-export-button";
+    kmzExportButton.type = "button";
+    kmzExportButton.textContent = "KMZ";
+    kmzExportButton.title = "KMZ für diesen Tag herunterladen";
+    kmzExportButton.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        downloadDailyKmz(day.date, kmzExportButton);
+    });
+
+    exportActions.append(htmlExportButton, kmzExportButton);
+    header.append(toggle, exportActions);
 
     const body = document.createElement("div");
     body.className = "day-body";
