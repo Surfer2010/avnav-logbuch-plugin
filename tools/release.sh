@@ -25,7 +25,8 @@ rsync -a --delete \
   --exclude "__pycache__/" \
   --exclude "*.pyc" \
   --exclude "*.bak*" \
-  --exclude "plugin.mjs.before-*" \
+  --exclude "*.before-*" \
+  --exclude "*.before.*" \
   "$ROOT/logbuch/" \
   "$PACKAGE_ROOT/"
 
