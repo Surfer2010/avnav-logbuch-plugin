@@ -589,3 +589,240 @@ button {
     font-weight: 700;
     border-color: transparent;
 }
+
+
+/* Gemeinsamer Exportdialog */
+
+.export-dialog {
+    width: min(620px, calc(100vw - 2rem));
+    max-height: calc(100vh - 2rem);
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 0.7rem;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.export-dialog::backdrop {
+    background: rgb(15 23 42 / 65%);
+}
+
+.export-dialog form {
+    padding: 1rem;
+}
+
+.export-format-list {
+    display: grid;
+    gap: 0.7rem;
+    margin-top: 1rem;
+}
+
+.export-format-button {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    width: 100%;
+    padding: 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--surface-secondary);
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+}
+
+.export-format-button:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.export-format-button span {
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.35;
+}
+
+.export-raw-section {
+    margin-top: 1rem;
+}
+
+.export-raw-section > span {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 650;
+}
+
+.export-raw-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.export-format-button.compact {
+    display: block;
+    text-align: center;
+    font-weight: 700;
+}
+
+.export-selected-format {
+    margin: 0.75rem 0 0;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.export-range-grid {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.export-range-grid > label {
+    font-weight: 700;
+}
+
+.export-date-time-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(7rem, 1fr);
+    gap: 0.55rem;
+}
+
+.export-date-time-row input {
+    width: 100%;
+    min-width: 0;
+    padding: 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 0.45rem;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.export-quick-section {
+    margin-top: 1rem;
+}
+
+.export-quick-section > span {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 650;
+}
+
+.export-quick-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.export-quick-buttons button {
+    padding: 0.55rem 0.35rem;
+    border: 1px solid var(--border);
+    border-radius: 0.45rem;
+    background: var(--surface-secondary);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.export-quick-buttons button:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.export-quick-buttons button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.export-options {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1.1rem;
+}
+
+.export-options label {
+    display: flex;
+    gap: 0.55rem;
+    align-items: flex-start;
+    cursor: pointer;
+}
+
+.export-options input {
+    margin-top: 0.18rem;
+}
+
+.export-message {
+    min-height: 1.35rem;
+    margin: 0.85rem 0 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.export-message-error {
+    color: #b42318;
+}
+
+.export-message-success {
+    color: #16803a;
+}
+
+@media (max-width: 640px) {
+    .export-range-grid {
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+    }
+
+    .export-date-time-row {
+        grid-template-columns: minmax(0, 1fr) 7.5rem;
+        margin-bottom: 0.45rem;
+    }
+
+    .export-quick-buttons {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .export-dialog .dialog-actions {
+        flex-wrap: wrap;
+    }
+}
+
+
+/* Rückkehr zur AVNav-Navigation */
+
+.back-to-avnav {
+    margin-left: auto;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.back-to-avnav:hover,
+.back-to-avnav:focus-visible {
+    border-color: var(--accent);
+    background: var(--surface-secondary);
+}
+
+@media (max-width: 640px) {
+    .back-to-avnav {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.85rem;
+    }
+}
+
+
+/*
+ * Einheitliches Corporate Design:
+ * Die Logbuchseite verwendet unabhängig von den Geräteeinstellungen
+ * immer das helle Erscheinungsbild aus logbuch-theme.css.
+ */
+:root {
+    color-scheme: light;
+}

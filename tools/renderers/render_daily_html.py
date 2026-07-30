@@ -120,18 +120,31 @@ def render_daily_html(
     cache_dir=None,
     chart_xml=None,
     title=None,
+    include_map=True,
 ):
     date_dash = model["date_dash"]
     report_title = title or f"Logbuch – Tagesbericht vom {date_dash}"
-    try:
-        map_svg = render_static_map(
-            model,
-            cache_dir=cache_dir,
-            chart_xml=chart_xml,
-            online=online_map,
+    map_section = ""
+
+    if include_map:
+        try:
+            map_svg = render_static_map(
+                model,
+                cache_dir=cache_dir,
+                chart_xml=chart_xml,
+                online=online_map,
+            )
+        except Exception:
+            map_svg = render_map_placeholder(
+                message="Kartenansicht konnte nicht erzeugt werden"
+            )
+
+        map_section = (
+            '<section class="map-frame" '
+            'aria-label="Kartenansicht">'
+            + map_svg
+            + '</section>'
         )
-    except Exception:
-        map_svg = render_map_placeholder(message="Kartenansicht konnte nicht erzeugt werden")
 
     anchor_section = ""
     if model.get("anchors"):
@@ -192,7 +205,7 @@ h2 {{ margin: 3.5mm 0 1.5mm; font-size: 11pt; }}
 <main class="report">
 <header><h1>{_escape(report_title)}</h1><div class="future-vessel-data" aria-hidden="true"></div></header>
 <section aria-label="Tagesstatistik">{_statistics_table(model["statistics"])}{_count_strip(model)}</section>
-<section class="map-frame" aria-label="Kartenansicht">{map_svg}</section>
+{map_section}
 <section><h2>Logbucheinträge</h2>
 <table class="detail-table entries-table"><thead><tr><th>Zeit</th><th>Ereignis</th><th>Position</th><th>Bemerkung</th></tr></thead>
 <tbody>{_event_rows(model.get("events") or [])}</tbody></table></section>

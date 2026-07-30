@@ -17,3 +17,5 @@ export-test/
 __pycache__/
 *.pyc
 logbuch/plugin.mjs.before-*
+/backups/
+/logbuch/*.before-*

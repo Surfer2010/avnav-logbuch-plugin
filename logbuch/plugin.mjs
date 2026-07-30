@@ -13,7 +13,61 @@ export default function initializeLogbuch(avnavApi) {
         baseUrl: AVNAV_BASE_URL
     });
 
-    var LOGBUCH_VERSION = "2.0.1-beta6-entry-only";
+    var LOGBUCH_VERSION = "2.0.1-beta11-layout";
+
+
+    function openNativeQuickDialog(event) {
+        if (typeof avnavApi.showDialog !== "function") {
+            openNativeEntryDialog(event);
+            return;
+        }
+
+        var id = "logbuchQuick-" + Date.now();
+
+        var html =
+            '<div id="' + id + '" class="logbuchNativeQuickDialog">' +
+                '<button type="button" data-quick="entry">' +
+                    'Neuer Logbucheintrag' +
+                '</button>' +
+                '<button type="button" data-quick="logbook">' +
+                    'Digitales Logbuch öffnen' +
+                '</button>' +
+            '</div>';
+
+        avnavApi.showDialog({
+            title: "Logbuch",
+            html: html,
+            buttons: [{
+                name: "close",
+                shortText: "Schließen",
+                close: true
+            }]
+        }, event || {}).then(function(closeDialog) {
+            window.setTimeout(function() {
+                var box = document.getElementById(id);
+                if (!box) return;
+
+                box.addEventListener("click", function(e) {
+                    var button = e.target.closest("[data-quick]");
+                    if (!button) return;
+
+                    var action = button.getAttribute("data-quick");
+
+                    if (typeof closeDialog === "function") {
+                        closeDialog();
+                    }
+
+                    window.setTimeout(function() {
+                        if (action === "entry") {
+                            openNativeEntryDialog();
+                        } else {
+                            openNativeLogbookDialog();
+                        }
+                    }, 0);
+                });
+            }, 0);
+        });
+    }
 
     function openNativeEntryDialog(event) {
         if (typeof avnavApi.showDialog !== "function") {
@@ -311,7 +365,7 @@ export default function initializeLogbuch(avnavApi) {
                 longText: "Logbucheintrag",
                 icon: "icons/logbucheintrag.png",
                 onClick: function(event) {
-                    openNativeEntryDialog(event);
+                    openNativeQuickDialog(event);
                 }
             },
             "navpage"
@@ -549,6 +603,10 @@ export default function initializeLogbuch(avnavApi) {
                                 'Törn Ende' +
                             '</button>' +
 
+                            '<button type="button" id="logbuchOpenFullPage" class="logbuchMiniButton logbuchOpenFullPage">' +
+                                'Digitales Logbuch' +
+                            '</button>' +
+
                         '</div>' +
 
                         '<div class="logbuchSectionTitle logbuchHistoryTitle">Anmerkung / Freitext</div>' +
@@ -658,6 +716,16 @@ export default function initializeLogbuch(avnavApi) {
             e.stopPropagation();
             saveLogbuchEntry("trip_end");
         }, false);
+
+        document.getElementById("logbuchOpenFullPage").addEventListener(
+            "click",
+            function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = AVNAV_BASE_URL + "/index.html";
+            },
+            false
+        );
 
         loadLogbuchEntries();
     }

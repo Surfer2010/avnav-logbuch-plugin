@@ -1574,7 +1574,14 @@ class Plugin(object):
             else:
                 job['status'] = 'ERROR'
 
-                if 'No logbuch file found' in job['stderr']:
+                if (
+                    'Keine Logbucheinträge im gewählten Zeitraum.'
+                    in job['stderr']
+                ):
+                    job['message'] = (
+                        'Keine Logbucheinträge im gewählten Zeitraum.'
+                    )
+                elif 'No logbuch file found' in job['stderr']:
                     job['message'] = 'Keine Logbucheinträge für diesen Tag.'
                 elif 'GPX file not found' in job['stderr']:
                     job['message'] = 'Keine GPX-Trackdatei für diesen Tag.'
@@ -1698,6 +1705,105 @@ class Plugin(object):
             'job': job
         }
 
+    def _export_range_async(
+        self,
+        from_value,
+        to_value,
+        export_format,
+        include_without_position=True,
+        include_map=False
+    ):
+        export_format = str(
+            export_format or ''
+        ).strip().lower()
+
+        if export_format not in (
+            'html',
+            'kmz',
+            'csv',
+            'json'
+        ):
+            return {
+                'status': 'ERROR',
+                'message': 'Ungültiges Exportformat.'
+            }
+
+        script_names = {
+            'html': 'export_range_html.py',
+            'kmz': 'export_range_kmz.py',
+            'csv': 'export_range_data.py',
+            'json': 'export_range_data.py'
+        }
+
+        script = os.path.join(
+            self.tools_dir,
+            script_names[export_format]
+        )
+
+        if not os.path.exists(script):
+            return {
+                'status': 'ERROR',
+                'message': 'Export script not found: %s' % script
+            }
+
+        token = str(uuid.uuid4()).replace('-', '')[:10]
+        filename = 'logbuch_zeitraum_%s.%s' % (
+            token,
+            export_format
+        )
+        download_name = 'logbuch-zeitraum.%s' % (
+            export_format
+        )
+        output_file = os.path.join(
+            self.base_dir,
+            'overlays',
+            filename
+        )
+
+        command = [
+            'python3',
+            script,
+            '--from',
+            str(from_value),
+            '--to',
+            str(to_value),
+            '--avnav-data',
+            self.base_dir,
+            '--output',
+            output_file
+        ]
+
+        if export_format in ('csv', 'json'):
+            command.extend([
+                '--format',
+                export_format
+            ])
+
+        if not include_without_position:
+            command.append(
+                '--exclude-without-position'
+            )
+
+        if export_format == 'html' and not include_map:
+            command.append('--without-map')
+
+        job = self._start_export_job(
+            'range-%s' % export_format,
+            command,
+            output_file
+        )
+        job['downloadUrl'] = '/overlays/%s' % filename
+        job['downloadName'] = download_name
+        job['deleteAfterDownload'] = True
+        job['deleteDelaySeconds'] = 300
+
+        return {
+            'status': 'OK',
+            'message': '%s export started.'
+            % export_format.upper(),
+            'job': job
+        }
+
     def _parse_logbuch_timestamp(self, value):
         try:
             if not value:
@@ -1816,6 +1922,152 @@ class Plugin(object):
             result['to'] = to_date
 
         return result
+
+    def _read_export_entry_bounds(self):
+        first_timestamp = None
+        last_timestamp = None
+        count = 0
+
+        if not os.path.isdir(self.log_dir):
+            return first_timestamp, last_timestamp, count
+
+        paths = []
+
+        for name in os.listdir(self.log_dir):
+            if name.endswith('.jsonl'):
+                paths.append(os.path.join(self.log_dir, name))
+
+        paths.sort()
+
+        for path in paths:
+            try:
+                with open(path, 'r') as handle:
+                    for line in handle:
+                        line = line.strip()
+
+                        if not line:
+                            continue
+
+                        try:
+                            entry = json.loads(line)
+                        except Exception:
+                            continue
+
+                        timestamp = self._parse_logbuch_timestamp(
+                            entry.get('timestamp')
+                        )
+
+                        if timestamp is None:
+                            continue
+
+                        count += 1
+
+                        if (
+                            first_timestamp is None
+                            or timestamp < first_timestamp
+                        ):
+                            first_timestamp = timestamp
+
+                        if (
+                            last_timestamp is None
+                            or timestamp > last_timestamp
+                        ):
+                            last_timestamp = timestamp
+
+            except Exception:
+                continue
+
+        return first_timestamp, last_timestamp, count
+
+    def _current_trip_export_range(self):
+        markers = self._read_trip_marker_events()
+
+        last_start = None
+
+        for marker in markers:
+            if marker.get('event_type') == 'trip_start':
+                last_start = marker
+
+        if last_start is None:
+            return None
+
+        end_marker = None
+
+        for marker in markers:
+            if (
+                marker.get('event_type') == 'trip_end'
+                and marker.get('timestamp') >= last_start.get('timestamp')
+            ):
+                end_marker = marker
+                break
+
+        start_timestamp = last_start.get('timestamp')
+
+        if end_marker is not None:
+            end_timestamp = end_marker.get('timestamp')
+            active = False
+        else:
+            end_timestamp = datetime.datetime.utcnow()
+            active = True
+
+        return {
+            'from': start_timestamp.strftime(
+                '%Y-%m-%dT%H:%M:%SZ'
+            ),
+            'to': end_timestamp.strftime(
+                '%Y-%m-%dT%H:%M:%SZ'
+            ),
+            'active': active
+        }
+
+    def _export_range_info(self):
+        now = datetime.datetime.utcnow()
+        today_start = now.replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+        )
+
+        first_timestamp, last_timestamp, count = (
+            self._read_export_entry_bounds()
+        )
+
+        complete_range = None
+
+        if first_timestamp is not None and last_timestamp is not None:
+            complete_range = {
+                'from': first_timestamp.strftime(
+                    '%Y-%m-%dT%H:%M:%SZ'
+                ),
+                'to': last_timestamp.strftime(
+                    '%Y-%m-%dT%H:%M:%SZ'
+                )
+            }
+
+        current_trip = self._current_trip_export_range()
+
+        default_range = None
+
+        if current_trip and current_trip.get('active'):
+            default_range = current_trip
+
+        return {
+            'status': 'OK',
+            'now': now.strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'today': {
+                'from': today_start.strftime(
+                    '%Y-%m-%dT%H:%M:%SZ'
+                ),
+                'to': now.strftime(
+                    '%Y-%m-%dT%H:%M:%SZ'
+                )
+            },
+            'currentTrip': current_trip,
+            'completeLogbook': complete_range,
+            'defaultRange': default_range,
+            'entryCount': count
+        }
 
     def _export_status(self, job_id=None):
         if job_id:
@@ -2024,6 +2276,49 @@ class Plugin(object):
 
             if url in ('exportCurrentTripKmz', 'api/exportCurrentTripKmz'):
                 return self._export_current_trip_kmz_async()
+
+            if url in (
+                'exportRangeInfo',
+                'api/exportRangeInfo'
+            ):
+                return self._export_range_info()
+
+            if url in (
+                'exportRangeData',
+                'api/exportRangeData'
+            ):
+                from_value = self._get_arg(args, 'from', '')
+                to_value = self._get_arg(args, 'to', '')
+                export_format = self._get_arg(args, 'format', '')
+
+                if not from_value or not to_value:
+                    return {
+                        'status': 'ERROR',
+                        'message': 'from/to required'
+                    }
+
+                include_without_position = self._as_bool(
+                    self._get_arg(
+                        args,
+                        'includeWithoutPosition',
+                        'true'
+                    )
+                )
+                include_map = self._as_bool(
+                    self._get_arg(
+                        args,
+                        'includeMap',
+                        'false'
+                    )
+                )
+
+                return self._export_range_async(
+                    from_value,
+                    to_value,
+                    export_format,
+                    include_without_position,
+                    include_map
+                )
 
             if url in ('exportStatus', 'api/exportStatus'):
                 job_id = self._get_arg(args, 'job', self._get_arg(args, 'jobId', None))

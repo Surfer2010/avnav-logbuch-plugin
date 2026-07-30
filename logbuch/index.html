@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Digitales Logbuch</title>
     <link rel="stylesheet" href="logbuch-view.css">
+    <link rel="stylesheet" href="logbuch-theme.css">
 </head>
 <body>
     <div id="app">
@@ -16,6 +17,12 @@
                 <h1>Digitales Logbuch</h1>
                 <p id="status-text">Logbuchdaten werden geladen …</p>
             </div>
+
+            <button id="back-to-avnav"
+                    class="back-to-avnav"
+                    type="button">
+                Zurück zu AVNav
+            </button>
         </header>
 
         <div class="app-layout">
@@ -31,7 +38,9 @@
                     <button class="side-action" type="button" disabled>
                         Filter
                     </button>
-                    <button class="side-action" type="button" disabled>
+                    <button id="export-button"
+                            class="side-action"
+                            type="button">
                         Export
                     </button>
                 </nav>
@@ -42,6 +51,172 @@
             </main>
         </div>
     </div>
+
+    <dialog id="export-dialog" class="export-dialog">
+        <form method="dialog">
+            <div class="dialog-header">
+                <div>
+                    <p class="dialog-time">Logbuchdaten ausgeben</p>
+                    <h2 id="export-dialog-title">Export auswählen</h2>
+                </div>
+
+                <button id="export-close-top"
+                        class="dialog-close"
+                        value="close"
+                        aria-label="Dialog schließen">×</button>
+            </div>
+
+            <section id="export-format-step">
+                <div class="export-format-list">
+                    <button class="export-format-button"
+                            type="button"
+                            data-export-format="html">
+                        <strong>HTML-Bericht</strong>
+                        <span>
+                            Mit Tagesübersicht, Ereignissen und optionaler
+                            Trackkarte
+                        </span>
+                    </button>
+
+                    <button class="export-format-button"
+                            type="button"
+                            data-export-format="kmz">
+                        <strong>KMZ</strong>
+                        <span>
+                            Track und Logbucheinträge für Kartenprogramme
+                        </span>
+                    </button>
+                </div>
+
+                <div class="export-raw-section">
+                    <span>Maschinenlesbare Rohdaten</span>
+
+                    <div class="export-raw-buttons">
+                        <button class="export-format-button compact"
+                                type="button"
+                                data-export-format="csv">
+                            CSV
+                        </button>
+
+                        <button class="export-format-button compact"
+                                type="button"
+                                data-export-format="json">
+                            JSON
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dialog-actions">
+                    <button id="export-format-cancel"
+                            type="button">
+                        Abbrechen
+                    </button>
+                </div>
+            </section>
+
+            <section id="export-range-step" hidden>
+                <p id="export-selected-format"
+                   class="export-selected-format"></p>
+
+                <div class="export-range-grid">
+                    <label for="export-from-date">Von:</label>
+
+                    <div class="export-date-time-row">
+                        <input id="export-from-date"
+                               type="date"
+                               aria-label="Von Datum">
+
+                        <input id="export-from-time"
+                               type="time"
+                               step="60"
+                               aria-label="Von Uhrzeit">
+                    </div>
+
+                    <label for="export-to-date">Bis:</label>
+
+                    <div class="export-date-time-row">
+                        <input id="export-to-date"
+                               type="date"
+                               aria-label="Bis Datum">
+
+                        <input id="export-to-time"
+                               type="time"
+                               step="60"
+                               aria-label="Bis Uhrzeit">
+                    </div>
+                </div>
+
+                <div class="export-quick-section">
+                    <span>Schnellauswahl:</span>
+
+                    <div class="export-quick-buttons">
+                        <button type="button"
+                                data-export-range="today">
+                            Heute
+                        </button>
+
+                        <button type="button"
+                                data-export-range="yesterday">
+                            Gestern
+                        </button>
+
+                        <button id="export-current-trip"
+                                type="button"
+                                data-export-range="trip">
+                            Aktueller Törn
+                        </button>
+
+                        <button id="export-complete-logbook"
+                                type="button"
+                                data-export-range="complete">
+                            Gesamtes Logbuch
+                        </button>
+                    </div>
+                </div>
+
+                <div class="export-options">
+                    <label id="export-map-option">
+                        <input id="export-include-map"
+                               type="checkbox">
+                        <span>
+                            Trackkarte in HTML-Export einfügen
+                        </span>
+                    </label>
+
+                    <label>
+                        <input id="export-include-without-position"
+                               type="checkbox"
+                               checked>
+                        <span>
+                            Logbucheinträge ohne GPS-Position einschließen
+                        </span>
+                    </label>
+                </div>
+
+                <p id="export-message"
+                   class="export-message"
+                   role="status"></p>
+
+                <div class="dialog-actions">
+                    <button id="export-back"
+                            type="button">
+                        Zurück
+                    </button>
+
+                    <button id="export-cancel"
+                            type="button">
+                        Abbrechen
+                    </button>
+
+                    <button id="export-run"
+                            class="dialog-primary-action"
+                            type="button">
+                        Export erstellen
+                    </button>
+                </div>
+            </section>
+        </form>
+    </dialog>
 
     <dialog id="event-dialog" class="event-dialog">
         <form method="dialog">

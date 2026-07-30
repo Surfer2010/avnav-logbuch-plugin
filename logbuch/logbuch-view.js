@@ -454,22 +454,28 @@ function createDaySection(day, entries) {
     htmlExportButton.className = "day-export-button";
     htmlExportButton.type = "button";
     htmlExportButton.textContent = "HTML";
-    htmlExportButton.title = "HTML-Tagesbericht herunterladen";
+    htmlExportButton.title = "HTML-Export für diesen Tag konfigurieren";
     htmlExportButton.addEventListener("click", event => {
         event.preventDefault();
         event.stopPropagation();
-        downloadDailyHtml(day.date, htmlExportButton);
+        openExportDialog({
+            format: "html",
+            date: day.date
+        });
     });
 
     const kmzExportButton = document.createElement("button");
     kmzExportButton.className = "day-export-button";
     kmzExportButton.type = "button";
     kmzExportButton.textContent = "KMZ";
-    kmzExportButton.title = "KMZ für diesen Tag herunterladen";
+    kmzExportButton.title = "KMZ-Export für diesen Tag konfigurieren";
     kmzExportButton.addEventListener("click", event => {
         event.preventDefault();
         event.stopPropagation();
-        downloadDailyKmz(day.date, kmzExportButton);
+        openExportDialog({
+            format: "kmz",
+            date: day.date
+        });
     });
 
     exportActions.append(htmlExportButton, kmzExportButton);
@@ -1338,3 +1344,562 @@ loadSummary().catch(error => {
         </section>
     `;
 });
+
+
+/* Gemeinsamer Zeitraumexport */
+
+const exportButton = document.getElementById("export-button");
+const exportDialog = document.getElementById("export-dialog");
+const exportDialogTitle = document.getElementById(
+    "export-dialog-title"
+);
+const exportFormatStep = document.getElementById(
+    "export-format-step"
+);
+const exportRangeStep = document.getElementById(
+    "export-range-step"
+);
+const exportSelectedFormat = document.getElementById(
+    "export-selected-format"
+);
+
+const exportFromDateInput = document.getElementById(
+    "export-from-date"
+);
+const exportFromTimeInput = document.getElementById(
+    "export-from-time"
+);
+const exportToDateInput = document.getElementById(
+    "export-to-date"
+);
+const exportToTimeInput = document.getElementById(
+    "export-to-time"
+);
+
+const exportRunButton = document.getElementById("export-run");
+const exportBackButton = document.getElementById("export-back");
+const exportCancelButton = document.getElementById(
+    "export-cancel"
+);
+const exportFormatCancelButton = document.getElementById(
+    "export-format-cancel"
+);
+const exportMessage = document.getElementById("export-message");
+const exportMapOption = document.getElementById(
+    "export-map-option"
+);
+const exportIncludeMap = document.getElementById(
+    "export-include-map"
+);
+const exportIncludeWithoutPosition = document.getElementById(
+    "export-include-without-position"
+);
+const exportCurrentTripButton = document.getElementById(
+    "export-current-trip"
+);
+const exportCompleteLogbookButton = document.getElementById(
+    "export-complete-logbook"
+);
+
+const EXPORT_FORMAT_LABELS = {
+    html: "HTML-Bericht",
+    kmz: "KMZ",
+    csv: "CSV",
+    json: "JSON"
+};
+
+let selectedExportFormat = null;
+let exportRangeInfo = null;
+let exportBusy = false;
+let pendingExportDate = null;
+
+function padDatePart(value) {
+    return String(value).padStart(2, "0");
+}
+
+function localDateValue(date) {
+    return [
+        date.getFullYear(),
+        "-",
+        padDatePart(date.getMonth() + 1),
+        "-",
+        padDatePart(date.getDate())
+    ].join("");
+}
+
+function localTimeValue(date) {
+    return [
+        padDatePart(date.getHours()),
+        ":",
+        padDatePart(date.getMinutes())
+    ].join("");
+}
+
+function setExportDateTime(prefix, date) {
+    if (prefix === "from") {
+        exportFromDateInput.value = localDateValue(date);
+        exportFromTimeInput.value = localTimeValue(date);
+        return;
+    }
+
+    exportToDateInput.value = localDateValue(date);
+    exportToTimeInput.value = localTimeValue(date);
+}
+
+function readExportDateTime(dateInput, timeInput) {
+    if (!dateInput.value || !timeInput.value) {
+        return null;
+    }
+
+    const date = new Date(
+        `${dateInput.value}T${timeInput.value}:00`
+    );
+
+    if (Number.isNaN(date.getTime())) {
+        return null;
+    }
+
+    return date;
+}
+
+function utcIsoToLocalDate(value) {
+    if (!value) {
+        return null;
+    }
+
+    const date = new Date(value);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function setExportMessage(message, type = "") {
+    exportMessage.textContent = message || "";
+    exportMessage.className = "export-message";
+
+    if (type) {
+        exportMessage.classList.add(
+            `export-message-${type}`
+        );
+    }
+}
+
+function showExportFormatStep() {
+    selectedExportFormat = null;
+    exportDialogTitle.textContent = "Export auswählen";
+    exportFormatStep.hidden = false;
+    exportRangeStep.hidden = true;
+    setExportMessage("");
+}
+
+function showExportRangeStep(format) {
+    selectedExportFormat = format;
+    exportDialogTitle.textContent = "Export erstellen";
+    exportFormatStep.hidden = true;
+    exportRangeStep.hidden = false;
+
+    exportSelectedFormat.textContent =
+        EXPORT_FORMAT_LABELS[format] || format;
+
+    exportMapOption.hidden = format !== "html";
+    setExportMessage("");
+
+    if (pendingExportDate) {
+        setSpecificDayRange(pendingExportDate);
+        pendingExportDate = null;
+    } else {
+        setTodayRange(0);
+    }
+}
+
+function setTodayRange(offsetDays = 0) {
+    const now = new Date();
+
+    const start = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + offsetDays,
+        0,
+        0,
+        0,
+        0
+    );
+
+    let end;
+
+    if (offsetDays === 0) {
+        end = now;
+    } else {
+        end = new Date(
+            start.getFullYear(),
+            start.getMonth(),
+            start.getDate(),
+            23,
+            59,
+            0,
+            0
+        );
+    }
+
+    setExportDateTime("from", start);
+    setExportDateTime("to", end);
+}
+
+function setSpecificDayRange(dateValue) {
+    const parts = String(dateValue).split("-");
+
+    if (parts.length !== 3) {
+        setTodayRange(0);
+        return;
+    }
+
+    const start = new Date(
+        Number(parts[0]),
+        Number(parts[1]) - 1,
+        Number(parts[2]),
+        0,
+        0,
+        0,
+        0
+    );
+
+    const end = new Date(
+        Number(parts[0]),
+        Number(parts[1]) - 1,
+        Number(parts[2]),
+        23,
+        59,
+        0,
+        0
+    );
+
+    setExportDateTime("from", start);
+    setExportDateTime("to", end);
+}
+
+function setExportRange(range) {
+    if (!range || !range.from || !range.to) {
+        return false;
+    }
+
+    const start = utcIsoToLocalDate(range.from);
+    const end = utcIsoToLocalDate(range.to);
+
+    if (!start || !end) {
+        return false;
+    }
+
+    setExportDateTime("from", start);
+    setExportDateTime("to", end);
+
+    return true;
+}
+
+async function loadExportRangeInfo() {
+    const data = await fetchJson(
+        `${AVNAV_BASE_URL}/api/exportRangeInfo`
+    );
+
+    if (data.status !== "OK") {
+        throw new Error(
+            data.message ||
+            "Exportinformationen konnten nicht geladen werden."
+        );
+    }
+
+    exportRangeInfo = data;
+    exportCurrentTripButton.disabled = !data.currentTrip;
+    exportCompleteLogbookButton.disabled =
+        !data.completeLogbook;
+
+    return data;
+}
+
+async function openExportDialog(options = {}) {
+    pendingExportDate = options.date || null;
+
+    if (!exportDialog.open) {
+        exportDialog.showModal();
+    }
+
+    try {
+        const info = await loadExportRangeInfo();
+
+        if (options.format) {
+            showExportRangeStep(options.format);
+
+            if (
+                !options.date &&
+                info.defaultRange &&
+                info.defaultRange.active
+            ) {
+                setExportRange(info.defaultRange);
+            }
+
+            return;
+        }
+
+        showExportFormatStep();
+    } catch (error) {
+        console.error(error);
+
+        if (options.format) {
+            showExportRangeStep(options.format);
+        } else {
+            showExportFormatStep();
+        }
+
+        setExportMessage(
+            error.message ||
+            "Exportinformationen konnten nicht geladen werden.",
+            "error"
+        );
+    }
+}
+
+function buildRangeExportUrl() {
+    const fromDate = readExportDateTime(
+        exportFromDateInput,
+        exportFromTimeInput
+    );
+
+    const toDate = readExportDateTime(
+        exportToDateInput,
+        exportToTimeInput
+    );
+
+    if (!fromDate || !toDate) {
+        throw new Error(
+            "Bitte Datum und Uhrzeit vollständig angeben."
+        );
+    }
+
+    fromDate.setSeconds(0, 0);
+    toDate.setSeconds(59, 999);
+
+    if (fromDate.getTime() > toDate.getTime()) {
+        throw new Error(
+            "„Von“ darf nicht nach „Bis“ liegen."
+        );
+    }
+
+    const parameters = new URLSearchParams({
+        from: fromDate.toISOString(),
+        to: toDate.toISOString(),
+        format: selectedExportFormat,
+        includeMap: String(
+            selectedExportFormat === "html" &&
+            exportIncludeMap.checked
+        ),
+        includeWithoutPosition: String(
+            exportIncludeWithoutPosition.checked
+        )
+    });
+
+    return (
+        `${AVNAV_BASE_URL}/api/exportRangeData?`
+        + parameters.toString()
+    );
+}
+
+async function waitForRangeExport(jobId) {
+    for (let attempt = 0; attempt < 120; attempt += 1) {
+        await new Promise(resolve =>
+            window.setTimeout(resolve, 500)
+        );
+
+        const result = await fetchJson(
+            `${AVNAV_BASE_URL}/api/exportStatus?job=${
+                encodeURIComponent(jobId)
+            }`
+        );
+
+        const job = result.job;
+
+        if (!job || job.status === "RUNNING") {
+            continue;
+        }
+
+        if (job.status !== "OK") {
+            throw new Error(
+                job.message || "Export fehlgeschlagen."
+            );
+        }
+
+        if (!job.downloadUrl) {
+            throw new Error("Download-Adresse fehlt.");
+        }
+
+        return job;
+    }
+
+    throw new Error("Zeitüberschreitung beim Export.");
+}
+
+async function runRangeExport() {
+    if (exportBusy || !selectedExportFormat) {
+        return;
+    }
+
+    exportBusy = true;
+    exportRunButton.disabled = true;
+    setExportMessage("Export wird erstellt …");
+
+    try {
+        const start = await fetchJson(buildRangeExportUrl());
+        const jobId = start.job && start.job.id;
+
+        if (!jobId) {
+            throw new Error(
+                start.message ||
+                "Export konnte nicht gestartet werden."
+            );
+        }
+
+        const job = await waitForRangeExport(jobId);
+        const link = document.createElement("a");
+
+        link.href = job.downloadUrl;
+        link.download =
+            job.downloadName ||
+            `logbuch-zeitraum.${selectedExportFormat}`;
+        link.hidden = true;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setExportMessage(
+            "Export wurde erstellt und heruntergeladen.",
+            "success"
+        );
+        setStatus("Export wurde heruntergeladen.");
+    } catch (error) {
+        console.error(error);
+        setExportMessage(
+            error.message || "Export fehlgeschlagen.",
+            "error"
+        );
+    } finally {
+        exportBusy = false;
+        exportRunButton.disabled = false;
+    }
+}
+
+document.querySelectorAll("[data-export-format]").forEach(
+    button => {
+        button.addEventListener("click", () => {
+            showExportRangeStep(
+                button.dataset.exportFormat
+            );
+        });
+    }
+);
+
+document.querySelectorAll("[data-export-range]").forEach(
+    button => {
+        button.addEventListener("click", () => {
+            const range = button.dataset.exportRange;
+
+            if (range === "today") {
+                setTodayRange(0);
+                return;
+            }
+
+            if (range === "yesterday") {
+                setTodayRange(-1);
+                return;
+            }
+
+            if (range === "trip") {
+                if (
+                    !exportRangeInfo ||
+                    !setExportRange(
+                        exportRangeInfo.currentTrip
+                    )
+                ) {
+                    setExportMessage(
+                        "Kein Törnzeitraum vorhanden.",
+                        "error"
+                    );
+                }
+
+                return;
+            }
+
+            if (range === "complete") {
+                if (
+                    !exportRangeInfo ||
+                    !setExportRange(
+                        exportRangeInfo.completeLogbook
+                    )
+                ) {
+                    setExportMessage(
+                        "Das Logbuch enthält keine Einträge.",
+                        "error"
+                    );
+                }
+            }
+        });
+    }
+);
+
+exportButton.addEventListener("click", () => {
+    openExportDialog();
+});
+
+exportBackButton.addEventListener("click", () => {
+    showExportFormatStep();
+});
+
+exportCancelButton.addEventListener("click", () => {
+    exportDialog.close();
+});
+
+exportFormatCancelButton.addEventListener("click", () => {
+    exportDialog.close();
+});
+
+exportRunButton.addEventListener("click", runRangeExport);
+
+exportDialog.addEventListener("close", () => {
+    selectedExportFormat = null;
+    pendingExportDate = null;
+    setExportMessage("");
+});
+
+
+/* Rückkehr zur AVNav-Navigation */
+
+const backToAvnavButton = document.getElementById("back-to-avnav");
+
+if (backToAvnavButton) {
+    const runsInsideAvnavDialog = window.self !== window.top;
+
+    backToAvnavButton.hidden = runsInsideAvnavDialog;
+
+    if (!runsInsideAvnavDialog) {
+        backToAvnavButton.addEventListener("click", () => {
+            let target = "/viewer/avnav_viewer.html";
+
+            try {
+                if (document.referrer) {
+                    const referrer = new URL(document.referrer);
+
+                    if (
+                        referrer.origin === window.location.origin &&
+                        !referrer.pathname.includes("/plugins/user-logbuch/")
+                    ) {
+                        target = referrer.href;
+                    }
+                }
+            } catch (error) {
+                console.warn(
+                    "AVNav-Rücksprung konnte nicht ermittelt werden",
+                    error
+                );
+            }
+
+            window.location.href = target;
+        });
+    }
+}

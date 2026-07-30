@@ -725,3 +725,639 @@
         grid-template-columns: 1fr;
     }
 }
+
+.logbuchNativeQuickDialog {
+    display: grid;
+    gap: 12px;
+    min-width: min(420px, 80vw);
+}
+
+.logbuchNativeQuickDialog button {
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+
+/* Zentrale Logbuchseite im klassischen Overlay */
+
+.logbuchOpenFullPage {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 12px 16px;
+    border: 1px solid rgba(120, 165, 230, 0.65);
+    border-radius: 8px;
+    background: #284a78;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+}
+
+.logbuchOpenFullPage:hover,
+.logbuchOpenFullPage:focus-visible {
+    background: #35639f;
+}
+
+
+/* Digitales Logbuch neben den Törn-Schaltflächen */
+
+.logbuchExportRow .logbuchOpenFullPage {
+    display: inline-flex;
+    width: auto;
+    margin: 0;
+    padding: 0 14px;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+
+/* ===== EINGEBAUTES GEMEINSAMES LOGBUCH-THEME ===== */
+
+/*
+ * Gemeinsames Erscheinungsbild des AVNav-Logbuch-Plugins.
+ *
+ * Diese Datei enthält ausschließlich das gemeinsame Corporate Design.
+ * Seitenlayout und AVNav-spezifische Größen bleiben in den vorhandenen
+ * CSS-Dateien.
+ */
+
+:root {
+    color-scheme: light;
+
+    --logbook-blue: #0969a2;
+    --logbook-blue-dark: #075681;
+    --logbook-blue-soft: #e4f2fa;
+
+    --logbook-yellow: #ffca05;
+
+    --logbook-background: #eef2f5;
+    --logbook-surface: #ffffff;
+    --logbook-surface-secondary: #f7f9fb;
+
+    --logbook-text: #18212b;
+    --logbook-muted: #5d6975;
+    --logbook-border: #ced6de;
+
+    --logbook-success: #2c8a4b;
+    --logbook-warning: #b66a00;
+    --logbook-danger: #b43b3b;
+
+    --logbook-backdrop: rgb(39 49 64 / 68%);
+    --logbook-shadow: 0 18px 55px rgb(15 23 42 / 24%);
+
+    --logbook-dialog-radius: 12px;
+    --logbook-control-radius: 9px;
+    --logbook-spacing: 1rem;
+}
+
+/* ------------------------------------------------------------
+ * Gemeinsame Dialogflächen
+ * ------------------------------------------------------------ */
+
+.event-dialog,
+.export-dialog,
+.logbuchBox,
+.logbuchExportBox {
+    position: relative;
+    box-sizing: border-box;
+    border: 1px solid var(--logbook-border);
+    border-radius: var(--logbook-dialog-radius);
+    background: var(--logbook-surface);
+    color: var(--logbook-text);
+    box-shadow: var(--logbook-shadow);
+}
+
+/* Gelbes Lesezeichen als wiederkehrendes Markenelement. */
+
+.event-dialog::before,
+.export-dialog::before,
+.logbuchBox::before,
+.logbuchExportBox::before {
+    content: "";
+    position: absolute;
+    z-index: 5;
+    top: -1px;
+    right: 76px;
+    width: 30px;
+    height: 48px;
+    background:
+        linear-gradient(
+            135deg,
+            transparent 0 49%,
+            var(--logbook-surface) 50% 100%
+        )
+        bottom left / 50% 15px no-repeat,
+        linear-gradient(
+            225deg,
+            transparent 0 49%,
+            var(--logbook-surface) 50% 100%
+        )
+        bottom right / 50% 15px no-repeat,
+        var(--logbook-yellow);
+    pointer-events: none;
+}
+
+/* ------------------------------------------------------------
+ * Gemeinsame Dialogköpfe
+ * ------------------------------------------------------------ */
+
+.dialog-header,
+.logbuchHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--logbook-border);
+}
+
+.dialog-header h2,
+.logbuchHeader h2 {
+    margin: 0;
+    color: var(--logbook-text);
+    font-size: clamp(1.25rem, 2.4vw, 1.7rem);
+    line-height: 1.15;
+    font-weight: 750;
+}
+
+.dialog-time {
+    margin: 0 0 0.25rem;
+    color: var(--logbook-muted);
+    font-size: 0.9rem;
+}
+
+.dialog-close,
+.logbuchCloseButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--logbook-control-radius);
+    background: transparent;
+    color: var(--logbook-text);
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.dialog-close:hover,
+.dialog-close:focus-visible,
+.logbuchCloseButton:hover,
+.logbuchCloseButton:focus-visible {
+    background: var(--logbook-surface-secondary);
+    outline: none;
+}
+
+/* ------------------------------------------------------------
+ * Gemeinsame Bedienelemente
+ * ------------------------------------------------------------ */
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button {
+    border-radius: var(--logbook-control-radius);
+}
+
+input,
+select,
+textarea,
+.edit-field input,
+.edit-field select,
+.edit-field textarea,
+.logbuchExportForm input,
+.logbuchExportForm select,
+#logbuchText {
+    box-sizing: border-box;
+    border: 1px solid var(--logbook-border);
+    border-radius: var(--logbook-control-radius);
+    background: var(--logbook-surface);
+    color: var(--logbook-text);
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.edit-field input:focus,
+.edit-field select:focus,
+.edit-field textarea:focus,
+#logbuchText:focus {
+    border-color: var(--logbook-blue);
+    outline: 2px solid var(--logbook-blue-soft);
+    outline-offset: 1px;
+}
+
+.dialog-actions button,
+.logbuchMiniButton,
+.logbuchOpenButton,
+.logbuchOpenFullPage {
+    min-height: 42px;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--logbook-border);
+    border-radius: var(--logbook-control-radius);
+    background: var(--logbook-surface-secondary);
+    color: var(--logbook-text);
+    box-shadow: none;
+    text-shadow: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.dialog-actions button:hover:not(:disabled),
+.dialog-actions button:focus-visible:not(:disabled),
+.logbuchMiniButton:hover,
+.logbuchMiniButton:focus-visible {
+    border-color: var(--logbook-blue);
+    background: var(--logbook-blue-soft);
+    color: var(--logbook-blue-dark);
+    outline: none;
+    filter: none;
+}
+
+.dialog-primary-action,
+.logbuchMiniButton:not(.logbuchSecondaryButton),
+.logbuchOpenButton,
+.logbuchOpenFullPage,
+.logbuchVerticalSave {
+    border-color: var(--logbook-blue);
+    background: var(--logbook-blue);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.dialog-primary-action:hover:not(:disabled),
+.dialog-primary-action:focus-visible:not(:disabled),
+.logbuchOpenButton:hover,
+.logbuchOpenButton:focus-visible,
+.logbuchOpenFullPage:hover,
+.logbuchOpenFullPage:focus-visible,
+.logbuchVerticalSave:hover,
+.logbuchVerticalSave:focus-visible {
+    border-color: var(--logbook-blue-dark);
+    background: var(--logbook-blue-dark);
+    color: #ffffff;
+}
+
+.logbuchSecondaryButton {
+    border-color: var(--logbook-border);
+    background: var(--logbook-surface-secondary);
+    color: var(--logbook-text);
+}
+
+.dialog-warning-action {
+    border-color: var(--logbook-warning);
+    background: var(--logbook-warning);
+    color: #ffffff;
+}
+
+.dialog-danger-action {
+    border-color: var(--logbook-danger);
+    background: var(--logbook-danger);
+    color: #ffffff;
+}
+
+/* ------------------------------------------------------------
+ * Gemeinsame Inhaltsbereiche
+ * ------------------------------------------------------------ */
+
+.dialog-content {
+    padding: 1.25rem;
+}
+
+.dialog-actions {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--logbook-border);
+}
+
+.logbuchSectionTitle {
+    color: var(--logbook-blue);
+}
+
+.logbuchStatus {
+    border: 1px solid var(--logbook-border);
+    background: var(--logbook-surface-secondary);
+    color: var(--logbook-text);
+}
+
+.logbuchStatus-info {
+    color: var(--logbook-text);
+}
+
+.logbuchStatus-success {
+    border-color: var(--logbook-success);
+    background: rgb(44 138 75 / 10%);
+    color: var(--logbook-success);
+}
+
+.logbuchStatus-warning {
+    border-color: var(--logbook-warning);
+    background: rgb(182 106 0 / 10%);
+    color: var(--logbook-warning);
+}
+
+.logbuchStatus-error {
+    border-color: var(--logbook-danger);
+    background: rgb(180 59 59 / 10%);
+    color: var(--logbook-danger);
+}
+
+/* ------------------------------------------------------------
+ * AVNav-Eintragsdialog
+ * ------------------------------------------------------------ */
+
+#logbuchOverlay,
+#logbuchExportOverlay,
+#logbuchMotorHoursOverlay,
+#logbuchForceOverlay {
+    background: var(--logbook-backdrop);
+}
+
+.logbuchBox {
+    background: var(--logbook-surface);
+    color: var(--logbook-text);
+}
+
+.logbuchMainLayout {
+    border-color: var(--logbook-border);
+    background: var(--logbook-surface);
+}
+
+.logbuchInputPane {
+    border-right-color: var(--logbook-border);
+}
+
+.logbuchHistoryPane {
+    background: var(--logbook-surface);
+}
+
+/*
+ * Aktionskarten:
+ * keine unterschiedlichen grünen, blauen und orangefarbenen Flächen mehr.
+ * Der Zustand wird ausschließlich über das gemeinsame Blau angezeigt.
+ */
+
+.logbuchToggleButton,
+.logbuchMotorOn,
+.logbuchMotorOff,
+.logbuchSailOn,
+.logbuchSailOff,
+.logbuchAnchorOn,
+.logbuchAnchorOff {
+    border: 1px solid var(--logbook-border);
+    background: var(--logbook-surface-secondary);
+    color: var(--logbook-text);
+    box-shadow: none;
+    filter: none;
+}
+
+.logbuchToggleButton:hover,
+.logbuchToggleButton:focus-visible {
+    border-color: var(--logbook-blue);
+    background: var(--logbook-blue-soft);
+    outline: none;
+}
+
+.logbuchToggleButton.logbuchStatusActive,
+.logbuchMotorOn.logbuchStatusActive,
+.logbuchMotorOff.logbuchStatusActive,
+.logbuchSailOn.logbuchStatusActive,
+.logbuchSailOff.logbuchStatusActive,
+.logbuchAnchorOn.logbuchStatusActive,
+.logbuchAnchorOff.logbuchStatusActive {
+    border: 2px solid var(--logbook-blue);
+    background: var(--logbook-blue-soft);
+    color: var(--logbook-blue-dark);
+    box-shadow: 0 0 0 2px rgb(9 105 162 / 12%);
+    filter: none;
+    opacity: 1;
+}
+
+.logbuchStatusInactive {
+    opacity: 1;
+    filter: none;
+}
+
+.logbuchButtonLabel {
+    color: var(--logbook-text);
+    text-shadow: none;
+}
+
+.logbuchStatusActive .logbuchButtonLabel {
+    color: var(--logbook-blue-dark);
+}
+
+.logbuchButtonIcon {
+    opacity: 0.78;
+}
+
+.logbuchStatusActive .logbuchButtonIcon {
+    opacity: 1;
+}
+
+.logbuchActionLabel span {
+    color: var(--logbook-blue);
+}
+
+#logbuchText {
+    background: var(--logbook-surface);
+    color: var(--logbook-text);
+}
+
+#logbuchText::placeholder {
+    color: var(--logbook-muted);
+}
+
+.logbuchVerticalSave {
+    border: 1px solid var(--logbook-blue);
+    background: var(--logbook-blue);
+    color: #ffffff;
+    box-shadow: none;
+}
+
+.logbuchEntry {
+    border-color: var(--logbook-border);
+    background: var(--logbook-surface-secondary);
+}
+
+.logbuchEntryIcon {
+    background: var(--logbook-blue-soft);
+}
+
+.logbuchEntryTitle {
+    color: var(--logbook-text);
+}
+
+.logbuchEntryMeta,
+.logbuchEntryText {
+    color: var(--logbook-muted);
+}
+
+/* ------------------------------------------------------------
+ * Kleine Export-, Warn- und Motorstundendialoge
+ * ------------------------------------------------------------ */
+
+.logbuchExportBox {
+    width: min(520px, calc(100vw - 2rem));
+    padding: 0;
+    background: var(--logbook-surface);
+    color: var(--logbook-text);
+}
+
+.logbuchExportForm {
+    padding: 1.25rem;
+}
+
+.logbuchExportForm label {
+    color: var(--logbook-text);
+}
+
+.logbuchExportForm input[type="date"],
+.logbuchExportForm input[type="number"],
+.logbuchExportForm select {
+    min-height: 42px;
+    padding: 0.55rem 0.7rem;
+    border-color: var(--logbook-border);
+    background: var(--logbook-surface);
+    color: var(--logbook-text);
+}
+
+.logbuchExportHint {
+    color: var(--logbook-muted);
+}
+
+.logbuchExportButtons {
+    padding-top: 1rem;
+    border-top: 1px solid var(--logbook-border);
+}
+
+/* ------------------------------------------------------------
+ * Logbuchseite
+ * ------------------------------------------------------------ */
+
+.app-header {
+    background: var(--logbook-surface);
+    color: var(--logbook-text);
+}
+
+/* Gelbe Markierung im Kopf der vollständigen Logbuchseite. */
+
+.app-header::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 92px;
+    width: 26px;
+    height: 43px;
+    background:
+        linear-gradient(
+            135deg,
+            transparent 0 49%,
+            var(--logbook-surface) 50% 100%
+        )
+        bottom left / 50% 13px no-repeat,
+        linear-gradient(
+            225deg,
+            transparent 0 49%,
+            var(--logbook-surface) 50% 100%
+        )
+        bottom right / 50% 13px no-repeat,
+        var(--logbook-yellow);
+    pointer-events: none;
+}
+
+.nav-link.today {
+    background: var(--logbook-blue-soft);
+    color: var(--logbook-blue);
+}
+
+.back-to-avnav,
+.back-to-top {
+    color: var(--logbook-blue);
+}
+
+/* Native HTML-Dialoge */
+
+.event-dialog::backdrop,
+.export-dialog::backdrop {
+    background: var(--logbook-backdrop);
+}
+
+/* ------------------------------------------------------------
+ * Kleine Bildschirmbreiten
+ * ------------------------------------------------------------ */
+
+@media (max-width: 700px) {
+    .event-dialog::before,
+    .export-dialog::before,
+    .logbuchBox::before,
+    .logbuchExportBox::before {
+        right: 58px;
+        width: 24px;
+        height: 40px;
+    }
+
+    .app-header::after {
+        right: 62px;
+        width: 22px;
+        height: 36px;
+    }
+}
+
+/* ===== ENDE GEMEINSAMES LOGBUCH-THEME ===== */
+
+
+/* Dunklen Außenrahmen des klassischen Logbuch-Overlays entfernen */
+#logbuchOverlay .logbuchBox {
+    padding: 0;
+    border: 1px solid var(--logbook-border);
+    background: var(--logbook-surface);
+    color: var(--logbook-text);
+    overflow: hidden;
+}
+
+#logbuchOverlay .logbuchHeader {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    background: var(--logbook-surface);
+    border-bottom: 1px solid var(--logbook-border);
+}
+
+#logbuchOverlay .logbuchHeader h2 {
+    color: var(--logbook-text);
+}
+
+#logbuchOverlay .logbuchCloseButton {
+    background: transparent;
+    color: var(--logbook-text);
+}
+
+#logbuchOverlay .logbuchCloseButton:hover,
+#logbuchOverlay .logbuchCloseButton:focus-visible {
+    background: var(--logbook-surface-secondary);
+}
+
+#logbuchOverlay .logbuchMainLayout {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--logbook-surface);
+}
+
+#logbuchOverlay .logbuchVersion {
+    color: var(--logbook-muted);
+}
