@@ -36,6 +36,8 @@ rsync -a --delete \
   --exclude "__pycache__/" \
   --exclude "*.pyc" \
   --exclude "*.bak*" \
+  --exclude "*.before-*" \
+  --exclude "*.before.*" \
   --exclude "test_*.py" \
   --exclude "release.sh" \
   "$ROOT/tools/" \
