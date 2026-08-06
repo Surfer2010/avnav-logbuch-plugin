@@ -21,6 +21,10 @@ const EVENT_TYPES = {
         icon: "⛵",
         title: "Segel eingeholt"
     },
+    location: {
+        icon: "⚓",
+        title: "Festmachen"
+    },
     anchor_down: {
         icon: "⚓",
         title: "Anker gefallen"

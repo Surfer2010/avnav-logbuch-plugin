@@ -652,7 +652,14 @@ class Plugin(object):
             'cog': nav.get('cog'),
             'heading': nav.get('heading'),
             'state': dict(self.state),
-            'details': {},
+            'details': (
+                {
+                    'location_type': 'anchor',
+                    'location_label': 'Festmachen',
+                }
+                if event_type == 'location'
+                else {}
+            ),
             'source': 'avnav-logbuch-plugin'
         }
 
@@ -873,7 +880,7 @@ class Plugin(object):
 
     def _known_event_types(self):
         return set(
-            ['manual', 'trip_start', 'trip_end']
+            ['manual', 'trip_start', 'trip_end', 'location']
             + list(self.START_EVENTS.keys())
             + list(self.END_EVENTS.keys())
         )
@@ -1318,8 +1325,14 @@ class Plugin(object):
             pass
 
     def _validate_event(self, event_type):
-        # Manuelle Einträge und Törn-Marker verändern keinen Zustand und sind immer erlaubt.
-        if event_type in ('manual', 'trip_start', 'trip_end'):
+        # Manuelle Einträge, Törn-Marker und Locations verändern
+        # keinen Laufzeitzustand und sind immer erlaubt.
+        if event_type in (
+            'manual',
+            'trip_start',
+            'trip_end',
+            'location'
+        ):
             return True, ''
 
         # Start-Events dürfen nur ausgeführt werden, wenn der Zustand noch aus ist.

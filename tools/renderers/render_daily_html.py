@@ -8,6 +8,7 @@ from exportlib.formatting import format_hms
 from renderers.render_static_map import render_map_placeholder, render_static_map
 
 EVENT_LABELS = {
+    "location": "Festmachen",
     "motor_on": "Motor an",
     "motor_off": "Motor aus",
     "sail_set": "Segel gesetzt",

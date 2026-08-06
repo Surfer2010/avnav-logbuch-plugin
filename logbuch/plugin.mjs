@@ -13,7 +13,7 @@ export default function initializeLogbuch(avnavApi) {
         baseUrl: AVNAV_BASE_URL
     });
 
-    var LOGBUCH_VERSION = "2.0.1-beta11-layout";
+    var LOGBUCH_VERSION = "2.0.2";
 
 
     function openNativeQuickDialog(event) {
@@ -69,6 +69,202 @@ export default function initializeLogbuch(avnavApi) {
         });
     }
 
+    function logbuchStateSwitch(kind, title, offLabel, onLabel) {
+        return (
+            '<button type="button" ' +
+                'class="logbuchStateSwitch" ' +
+                'data-logbuch-switch="' + escapeHtml(kind) + '" ' +
+                'data-active="0" ' +
+                'aria-pressed="false">' +
+                '<span class="logbuchStateSwitchTitle">' +
+                    escapeHtml(title) +
+                '</span>' +
+                '<span class="logbuchStateSwitchTrack">' +
+                    '<span class="logbuchStateSwitchOff">' +
+                        escapeHtml(offLabel) +
+                    '</span>' +
+                    '<span class="logbuchStateSwitchKnob"></span>' +
+                    '<span class="logbuchStateSwitchOn">' +
+                        escapeHtml(onLabel) +
+                    '</span>' +
+                '</span>' +
+            '</button>'
+        );
+    }
+
+    function logbuchAnchorToggle() {
+        return (
+            '<button type="button" ' +
+                'class="logbuchToggleButton ' +
+                    'logbuchAnchorToggle ' +
+                    'logbuchLocationButton" ' +
+                'data-logbuch-location="anchor">' +
+                '<span class="logbuchLocationAnchorIcon" ' +
+                    'aria-hidden="true">&#9875;</span>' +
+                '<span class="logbuchButtonLabel">' +
+                    'Festmachen' +
+                '</span>' +
+            '</button>'
+        );
+    }
+
+    function updateLogbuchAnchorToggleButtons(root) {
+        root = root || document;
+
+        Array.prototype.forEach.call(
+            root.querySelectorAll(
+                '[data-logbuch-location="anchor"]'
+            ),
+            function(button) {
+                var label = button.querySelector(
+                    ".logbuchButtonLabel"
+                );
+
+                button.classList.remove(
+                    "logbuchStatusActive",
+                    "logbuchStatusInactive"
+                );
+                button.removeAttribute("data-active");
+                button.removeAttribute("aria-pressed");
+
+                if (label) {
+                    label.textContent = "Festmachen";
+                }
+
+            }
+        );
+    }
+
+    function updateLogbuchStateSwitches(root, state) {
+        root = root || document;
+        state = state || {
+            motor: false,
+            sail: false,
+            anchor: false
+        };
+
+        Array.prototype.forEach.call(
+            root.querySelectorAll("[data-logbuch-switch]"),
+            function(button) {
+                var kind = button.getAttribute("data-logbuch-switch");
+                var active = kind === "motor"
+                    ? state.motor === true
+                    : state.sail === true;
+
+                button.setAttribute("data-active", active ? "1" : "0");
+                button.setAttribute("aria-pressed", active ? "true" : "false");
+                button.classList.toggle("logbuchStateSwitchActive", active);
+            }
+        );
+
+        updateLogbuchAnchorToggleButtons(root, state);
+    }
+
+    function getLogbuchSwitchState(button) {
+        return button &&
+            button.getAttribute("data-active") === "1";
+    }
+
+    function loadCurrentLogbuchState(callback) {
+        fetch(AVNAV_BASE_URL + "/api/list?limit=12")
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                var state = deriveLogbuchState(
+                    data && data.status === "OK"
+                        ? (data.entries || [])
+                        : []
+                );
+
+                if (typeof callback === "function") {
+                    callback(state);
+                }
+            })
+            .catch(function(error) {
+                console.error(
+                    "Logbuch-Zustand konnte nicht geladen werden",
+                    error
+                );
+
+                if (typeof callback === "function") {
+                    callback({
+                        motor: false,
+                        sail: false,
+                        anchor: false
+                    });
+                }
+            });
+    }
+
+    function openSailMotorQuestion(onMotorOffSuccess) {
+        var existing = document.getElementById(
+            "logbuchSailMotorOverlay"
+        );
+
+        if (existing) {
+            existing.remove();
+        }
+
+        var overlay = document.createElement("div");
+        overlay.id = "logbuchSailMotorOverlay";
+
+        overlay.innerHTML =
+            '<div class="logbuchExportBox logbuchSailMotorBox">' +
+                '<div class="logbuchHeader">' +
+                    '<h2>Segel gesetzt</h2>' +
+                '</div>' +
+
+                '<div class="logbuchSailMotorText">' +
+                    'Soll der Motor ebenfalls ausgeschaltet werden?' +
+                '</div>' +
+
+                '<div class="logbuchSailMotorActions">' +
+                    '<button type="button" ' +
+                        'id="logbuchSailMotorOff" ' +
+                        'class="logbuchSailMotorPrimary">' +
+                        'Motor ausschalten' +
+                    '</button>' +
+
+                    '<button type="button" ' +
+                        'id="logbuchSailMotorKeep" ' +
+                        'class="logbuchSailMotorSecondary">' +
+                        'Bleibt an' +
+                    '</button>' +
+                '</div>' +
+            '</div>';
+
+        document.body.appendChild(overlay);
+
+        function closeQuestion(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            overlay.remove();
+        }
+
+        overlay.addEventListener("click", function(event) {
+            if (event.target === overlay) {
+                closeQuestion(event);
+            }
+        }, false);
+
+        document.getElementById(
+            "logbuchSailMotorKeep"
+        ).addEventListener("click", closeQuestion, false);
+
+        document.getElementById(
+            "logbuchSailMotorOff"
+        ).addEventListener("click", function(event) {
+            closeQuestion(event);
+            openLogbuchMotorHoursOverlay(
+                onMotorOffSuccess
+            );
+        }, false);
+    }
+
     function openNativeEntryDialog(event) {
         if (typeof avnavApi.showDialog !== "function") {
             openLogbuchOverlay(event);
@@ -85,38 +281,27 @@ export default function initializeLogbuch(avnavApi) {
             '<div id="' + dialogId + '" class="logbuchNativeEntryDialog">' +
 
                 '<section class="logbuchNativeGroup">' +
-                    '<h3>Motor</h3>' +
-                    '<div class="logbuchNativeActionGrid">' +
-                        '<button type="button" data-logbuch-action="motor_on">' +
-                            'Motor an' +
-                        '</button>' +
-                        '<button type="button" data-logbuch-action="motor_off">' +
-                            'Motor aus' +
-                        '</button>' +
-                    '</div>' +
+                    logbuchStateSwitch(
+                        "motor",
+                        "Motor",
+                        "AUS",
+                        "AN"
+                    ) +
                 '</section>' +
 
                 '<section class="logbuchNativeGroup">' +
-                    '<h3>Segel</h3>' +
-                    '<div class="logbuchNativeActionGrid">' +
-                        '<button type="button" data-logbuch-action="sail_set">' +
-                            'Segel setzen' +
-                        '</button>' +
-                        '<button type="button" data-logbuch-action="sail_down">' +
-                            'Segel bergen' +
-                        '</button>' +
-                    '</div>' +
+                    logbuchStateSwitch(
+                        "sail",
+                        "Segel",
+                        "UNTEN",
+                        "GESETZT"
+                    ) +
                 '</section>' +
 
                 '<section class="logbuchNativeGroup">' +
                     '<h3>Anker</h3>' +
-                    '<div class="logbuchNativeActionGrid">' +
-                        '<button type="button" data-logbuch-action="anchor_down">' +
-                            'Anker fallen' +
-                        '</button>' +
-                        '<button type="button" data-logbuch-action="anchor_up">' +
-                            'Anker auf' +
-                        '</button>' +
+                    '<div class="logbuchNativeAnchorAction">' +
+                        logbuchAnchorToggle() +
                     '</div>' +
                 '</section>' +
 
@@ -187,6 +372,10 @@ export default function initializeLogbuch(avnavApi) {
                 var statusTimer = null;
                 var actionLocked = false;
 
+                loadCurrentLogbuchState(function(state) {
+                    updateLogbuchStateSwitches(container, state);
+                });
+
                 var actionLabels = {
                     motor_on: "Motor an gespeichert",
                     motor_off: "Motor aus gespeichert",
@@ -228,10 +417,124 @@ export default function initializeLogbuch(avnavApi) {
 
                 container.addEventListener("click", function(clickEvent) {
                     var button = clickEvent.target.closest(
-                        "[data-logbuch-action]"
+                        "[data-logbuch-action], " +
+                        "[data-logbuch-switch], " +
+                        "[data-logbuch-location]"
                     );
 
                     if (!button || !container.contains(button)) {
+                        return;
+                    }
+
+                    var locationType = button.getAttribute(
+                        "data-logbuch-location"
+                    );
+
+                    if (locationType === "anchor") {
+                        clickEvent.preventDefault();
+                        clickEvent.stopPropagation();
+
+                        if (actionLocked) {
+                            return;
+                        }
+
+                        lockActions();
+
+                        saveLogbuchEntry(
+                            "location",
+                            function() {
+                                showStatus(
+                                    "Festmachen gespeichert"
+                                );
+                            }
+                        );
+                        return;
+                    }
+
+                    var switchKind = button.getAttribute(
+                        "data-logbuch-switch"
+                    );
+
+                    if (switchKind) {
+                        clickEvent.preventDefault();
+                        clickEvent.stopPropagation();
+
+                        if (actionLocked) {
+                            return;
+                        }
+
+                        var active = getLogbuchSwitchState(button);
+
+                        if (switchKind === "motor") {
+                            if (active) {
+                                openLogbuchMotorHoursOverlay(function() {
+                                    loadCurrentLogbuchState(function(state) {
+                                        updateLogbuchStateSwitches(
+                                            container,
+                                            state
+                                        );
+                                    });
+                                });
+                                return;
+                            }
+
+                            lockActions();
+                            saveLogbuchEntry("motor_on", function() {
+                                loadCurrentLogbuchState(function(state) {
+                                    updateLogbuchStateSwitches(
+                                        container,
+                                        state
+                                    );
+                                });
+                            });
+                            return;
+                        }
+
+                        if (switchKind === "sail") {
+                            lockActions();
+
+                            if (active) {
+                                saveLogbuchEntry("sail_down", function() {
+                                    loadCurrentLogbuchState(function(state) {
+                                        updateLogbuchStateSwitches(
+                                            container,
+                                            state
+                                        );
+                                    });
+                                });
+                                return;
+                            }
+
+                            var motorWasRunning =
+                                container.querySelector(
+                                    '[data-logbuch-switch="motor"]'
+                                );
+                            motorWasRunning = getLogbuchSwitchState(
+                                motorWasRunning
+                            );
+
+                            saveLogbuchEntry("sail_set", function() {
+                                loadCurrentLogbuchState(function(state) {
+                                    updateLogbuchStateSwitches(
+                                        container,
+                                        state
+                                    );
+                                });
+
+                                if (motorWasRunning) {
+                                    openSailMotorQuestion(function() {
+                                        loadCurrentLogbuchState(function(state) {
+                                            updateLogbuchStateSwitches(
+                                                container,
+                                                state
+                                            );
+                                        });
+                                    });
+                                }
+                            });
+                            return;
+                        }
+
                         return;
                     }
 
@@ -475,8 +778,7 @@ export default function initializeLogbuch(avnavApi) {
         { name: "logbuch_b_motor_aus", caption: "Motor aus", type: "motor_off", icon: "motor-off" },
         { name: "logbuch_b_segel_hoch", caption: "Segel hoch", type: "sail_set", icon: "sail-set" },
         { name: "logbuch_b_segel_runter", caption: "Segel runter", type: "sail_down", icon: "sail-down" },
-        { name: "logbuch_b_anker_ab", caption: "Anker ab", type: "anchor_down", icon: "anchor-down" },
-        { name: "logbuch_b_anker_auf", caption: "Anker auf", type: "anchor_up", icon: "anchor-up" }
+        { name: "logbuch_b_festmachen", caption: "Festmachen", type: "location", icon: "anchor-down" }
     ];
 
     logbuchActionWidgets.forEach(function(widget) {
@@ -574,16 +876,29 @@ export default function initializeLogbuch(avnavApi) {
                         '<div class="logbuchActionGrid">' +
 
                             '<div class="logbuchActionLabel"><span>Motor</span></div>' +
-                            logbuchButton("motor_on", "Motor an", "motor-on", "logbuchMotorOn") +
-                            logbuchButton("motor_off", "Motor aus", "motor-off", "logbuchMotorOff") +
+                            '<div class="logbuchStateSwitchCell">' +
+                                logbuchStateSwitch(
+                                    "motor",
+                                    "Motor",
+                                    "AUS",
+                                    "AN"
+                                ) +
+                            '</div>' +
 
                             '<div class="logbuchActionLabel"><span>Segel</span></div>' +
-                            logbuchButton("sail_set", "Segel setzen", "sail-set", "logbuchSailOn") +
-                            logbuchButton("sail_down", "Segel einholen", "sail-down", "logbuchSailOff") +
+                            '<div class="logbuchStateSwitchCell">' +
+                                logbuchStateSwitch(
+                                    "sail",
+                                    "Segel",
+                                    "UNTEN",
+                                    "GESETZT"
+                                ) +
+                            '</div>' +
 
                             '<div class="logbuchActionLabel"><span>Anker</span></div>' +
-                            logbuchButton("anchor_down", "Anker ab", "anchor-down", "logbuchAnchorOn") +
-                            logbuchButton("anchor_up", "Anker auf", "anchor-up", "logbuchAnchorOff") +
+                            '<div class="logbuchAnchorToggleCell">' +
+                                logbuchAnchorToggle() +
+                            '</div>' +
 
                         '</div>' +
 
@@ -678,6 +993,59 @@ export default function initializeLogbuch(avnavApi) {
                 textField.removeAttribute("readonly");
             }, false);
         }
+
+        overlay.querySelectorAll(
+            "button[data-logbuch-location]"
+        ).forEach(function(button) {
+            button.addEventListener("click", function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                saveLogbuchEntry("location");
+            }, false);
+        });
+
+        overlay.querySelectorAll(
+            "button[data-logbuch-switch]"
+        ).forEach(function(button) {
+            button.addEventListener("click", function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                var kind = button.getAttribute(
+                    "data-logbuch-switch"
+                );
+                var active = getLogbuchSwitchState(button);
+
+                if (kind === "motor") {
+                    if (active) {
+                        openLogbuchMotorHoursOverlay();
+                    } else {
+                        saveLogbuchEntry("motor_on");
+                    }
+                    return;
+                }
+
+                if (kind === "sail") {
+                    if (active) {
+                        saveLogbuchEntry("sail_down");
+                        return;
+                    }
+
+                    var motorButton = overlay.querySelector(
+                        '[data-logbuch-switch="motor"]'
+                    );
+                    var motorWasRunning =
+                        getLogbuchSwitchState(motorButton);
+
+                    saveLogbuchEntry("sail_set", function() {
+                        if (motorWasRunning) {
+                            openSailMotorQuestion();
+                        }
+                    });
+                }
+            }, false);
+        });
 
         overlay.querySelectorAll("button[data-type]").forEach(function(btn) {
             btn.addEventListener("click", function(e) {
@@ -806,6 +1174,8 @@ export default function initializeLogbuch(avnavApi) {
 
         setLogbuchButtonActive('[data-type="anchor_down"]', state.anchor === true);
         setLogbuchButtonActive('[data-type="anchor_up"]', state.anchor !== true);
+
+        updateLogbuchStateSwitches(document, state);
     }
 
 
@@ -839,14 +1209,24 @@ export default function initializeLogbuch(avnavApi) {
             });
     }
 
-    function saveLogbuchEntry(type) {
+    function saveLogbuchEntry(type, onSuccess) {
         var textField = document.getElementById("logbuchText");
         var text = textField ? (textField.value || "") : "";
 
-        saveLogbuchEntryWithText(type, text, false);
+        saveLogbuchEntryWithText(
+            type,
+            text,
+            false,
+            onSuccess
+        );
     }
 
-    function saveLogbuchEntryWithText(type, text, force) {
+    function saveLogbuchEntryWithText(
+        type,
+        text,
+        force,
+        onSuccess
+    ) {
         setLogbuchStatus("Speichere...", "info");
 
         var url =
@@ -878,6 +1258,10 @@ export default function initializeLogbuch(avnavApi) {
 
                     loadLogbuchEntries();
 
+                    if (typeof onSuccess === "function") {
+                        onSuccess(data);
+                    }
+
                     console.log("logbuch saved", data);
                     return;
                 }
@@ -902,15 +1286,38 @@ export default function initializeLogbuch(avnavApi) {
             return;
         }
 
-        target.innerHTML = "Lade Einträge...";
+        /*
+         * Eine bereits sichtbare Liste während des Nachladens nicht
+         * entfernen. Das bisherige Ersetzen durch "Lade Einträge..."
+         * ließ den Inhaltsbereich kurz zusammenfallen und verursachte
+         * ein sichtbares Springen des gesamten Overlays.
+         */
+        var hasRenderedEntries =
+            target.querySelector(".logbuchEntry") !== null;
+
+        if (!hasRenderedEntries) {
+            target.innerHTML = "Lade Einträge...";
+        }
+
+        target.setAttribute("aria-busy", "true");
 
         fetch(AVNAV_BASE_URL + "/api/list?limit=12")
             .then(function(response) {
                 return response.json();
             })
             .then(function(data) {
+                target.removeAttribute("aria-busy");
+
                 if (data.status !== "OK") {
-                    target.innerHTML = "Einträge konnten nicht geladen werden.";
+                    if (!hasRenderedEntries) {
+                        target.innerHTML =
+                            "Einträge konnten nicht geladen werden.";
+                    }
+
+                    setLogbuchStatus(
+                        "Einträge konnten nicht aktualisiert werden",
+                        "warning"
+                    );
                     return;
                 }
 
@@ -919,7 +1326,17 @@ export default function initializeLogbuch(avnavApi) {
                 renderLogbuchEntries(entries);
             })
             .catch(function(err) {
-                target.innerHTML = "Fehler beim Laden der Einträge.";
+                target.removeAttribute("aria-busy");
+
+                if (!hasRenderedEntries) {
+                    target.innerHTML =
+                        "Fehler beim Laden der Einträge.";
+                }
+
+                setLogbuchStatus(
+                    "Fehler beim Aktualisieren der Einträge",
+                    "error"
+                );
                 console.error("logbuch list error", err);
             });
     }
@@ -972,6 +1389,7 @@ export default function initializeLogbuch(avnavApi) {
             sail_down: "sail-down",
             anchor_down: "anchor-down",
             anchor_up: "anchor-up",
+            location: "anchor-down",
             manual: "manual"
         };
 
@@ -986,6 +1404,7 @@ export default function initializeLogbuch(avnavApi) {
             sail_down: "Segel eingeholt",
             anchor_down: "Anker ab",
             anchor_up: "Anker auf",
+            location: "Festmachen",
             manual: "Manueller Eintrag"
         };
 
@@ -1137,7 +1556,7 @@ export default function initializeLogbuch(avnavApi) {
     }
 
 
-    function openLogbuchMotorHoursOverlay() {
+    function openLogbuchMotorHoursOverlay(onSuccess) {
         var existing = document.getElementById("logbuchMotorHoursOverlay");
         if (existing) {
             existing.remove();
@@ -1216,7 +1635,12 @@ export default function initializeLogbuch(avnavApi) {
             }
 
             overlay.remove();
-            saveLogbuchEntryWithText("motor_off", text);
+            saveLogbuchEntryWithText(
+                "motor_off",
+                text,
+                false,
+                onSuccess
+            );
         }, false);
     }
 

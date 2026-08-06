@@ -1361,3 +1361,273 @@ textarea:focus,
 #logbuchOverlay .logbuchVersion {
     color: var(--logbook-muted);
 }
+
+
+/* ISSUE-41-47 LARGE STATE SWITCHES */
+
+.logbuchStateSwitchCell {
+    grid-column: span 2;
+    min-width: 0;
+}
+
+.logbuchStateSwitch {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 76px;
+    padding: 8px 10px;
+    border: 2px solid var(--logbook-border, #9aa6b2);
+    border-radius: 14px;
+    background: var(--logbook-surface-secondary, #eef2f5);
+    color: var(--logbook-text, #18212a);
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+}
+
+.logbuchStateSwitchTitle {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.92rem;
+    font-weight: 800;
+    text-align: center;
+}
+
+.logbuchStateSwitchTrack {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 58px 1fr;
+    align-items: center;
+    min-height: 48px;
+    overflow: hidden;
+    border: 2px solid var(--logbook-border, #9aa6b2);
+    border-radius: 24px;
+    background: #d7dde3;
+    box-shadow: inset 0 2px 5px rgb(0 0 0 / 14%);
+}
+
+.logbuchStateSwitchOff,
+.logbuchStateSwitchOn {
+    position: relative;
+    z-index: 2;
+    padding: 0 8px;
+    font-size: 0.92rem;
+    font-weight: 900;
+    line-height: 1.1;
+    text-align: center;
+}
+
+.logbuchStateSwitchOff {
+    color: #23303c;
+}
+
+.logbuchStateSwitchOn {
+    color: #5c6873;
+}
+
+.logbuchStateSwitchKnob {
+    position: absolute;
+    z-index: 3;
+    top: 4px;
+    left: 5px;
+    width: calc(50% - 10px);
+    min-width: 54px;
+    height: calc(100% - 8px);
+    border: 2px solid #677581;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 3px 7px rgb(0 0 0 / 28%);
+    transition: left 0.16s ease;
+}
+
+.logbuchStateSwitchActive {
+    border-color: var(--logbook-blue, #0969a2);
+    background: var(--logbook-blue-soft, #dceefa);
+}
+
+.logbuchStateSwitchActive .logbuchStateSwitchTrack {
+    border-color: var(--logbook-blue, #0969a2);
+    background: var(--logbook-blue-soft, #dceefa);
+}
+
+.logbuchStateSwitchActive .logbuchStateSwitchKnob {
+    left: calc(50% + 5px);
+    border-color: var(--logbook-blue-dark, #075985);
+}
+
+.logbuchStateSwitchActive .logbuchStateSwitchOff {
+    color: #61707c;
+}
+
+.logbuchStateSwitchActive .logbuchStateSwitchOn {
+    color: var(--logbook-blue-dark, #075985);
+}
+
+.logbuchNativeGroup .logbuchStateSwitch {
+    min-height: 82px;
+}
+
+#logbuchSailMotorOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: var(--logbook-backdrop, rgb(39 49 64 / 68%));
+}
+
+.logbuchSailMotorBox {
+    width: min(520px, 94vw);
+}
+
+.logbuchSailMotorText {
+    padding: 18px 8px 20px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.logbuchSailMotorActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.logbuchSailMotorActions button {
+    box-sizing: border-box;
+    min-height: 68px;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.logbuchSailMotorPrimary {
+    border: 2px solid var(--logbook-blue, #0969a2);
+    background: var(--logbook-blue, #0969a2);
+    color: #ffffff;
+}
+
+.logbuchSailMotorSecondary {
+    border: 2px solid var(--logbook-border, #9aa6b2);
+    background: var(--logbook-surface-secondary, #eef2f5);
+    color: var(--logbook-text, #18212a);
+}
+
+@media (max-width: 520px) {
+    .logbuchStateSwitch {
+        min-height: 72px;
+    }
+
+    .logbuchStateSwitchTrack {
+        min-height: 46px;
+    }
+
+    .logbuchSailMotorActions {
+        grid-template-columns: 1fr;
+    }
+
+    .logbuchSailMotorActions button {
+        min-height: 64px;
+    }
+}
+
+
+/* ISSUE-41 LARGE TITLES AND SINGLE ANCHOR BUTTON */
+
+.logbuchStateSwitchTitle {
+    margin-bottom: 10px;
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.01em;
+}
+
+.logbuchStateSwitch {
+    min-height: 112px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.logbuchStateSwitchTrack {
+    min-height: 52px;
+}
+
+.logbuchAnchorToggleCell {
+    grid-column: span 2;
+    min-width: 0;
+}
+
+.logbuchAnchorToggle {
+    width: 100%;
+    min-height: var(--action-size);
+}
+
+.logbuchAnchorToggle .logbuchButtonIcon {
+    width: auto;
+    height: 62%;
+    max-width: 92px;
+}
+
+.logbuchAnchorToggle .logbuchButtonLabel {
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.logbuchNativeAnchorAction {
+    display: block;
+    width: 100%;
+}
+
+.logbuchNativeAnchorAction .logbuchAnchorToggle {
+    min-height: 72px;
+}
+
+@media (max-width: 520px) {
+    .logbuchStateSwitchTitle {
+        font-size: clamp(1.8rem, 8vw, 2.35rem);
+    }
+
+    .logbuchStateSwitch {
+        min-height: 102px;
+    }
+}
+
+
+/* ISSUE-42 ROBUST ANCHOR SYMBOL */
+
+.logbuchLocationButton {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.logbuchLocationAnchorIcon {
+    display: block;
+    margin: 0;
+    color: #17212d;
+    font-family: Arial, sans-serif;
+    font-size: 78px;
+    font-weight: 700;
+    line-height: 0.9;
+    text-align: center;
+}
+
+.logbuchLocationButton .logbuchButtonLabel {
+    display: block;
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1.1;
+}
+
+@media (max-width: 520px) {
+    .logbuchLocationAnchorIcon {
+        font-size: 68px;
+    }
+}

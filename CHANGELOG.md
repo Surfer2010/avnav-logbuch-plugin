@@ -1,3 +1,28 @@
+## 2.0.2
+
+### Cockpitbedienung
+
+- Große und gut lesbare Motor- und Segel-Schalter
+- Vergrößerte Touchflächen für die Bedienung an Bord
+- Stabile Dialoggröße beim Aktualisieren der Einträge
+- Nachfrage zum Ausschalten des Motors beim Setzen der Segel
+
+### Festmachen als Location
+
+- Einzelner Button „Festmachen“ mit großem Anker-Symbol
+- Speicherung als positionsgebundene Location
+- Location-Typ `anchor`
+- Location-Bezeichnung `Festmachen`
+- Keine Veränderung eines dauerhaften Ankerzustands
+- Historische Ereignisse `anchor_down` und `anchor_up` bleiben lesbar
+- Unterstützung in Logbuchansicht und Exporten
+
+### Behobene Issues
+
+- #41 Overlay-Schieberegler
+- #42 Anker als Location statt Event
+- #47 Motor ausschalten beim Setzen der Segel
+
 ## [1.9.0] - 2026-07-20
 
 ### Added
@@ -11,4 +36,3 @@
 
 - Tages- und Törn-KMZ verwenden die gemeinsame Exportdatenbasis
 - Release-Paket enthält die vollständigen Exportwerkzeuge
-

@@ -97,7 +97,14 @@ def render_day_folder(model, prefix_names=False):
     notes = []
     for i, entry in enumerate(model["notes"], 1):
         event_type = entry.get("event_type")
-        title = "Törn Start" if event_type == "trip_start" else "Törn Ende" if event_type == "trip_end" else f"Logbuchnotiz {i}"
+        if event_type == "trip_start":
+            title = "Törn Start"
+        elif event_type == "trip_end":
+            title = "Törn Ende"
+        elif event_type == "location":
+            title = "Festmachen"
+        else:
+            title = f"Logbuchnotiz {i}"
         if prefix_names:
             title = f"{date_dash} {title}"
         notes.append(_point_placemark(title, entry, "notePoint"))

@@ -21,6 +21,11 @@ EVENT_TYPES = {
         "icon": "sail-down",
         "category": "sail",
     },
+    "location": {
+        "label": "Festmachen",
+        "icon": "anchor-down",
+        "category": "location",
+    },
     "anchor_down": {
         "label": "Anker ab",
         "icon": "anchor-down",
