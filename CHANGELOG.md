@@ -1,5 +1,14 @@
 ## 2.0.2
 
+### Korrigiertes Release-Paket
+
+- Exportwerkzeuge werden vollständig unter `logbuch/tools/` paketiert
+- ZIP-Prüfung kontrolliert alle benötigten Exportskripte
+- `exportlib` und `renderers` werden als Teil des Plugins ausgeliefert
+- Legacy-Loader verwendet einen versionsbezogenen Cache-Buster
+- Mobile Scroll- und Schalterkorrekturen sind Bestandteil des Releases
+
+
 ### Cockpitbedienung
 
 - Große und gut lesbare Motor- und Segel-Schalter

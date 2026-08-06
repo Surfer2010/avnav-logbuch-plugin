@@ -1631,3 +1631,262 @@ textarea:focus,
         font-size: 68px;
     }
 }
+
+/* ISSUE-41 SWITCH LABEL VISIBILITY */
+
+/*
+ * Der Schieber belegt weniger als die Hälfte der Spur.
+ * Dadurch bleibt auf der gegenüberliegenden Seite ausreichend
+ * Platz für die jeweilige Aktionsbeschriftung.
+ */
+.logbuchStateSwitchTrack {
+    position: relative;
+    overflow: hidden;
+}
+
+.logbuchStateSwitchKnob {
+    position: absolute;
+    top: 7%;
+    bottom: 7%;
+    left: 2%;
+    width: 44%;
+    box-sizing: border-box;
+    z-index: 3;
+    transition: left 160ms ease;
+}
+
+.logbuchStateSwitchActive .logbuchStateSwitchKnob {
+    left: 54%;
+}
+
+/*
+ * Beide Beschriftungsbereiche liegen fest in ihrer Hälfte.
+ * Sichtbar ist ausschließlich die Beschriftung auf der freien
+ * Seite des Schalters.
+ */
+.logbuchStateSwitchOff,
+.logbuchStateSwitchOn {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 46%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+    z-index: 2;
+    font-weight: 800;
+    pointer-events: none;
+}
+
+.logbuchStateSwitchOff {
+    left: 2%;
+}
+
+.logbuchStateSwitchOn {
+    right: 2%;
+}
+
+/* Schieber links: rechte Aktion anzeigen. */
+.logbuchStateSwitch:not(.logbuchStateSwitchActive)
+    .logbuchStateSwitchOff {
+    visibility: hidden;
+}
+
+.logbuchStateSwitch:not(.logbuchStateSwitchActive)
+    .logbuchStateSwitchOn {
+    visibility: visible;
+}
+
+/* Schieber rechts: linke Aktion anzeigen. */
+.logbuchStateSwitchActive .logbuchStateSwitchOff {
+    visibility: visible;
+}
+
+.logbuchStateSwitchActive .logbuchStateSwitchOn {
+    visibility: hidden;
+}
+
+/* END ISSUE-41 SWITCH LABEL VISIBILITY */
+
+
+/* MOBILE OVERLAY COMPACT AND SCROLLABLE */
+
+@media (max-width: 700px), (max-height: 850px) {
+    /*
+     * Dialog und Dialoginhalt bleiben auch bei eingeblendeter
+     * Bildschirmtastatur vertikal scrollbar.
+     */
+    #logbuchOverlay {
+        align-items: flex-start;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding: 6px;
+        box-sizing: border-box;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #logbuchOverlay .logbuchBox {
+        width: 100%;
+        max-height: calc(100vh - 12px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /*
+     * Hauptbedienelemente ungefähr zehn Prozent niedriger.
+     */
+    #logbuchOverlay {
+        --action-size: clamp(60px, 23vw, 79px);
+    }
+
+    #logbuchOverlay .logbuchStateSwitch {
+        min-height: 92px;
+        padding-top: 9px;
+        padding-bottom: 9px;
+    }
+
+    #logbuchOverlay .logbuchStateSwitchTitle {
+        margin-bottom: 7px;
+    }
+
+    #logbuchOverlay .logbuchStateSwitchTrack {
+        min-height: 47px;
+    }
+
+    /*
+     * Auf kleinen Bildschirmen wird der Schieber zusätzlich etwas
+     * schmaler, um lange Texte wie GESETZT vollständig darzustellen.
+     */
+    #logbuchOverlay .logbuchStateSwitchKnob {
+        left: 2%;
+        width: 43%;
+    }
+
+    #logbuchOverlay
+        .logbuchStateSwitchActive
+        .logbuchStateSwitchKnob {
+        left: 55%;
+    }
+
+    #logbuchOverlay .logbuchStateSwitchOff,
+    #logbuchOverlay .logbuchStateSwitchOn {
+        width: 45%;
+        font-size: 0.95rem;
+    }
+
+    #logbuchOverlay .logbuchStateSwitchOff {
+        left: 2%;
+    }
+
+    #logbuchOverlay .logbuchStateSwitchOn {
+        right: 2%;
+    }
+
+    #logbuchOverlay .logbuchAnchorToggle {
+        min-height: 79px;
+    }
+
+    #logbuchOverlay .logbuchLocationAnchorIcon {
+        font-size: 61px;
+    }
+
+    #logbuchOverlay
+        .logbuchLocationButton
+        .logbuchButtonLabel {
+        font-size: 18px;
+    }
+
+    #logbuchOverlay .logbuchMiniButton {
+        min-height: 34px;
+        padding-top: 7px;
+        padding-bottom: 7px;
+    }
+
+    #logbuchOverlay .logbuchOpenFullPage {
+        min-height: 34px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    /*
+     * Freitext initial kompakter, aber weiterhin groß genug für
+     * Touch-Bedienung und manuelles Vergrößern.
+     */
+    #logbuchOverlay #logbuchText,
+    #logbuchOverlay .logbuchVerticalSave {
+        min-height: 97px;
+    }
+
+    #logbuchOverlay .logbuchInputPane,
+    #logbuchOverlay .logbuchHistoryPane {
+        overflow: visible;
+    }
+
+    #logbuchOverlay .logbuchEntries {
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+/* END MOBILE OVERLAY COMPACT AND SCROLLABLE */
+
+/* ISSUE-41 SWITCH KNOB STATUS TEXT */
+
+/*
+ * Die weiße Schieberfläche zeigt den aktuell gespeicherten Zustand.
+ * Die Beschriftung auf der freien grauen Seite zeigt weiterhin die
+ * Aktion, die durch Antippen ausgeführt wird.
+ */
+.logbuchStateSwitchKnob {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logbuchStateSwitchKnob::after {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    color: #536371;
+    font-size: 1rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-align: center;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Motor: aktueller Zustand auf dem weißen Schieber. */
+.logbuchStateSwitch[data-logbuch-switch="motor"]
+    .logbuchStateSwitchKnob::after {
+    content: "AUS";
+}
+
+.logbuchStateSwitchActive[data-logbuch-switch="motor"]
+    .logbuchStateSwitchKnob::after {
+    content: "AN";
+}
+
+/* Segel: aktueller Zustand auf dem weißen Schieber. */
+.logbuchStateSwitch[data-logbuch-switch="sail"]
+    .logbuchStateSwitchKnob::after {
+    content: "UNTEN";
+}
+
+.logbuchStateSwitchActive[data-logbuch-switch="sail"]
+    .logbuchStateSwitchKnob::after {
+    content: "GESETZT";
+}
+
+@media (max-width: 700px), (max-height: 850px) {
+    .logbuchStateSwitchKnob::after {
+        font-size: 0.92rem;
+    }
+}
+
+/* END ISSUE-41 SWITCH KNOB STATUS TEXT */

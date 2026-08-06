@@ -4,7 +4,7 @@
  * Neue AVNav-Versionen laden plugin.mjs direkt.
  * Ältere AVNav-Versionen laden diese Datei und anschließend plugin.mjs.
  */
-import("./plugin.mjs")
+import("./plugin.mjs?v=2.0.2")
     .then(function(module) {
         if (!module || typeof module.default !== "function") {
             throw new Error("Logbuch: plugin.mjs besitzt keinen Default-Export");
