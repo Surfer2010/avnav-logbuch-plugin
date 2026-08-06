@@ -2,9 +2,8 @@
 """Self-contained DIN-A4 daily HTML report renderer."""
 
 import html
-from datetime import timezone
-
 from exportlib.formatting import format_hms
+from exportlib.local_time import to_local
 from renderers.render_static_map import render_map_placeholder, render_static_map
 
 EVENT_LABELS = {
@@ -31,9 +30,11 @@ def _format_decimal(value, digits=1):
 
 def _format_time(value):
     timestamp = value.get("_timestamp")
+
     if timestamp is None:
         return "--:--"
-    return timestamp.astimezone(timezone.utc).strftime("%H:%M")
+
+    return to_local(timestamp).strftime("%H:%M")
 
 
 def _position_label(event):

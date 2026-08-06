@@ -3,6 +3,7 @@
 from collections import OrderedDict
 
 from exportlib.event_types import get_event_icon, get_event_label
+from exportlib.local_time import to_local
 
 
 def build_position(event):
@@ -50,9 +51,10 @@ def build_entry(event):
     timestamp = event.get("_timestamp")
 
     if timestamp is not None:
-        date_key = timestamp.strftime("%Y-%m-%d")
-        date_label = timestamp.strftime("%d.%m.%Y")
-        time_label = timestamp.strftime("%H:%M")
+        local_timestamp = to_local(timestamp)
+        date_key = local_timestamp.strftime("%Y-%m-%d")
+        date_label = local_timestamp.strftime("%d.%m.%Y")
+        time_label = local_timestamp.strftime("%H:%M")
     else:
         date_key = "unknown"
         date_label = "Datum unbekannt"

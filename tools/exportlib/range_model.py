@@ -3,33 +3,15 @@
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from exportlib.local_time import (
+    local_iso,
+    local_label,
+    parse_range_datetime,
+    to_local,
+)
 from exportlib.navigation_analysis import analyze_day
 from exportlib.read_events import find_logbuch_file, read_logbuch_file
 from exportlib.read_tracks import read_gpx_points
-
-
-def parse_range_datetime(value, end=False):
-    value = str(value or "").strip()
-
-    if not value:
-        raise ValueError("Zeitangabe fehlt")
-
-    if value.endswith("Z"):
-        parsed = datetime.fromisoformat(value[:-1] + "+00:00")
-    else:
-        parsed = datetime.fromisoformat(value)
-
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-
-    parsed = parsed.astimezone(timezone.utc)
-
-    if end:
-        parsed = parsed.replace(second=59, microsecond=999999)
-    else:
-        parsed = parsed.replace(second=0, microsecond=0)
-
-    return parsed
 
 
 def _day_range(start, end):
@@ -73,6 +55,9 @@ def load_range(
     if start > end:
         raise ValueError("Von darf nicht nach Bis liegen")
 
+    local_start = to_local(start)
+    local_end = to_local(end)
+
     logbuch_dir = Path(logbuch_dir)
     tracks_dir = Path(tracks_dir)
 
@@ -81,7 +66,7 @@ def load_range(
     warnings = []
     source_files = []
 
-    for day_value in _day_range(start, end):
+    for day_value in _day_range(local_start, local_end):
         day_datetime = datetime(
             day_value.year,
             day_value.month,
@@ -136,23 +121,40 @@ def load_range(
     model.update({
         "range_start": start,
         "range_end": end,
-        "range_start_iso": start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "range_end_iso": end.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "range_start_label": start.strftime("%d.%m.%Y %H:%M"),
-        "range_end_label": end.strftime("%d.%m.%Y %H:%M"),
+        "range_start_local": local_start,
+        "range_end_local": local_end,
+
+        # Maschinenlesbare Werte enthalten den lokalen UTC-Offset.
+        "range_start_iso": local_iso(start),
+        "range_end_iso": local_iso(end),
+
+        # Alle sichtbaren Exportangaben verwenden Server-Lokalzeit.
+        "range_start_label": local_label(start),
+        "range_end_label": local_label(end),
+
         "date_dash": (
-            start.strftime("%Y-%m-%d")
-            if start.date() == end.date()
+            local_start.strftime("%Y-%m-%d")
+            if local_start.date() == local_end.date()
             else (
-                start.strftime("%Y-%m-%d")
+                local_start.strftime("%Y-%m-%d")
                 + "_bis_"
-                + end.strftime("%Y-%m-%d")
+                + local_end.strftime("%Y-%m-%d")
             )
         ),
         "date_compact": (
-            start.strftime("%Y%m%d-%H%M")
+            local_start.strftime("%Y%m%d-%H%M")
             + "_bis_"
-            + end.strftime("%Y%m%d-%H%M")
+            + local_end.strftime("%Y%m%d-%H%M")
+        ),
+        "download_date": local_start.strftime("%Y%m%d"),
+        "download_date_range": (
+            local_start.strftime("%Y%m%d")
+            if local_start.date() == local_end.date()
+            else (
+                local_start.strftime("%Y%m%d")
+                + "-"
+                + local_end.strftime("%Y%m%d")
+            )
         ),
         "source_files": source_files,
         "include_without_position": include_without_position,

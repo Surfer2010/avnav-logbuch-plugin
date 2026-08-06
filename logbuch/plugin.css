@@ -1890,3 +1890,112 @@ textarea:focus,
 }
 
 /* END ISSUE-41 SWITCH KNOB STATUS TEXT */
+
+
+/* ISSUE-46 COMPACT MOTOR HOURS DIALOG */
+
+#logbuchMotorHoursOverlay .logbuchExportBox {
+    width: min(460px, calc(100vw - 20px));
+}
+
+.logbuchMotorHoursForm {
+    padding: 16px;
+}
+
+.logbuchMotorHoursForm > label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 800;
+}
+
+.logbuchMotorHoursInputRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.logbuchMotorHoursInputRow
+    #logbuchMotorHoursInput {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 8px 12px;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.logbuchMotorHoursUnit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.logbuchMotorHoursSave {
+    min-height: 48px;
+    margin: 0;
+    padding: 8px 14px;
+    white-space: nowrap;
+}
+
+.logbuchMotorHoursError {
+    min-height: 20px;
+    margin-top: 5px;
+    color: var(--logbook-danger);
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.logbuchMotorHoursForm .logbuchExportHint {
+    margin-top: 3px;
+    padding: 8px 10px;
+    font-size: 0.86rem;
+}
+
+.logbuchMotorHoursCancelRow {
+    margin-top: 9px;
+}
+
+.logbuchMotorHoursCancelRow
+    .logbuchMiniButton {
+    min-height: 38px;
+}
+
+@media (max-width: 420px), (max-height: 650px) {
+    #logbuchMotorHoursOverlay {
+        align-items: flex-start;
+        overflow-y: auto;
+        padding: 6px;
+        box-sizing: border-box;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #logbuchMotorHoursOverlay .logbuchExportBox {
+        width: 100%;
+        margin: auto 0;
+    }
+
+    .logbuchMotorHoursForm {
+        padding: 12px;
+    }
+
+    .logbuchMotorHoursInputRow {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .logbuchMotorHoursSave {
+        grid-column: 1 / -1;
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .logbuchMotorHoursInputRow
+        #logbuchMotorHoursInput {
+        min-height: 44px;
+    }
+}

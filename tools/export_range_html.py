@@ -23,10 +23,6 @@ def main():
     parser.add_argument("--avnav-data", default="")
     parser.add_argument("--output", default="")
     parser.add_argument(
-        "--exclude-without-position",
-        action="store_true",
-    )
-    parser.add_argument(
         "--without-map",
         action="store_true",
         help="Keine Trackkarte in den HTML-Bericht einfügen",
@@ -47,9 +43,7 @@ def main():
         get_tracks_dir(avnav_data),
         args.from_value,
         args.to_value,
-        include_without_position=(
-            not args.exclude_without_position
-        ),
+        include_without_position=True,
     )
 
     if not model["events"]:

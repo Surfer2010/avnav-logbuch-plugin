@@ -13,7 +13,7 @@ export default function initializeLogbuch(avnavApi) {
         baseUrl: AVNAV_BASE_URL
     });
 
-    var LOGBUCH_VERSION = "2.0.2";
+    var LOGBUCH_VERSION = "2.0.3";
 
 
     function openNativeQuickDialog(event) {
@@ -616,11 +616,11 @@ export default function initializeLogbuch(avnavApi) {
 
     function openNativeLogbookDialog(event) {
         if (typeof avnavApi.showDialog !== "function") {
-            window.location.href = AVNAV_BASE_URL + "/index.html";
+            window.location.href = AVNAV_BASE_URL + "/index.html?v=2.0.2-issue44";
             return;
         }
 
-        var logbookUrl = AVNAV_BASE_URL + "/index.html";
+        var logbookUrl = AVNAV_BASE_URL + "/index.html?v=2.0.2-issue44";
 
         avnavApi.showDialog(
             {
@@ -1090,7 +1090,7 @@ export default function initializeLogbuch(avnavApi) {
             function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                window.location.href = AVNAV_BASE_URL + "/index.html";
+                window.location.href = AVNAV_BASE_URL + "/index.html?v=2.0.2-issue44";
             },
             false
         );
@@ -1572,17 +1572,48 @@ export default function initializeLogbuch(avnavApi) {
                     '<button type="button" id="logbuchMotorHoursCloseTop" class="logbuchCloseButton">×</button>' +
                 '</div>' +
 
-                '<div class="logbuchExportForm">' +
-                    '<label for="logbuchMotorHoursInput">Stunden</label>' +
-                    '<input type="number" id="logbuchMotorHoursInput" inputmode="decimal" min="0" step="0.1" placeholder="optional">' +
+                '<div class="logbuchExportForm logbuchMotorHoursForm">' +
+                    '<label for="logbuchMotorHoursInput">' +
+                        'Aktueller Motorstand' +
+                    '</label>' +
 
-                    '<div class="logbuchExportHint">' +
-                        'Leere Eingabe ist erlaubt. Der Eintrag wird als Motor aus gespeichert.' +
+                    '<div class="logbuchMotorHoursInputRow">' +
+                        '<input type="text" ' +
+                            'id="logbuchMotorHoursInput" ' +
+                            'inputmode="decimal" ' +
+                            'autocomplete="off" ' +
+                            'spellcheck="false" ' +
+                            'pattern="[0-9]+([,.][0-9]+)?" ' +
+                            'placeholder="z. B. 293,9">' +
+
+                        '<span class="logbuchMotorHoursUnit">' +
+                            'h' +
+                        '</span>' +
+
+                        '<button type="button" ' +
+                            'id="logbuchMotorHoursSave" ' +
+                            'class="logbuchMiniButton ' +
+                                'logbuchMotorHoursSave">' +
+                            'Speichern' +
+                        '</button>' +
                     '</div>' +
 
-                    '<div class="logbuchExportButtons">' +
-                        '<button type="button" id="logbuchMotorHoursSave" class="logbuchMiniButton">Speichern</button>' +
-                        '<button type="button" id="logbuchMotorHoursCancel" class="logbuchMiniButton logbuchSecondaryButton">Abbrechen</button>' +
+                    '<div id="logbuchMotorHoursError" ' +
+                        'class="logbuchMotorHoursError" ' +
+                        'aria-live="polite"></div>' +
+
+                    '<div class="logbuchExportHint">' +
+                        'Optional. Ohne Eingabe wird nur „Motor aus“ gespeichert.' +
+                    '</div>' +
+
+                    '<div class="logbuchExportButtons ' +
+                        'logbuchMotorHoursCancelRow">' +
+                        '<button type="button" ' +
+                            'id="logbuchMotorHoursCancel" ' +
+                            'class="logbuchMiniButton ' +
+                                'logbuchSecondaryButton">' +
+                            'Abbrechen' +
+                        '</button>' +
                     '</div>' +
                 '</div>' +
             '</div>';
@@ -1616,32 +1647,129 @@ export default function initializeLogbuch(avnavApi) {
             overlay.remove();
         }, false);
 
-        document.getElementById("logbuchMotorHoursSave").addEventListener("click", function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+        var motorHoursInput = document.getElementById(
+            "logbuchMotorHoursInput"
+        );
+        var motorHoursError = document.getElementById(
+            "logbuchMotorHoursError"
+        );
+        var motorHoursSave = document.getElementById(
+            "logbuchMotorHoursSave"
+        );
 
-            var input = document.getElementById("logbuchMotorHoursInput");
-            var hours = input ? String(input.value || "").trim() : "";
+        function saveMotorHours(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
 
-            var textField = document.getElementById("logbuchText");
-            var currentText = textField ? String(textField.value || "").trim() : "";
+            var hours = motorHoursInput
+                ? String(motorHoursInput.value || "").trim()
+                : "";
+
+            if (
+                hours !== ""
+                && !/^[0-9]+(?:[,.][0-9]+)?$/.test(hours)
+            ) {
+                if (motorHoursError) {
+                    motorHoursError.textContent =
+                        "Bitte eine positive Zahl eingeben, " +
+                        "zum Beispiel 293,9.";
+                }
+
+                if (motorHoursInput) {
+                    motorHoursInput.focus();
+                    motorHoursInput.select();
+                }
+
+                return;
+            }
+
+            if (motorHoursError) {
+                motorHoursError.textContent = "";
+            }
+
+            /*
+             * Für die Anzeige im deutschsprachigen Logbuch wird
+             * ein eingegebener Dezimalpunkt als Komma gespeichert.
+             */
+            hours = hours.replace(".", ",");
+
+            var textField = document.getElementById(
+                "logbuchText"
+            );
+            var currentText = textField
+                ? String(textField.value || "").trim()
+                : "";
             var text = currentText;
 
             if (hours !== "") {
                 text = "Motorstunden: " + hours;
+
                 if (currentText !== "") {
                     text += " | " + currentText;
                 }
             }
 
             overlay.remove();
+
             saveLogbuchEntryWithText(
                 "motor_off",
                 text,
                 false,
                 onSuccess
             );
-        }, false);
+        }
+
+        motorHoursSave.addEventListener(
+            "click",
+            saveMotorHours,
+            false
+        );
+
+        if (motorHoursInput) {
+            motorHoursInput.addEventListener(
+                "input",
+                function() {
+                    /*
+                     * Mobile Tastaturen können Leerzeichen oder
+                     * unerwünschte Zeichen einfügen. Nur Zeichen
+                     * behalten, die für Motorstunden sinnvoll sind.
+                     */
+                    var value = String(
+                        motorHoursInput.value || ""
+                    );
+
+                    value = value
+                        .replace(/[^0-9,.]/g, "")
+                        .replace(/([,.].*)[,.]/g, "$1");
+
+                    motorHoursInput.value = value;
+
+                    if (motorHoursError) {
+                        motorHoursError.textContent = "";
+                    }
+                },
+                false
+            );
+
+            motorHoursInput.addEventListener(
+                "keydown",
+                function(event) {
+                    if (
+                        event.key === "Enter"
+                        || event.keyCode === 13
+                    ) {
+                        saveMotorHours(event);
+                    }
+                },
+                false
+            );
+
+            window.setTimeout(function() {
+                motorHoursInput.focus();
+            }, 80);
+        }
     }
 
     function openLogbuchForceOverlay(type, text, message) {

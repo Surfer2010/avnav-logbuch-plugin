@@ -1718,13 +1718,64 @@ class Plugin(object):
             'job': job
         }
 
+    def _range_download_date(self, value):
+        """Exportdatum in der lokalen Zeitzone des Servers."""
+
+        text = str(value or '').strip()
+
+        try:
+            if text.endswith('Z'):
+                parsed = datetime.datetime.fromisoformat(
+                    text[:-1] + '+00:00'
+                )
+            else:
+                parsed = datetime.datetime.fromisoformat(text)
+
+            if parsed.tzinfo is None:
+                parsed = parsed.astimezone()
+            else:
+                parsed = parsed.astimezone()
+
+            return parsed.strftime('%Y%m%d')
+
+        except (TypeError, ValueError):
+            compact = text[:10].replace('-', '')
+
+            if len(compact) == 8 and compact.isdigit():
+                return compact
+
+            raise ValueError(
+                'Ungültiges Exportdatum: %s' % text
+            )
+
+    def _range_download_name(
+        self,
+        from_value,
+        to_value,
+        export_format
+    ):
+        from_date = self._range_download_date(from_value)
+        to_date = self._range_download_date(to_value)
+
+        date_part = from_date
+
+        if from_date != to_date:
+            date_part = '%s-%s' % (
+                from_date,
+                to_date
+            )
+
+        return 'logbuch-zeitraum_%s.%s' % (
+            date_part,
+            export_format
+        )
+
     def _export_range_async(
         self,
         from_value,
         to_value,
         export_format,
-        include_without_position=True,
-        include_map=False
+        include_map=True
     ):
         export_format = str(
             export_format or ''
@@ -1764,7 +1815,9 @@ class Plugin(object):
             token,
             export_format
         )
-        download_name = 'logbuch-zeitraum.%s' % (
+        download_name = self._range_download_name(
+            from_value,
+            to_value,
             export_format
         )
         output_file = os.path.join(
@@ -1792,10 +1845,8 @@ class Plugin(object):
                 export_format
             ])
 
-        if not include_without_position:
-            command.append(
-                '--exclude-without-position'
-            )
+        # Alle Logbucheinträge werden grundsätzlich exportiert.
+        # Einträge ohne GPS-Position bleiben Bestandteil des Berichts.
 
         if export_format == 'html' and not include_map:
             command.append('--without-map')
@@ -2310,18 +2361,11 @@ class Plugin(object):
                         'message': 'from/to required'
                     }
 
-                include_without_position = self._as_bool(
-                    self._get_arg(
-                        args,
-                        'includeWithoutPosition',
-                        'true'
-                    )
-                )
                 include_map = self._as_bool(
                     self._get_arg(
                         args,
                         'includeMap',
-                        'false'
+                        'true'
                     )
                 )
 
@@ -2329,7 +2373,6 @@ class Plugin(object):
                     from_value,
                     to_value,
                     export_format,
-                    include_without_position,
                     include_map
                 )
 

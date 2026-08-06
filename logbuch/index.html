@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Digitales Logbuch</title>
-    <link rel="stylesheet" href="logbuch-view.css">
-    <link rel="stylesheet" href="logbuch-theme.css">
+    <link rel="stylesheet" href="logbuch-view.css?v=2.0.3">
+    <link rel="stylesheet" href="logbuch-theme.css?v=2.0.3">
 </head>
 <body>
     <div id="app">
@@ -177,20 +177,17 @@
                 <div class="export-options">
                     <label id="export-map-option">
                         <input id="export-include-map"
-                               type="checkbox">
+                               type="checkbox"
+                               checked>
                         <span>
                             Trackkarte in HTML-Export einfügen
                         </span>
                     </label>
 
-                    <label>
-                        <input id="export-include-without-position"
-                               type="checkbox"
-                               checked>
-                        <span>
-                            Logbucheinträge ohne GPS-Position einschließen
-                        </span>
-                    </label>
+                    <p class="export-option-hint">
+                        Alle Logbucheinträge werden exportiert,
+                        auch wenn keine GPS-Position vorhanden ist.
+                    </p>
                 </div>
 
                 <p id="export-message"
@@ -300,6 +297,6 @@
         </form>
     </dialog>
 
-    <script src="logbuch-view.js"></script>
+    <script src="logbuch-view.js?v=2.0.3"></script>
 </body>
 </html>

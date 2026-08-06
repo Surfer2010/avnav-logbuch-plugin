@@ -1395,9 +1395,6 @@ const exportMapOption = document.getElementById(
 const exportIncludeMap = document.getElementById(
     "export-include-map"
 );
-const exportIncludeWithoutPosition = document.getElementById(
-    "export-include-without-position"
-);
 const exportCurrentTripButton = document.getElementById(
     "export-current-trip"
 );
@@ -1466,6 +1463,23 @@ function readExportDateTime(dateInput, timeInput) {
     return date;
 }
 
+function exportLocalDateTimeValue(date) {
+    return [
+        date.getFullYear(),
+        "-",
+        padDatePart(date.getMonth() + 1),
+        "-",
+        padDatePart(date.getDate()),
+        "T",
+        padDatePart(date.getHours()),
+        ":",
+        padDatePart(date.getMinutes()),
+        ":",
+        padDatePart(date.getSeconds())
+    ].join("");
+}
+
+
 function utcIsoToLocalDate(value) {
     if (!value) {
         return null;
@@ -1505,6 +1519,15 @@ function showExportRangeStep(format) {
         EXPORT_FORMAT_LABELS[format] || format;
 
     exportMapOption.hidden = format !== "html";
+
+    /*
+     * Die Karte ist für jeden neu geöffneten HTML-Export
+     * standardmäßig aktiviert.
+     */
+    if (format === "html") {
+        exportIncludeMap.checked = true;
+    }
+
     setExportMessage("");
 
     if (pendingExportDate) {
@@ -1687,15 +1710,16 @@ function buildRangeExportUrl() {
     }
 
     const parameters = new URLSearchParams({
-        from: fromDate.toISOString(),
-        to: toDate.toISOString(),
+        /*
+         * Die Formularwerte sind lokale Zeitangaben. Sie werden ohne
+         * Umwandlung nach UTC an den AVNav-Server übertragen.
+         */
+        from: exportLocalDateTimeValue(fromDate),
+        to: exportLocalDateTimeValue(toDate),
         format: selectedExportFormat,
         includeMap: String(
-            selectedExportFormat === "html" &&
-            exportIncludeMap.checked
-        ),
-        includeWithoutPosition: String(
-            exportIncludeWithoutPosition.checked
+            selectedExportFormat === "html"
+            && exportIncludeMap.checked
         )
     });
 
@@ -1739,6 +1763,25 @@ async function waitForRangeExport(jobId) {
     throw new Error("Zeitüberschreitung beim Export.");
 }
 
+function exportDownloadDatePart() {
+    const fromDate = String(
+        exportFromDateInput.value || ""
+    ).replace(/-/g, "");
+
+    const toDate = String(
+        exportToDateInput.value || ""
+    ).replace(/-/g, "");
+
+    if (!fromDate || !toDate) {
+        return "zeitraum";
+    }
+
+    return fromDate === toDate
+        ? fromDate
+        : `${fromDate}-${toDate}`;
+}
+
+
 async function runRangeExport() {
     if (exportBusy || !selectedExportFormat) {
         return;
@@ -1765,7 +1808,11 @@ async function runRangeExport() {
         link.href = job.downloadUrl;
         link.download =
             job.downloadName ||
-            `logbuch-zeitraum.${selectedExportFormat}`;
+            (
+                `logbuch-zeitraum_${
+                    exportDownloadDatePart()
+                }.${selectedExportFormat}`
+            );
         link.hidden = true;
 
         document.body.appendChild(link);

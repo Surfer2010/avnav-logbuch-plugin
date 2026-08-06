@@ -563,3 +563,12 @@ textarea:focus,
         right: 20%;
     }
 }
+
+/* ISSUE-44 EXPORT OPTIONS */
+
+.export-option-hint {
+    margin: 0;
+    color: var(--logbook-muted);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}

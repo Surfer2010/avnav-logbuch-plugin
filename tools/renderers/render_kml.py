@@ -3,10 +3,22 @@
 import zipfile
 from pathlib import Path
 
+from exportlib.local_time import local_iso
+
 from exportlib.formatting import escape, format_hms
 
 CATEGORY_LABELS = {"motor": "Motor", "sail": "Segel", "unknown": "Unbekannt"}
 STYLE_IDS = {"motor": "motorLine", "sail": "sailLine", "unknown": "unknownLine"}
+
+
+
+def _event_local_timestamp(entry):
+    timestamp = entry.get("_timestamp")
+
+    if timestamp is not None:
+        return local_iso(timestamp)
+
+    return str(entry.get("timestamp") or "")
 
 
 def _coordinates(points):
@@ -71,12 +83,12 @@ def _point_placemark(name, entry, style_id):
       <name>{escape(name)}</name>
       <description><![CDATA[
         <h2>{escape(name)}</h2>
-        <p><b>Zeit:</b> {escape(entry.get('timestamp'))}</p>
+        <p><b>Zeit:</b> {escape(_event_local_timestamp(entry))}</p>
         <p><b>Position:</b> {escape(entry.get('lat'))}, {escape(entry.get('lon'))}</p>
         {f'<p>{escape(text)}</p>' if text else ''}
       ]]></description>
       <styleUrl>#{style_id}</styleUrl>
-      <TimeStamp><when>{escape(entry.get('timestamp'))}</when></TimeStamp>
+      <TimeStamp><when>{escape(_event_local_timestamp(entry))}</when></TimeStamp>
       <Point><coordinates>{float(entry['lon']):.9f},{float(entry['lat']):.9f},0</coordinates></Point>
     </Placemark>
 """
