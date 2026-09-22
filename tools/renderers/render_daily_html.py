@@ -12,8 +12,8 @@ EVENT_LABELS = {
     "motor_off": "Motor aus",
     "sail_set": "Segel gesetzt",
     "sail_down": "Segel eingeholt",
-    "anchor_down": "Anker ab",
-    "anchor_up": "Anker auf",
+    "anchor_down": "Festmachen",
+    "anchor_up": "Ablegen",
     "manual": "Logbucheintrag",
     "trip_start": "Törnstart",
     "trip_end": "Törnende",
@@ -26,6 +26,15 @@ def _escape(value):
 
 def _format_decimal(value, digits=1):
     return f"{float(value or 0.0):.{digits}f}".replace(".", ",")
+
+
+def _format_date(value):
+    timestamp = value.get("_timestamp")
+
+    if timestamp is None:
+        return "--.--.----"
+
+    return to_local(timestamp).strftime("%d.%m.%Y")
 
 
 def _format_time(value):
@@ -91,6 +100,7 @@ def _event_rows(events):
         text = (event.get("text") or "").strip()
         rows.append(
             '<tr>'
+            f'<td class="date">{_format_date(event)}</td>'
             f'<td class="time">{_format_time(event)}</td>'
             f'<td class="event">{_escape(label)}</td>'
             f'<td class="position">{_escape(_position_label(event))}</td>'
@@ -98,7 +108,7 @@ def _event_rows(events):
             '</tr>'
         )
     if not rows:
-        rows.append('<tr><td colspan="4" class="empty">Keine Logbucheinträge vorhanden.</td></tr>')
+        rows.append('<tr><td colspan="5" class="empty">Keine Logbucheinträge vorhanden.</td></tr>')
     return "".join(rows)
 
 
@@ -188,8 +198,11 @@ h2 {{ margin: 3.5mm 0 1.5mm; font-size: 11pt; }}
 .detail-table {{ width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8.4pt; }}
 .detail-table th {{ padding: 1.3mm 1.5mm; background: #e5eaed; text-align: left; font-weight: 600; }}
 .detail-table td {{ padding: 1.25mm 1.5mm; border-bottom: 0.2mm solid #d9dfe2; vertical-align: top; overflow-wrap: anywhere; }}
-.entries-table .time {{ width: 12%; white-space: nowrap; }} .entries-table .event {{ width: 21%; }}
-.entries-table .position {{ width: 27%; white-space: nowrap; }} .entries-table .description {{ width: 40%; }}
+.entries-table .date {{ width: 14%; white-space: nowrap; }}
+.entries-table .time {{ width: 10%; white-space: nowrap; }}
+.entries-table .event {{ width: 18%; }}
+.entries-table .position {{ width: 24%; white-space: nowrap; }}
+.entries-table .description {{ width: 34%; }}
 .compact-section {{ break-inside: avoid; }}
 .empty {{ text-align: center; color: #64727b; }}
 .report-footer {{ margin-top: 3mm; padding-top: 1.5mm; border-top: 0.2mm solid #cbd3d7; color: #5f6c74; font-size: 7pt; display: flex; justify-content: space-between; }}
@@ -209,7 +222,7 @@ h2 {{ margin: 3.5mm 0 1.5mm; font-size: 11pt; }}
 <section aria-label="Tagesstatistik">{_statistics_table(model["statistics"])}{_count_strip(model)}</section>
 {map_section}
 <section><h2>Logbucheinträge</h2>
-<table class="detail-table entries-table"><thead><tr><th>Zeit</th><th>Ereignis</th><th>Position</th><th>Bemerkung</th></tr></thead>
+<table class="detail-table entries-table"><thead><tr><th>Datum</th><th>Zeit</th><th>Ereignis</th><th>Position</th><th>Bemerkung</th></tr></thead>
 <tbody>{_event_rows(model.get("events") or [])}</tbody></table></section>
 {anchor_section}
 <footer class="report-footer"><span>AVNav Logbuch</span><span>{_escape(date_dash)}</span></footer>

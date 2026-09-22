@@ -13,7 +13,7 @@ export default function initializeLogbuch(avnavApi) {
         baseUrl: AVNAV_BASE_URL
     });
 
-    var LOGBUCH_VERSION = "2.0.3";
+    var LOGBUCH_VERSION = "2.1.0";
 
 
     function openNativeQuickDialog(event) {
@@ -381,8 +381,8 @@ export default function initializeLogbuch(avnavApi) {
                     motor_off: "Motor aus gespeichert",
                     sail_set: "Segel setzen gespeichert",
                     sail_down: "Segel bergen gespeichert",
-                    anchor_down: "Anker fallen gespeichert",
-                    anchor_up: "Anker auf gespeichert"
+                    anchor_down: "Festmachen gespeichert",
+                    anchor_up: "Ablegen gespeichert"
                 };
 
                 function showStatus(message, isError) {
@@ -1402,8 +1402,8 @@ export default function initializeLogbuch(avnavApi) {
             motor_off: "Motor aus",
             sail_set: "Segel gesetzt",
             sail_down: "Segel eingeholt",
-            anchor_down: "Anker ab",
-            anchor_up: "Anker auf",
+            anchor_down: "Festmachen",
+            anchor_up: "Ablegen",
             location: "Festmachen",
             manual: "Manueller Eintrag"
         };

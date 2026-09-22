@@ -64,8 +64,8 @@ class Plugin(object):
             'end_event': 'sail_down',
         },
         'anchor': {
-            'on': 'Anker ab',
-            'off': 'Anker auf',
+            'on': 'Festmachen',
+            'off': 'Ablegen',
             'start_event': 'anchor_down',
             'end_event': 'anchor_up',
         },

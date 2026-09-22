@@ -27,12 +27,12 @@ EVENT_TYPES = {
         "category": "location",
     },
     "anchor_down": {
-        "label": "Anker ab",
+        "label": "Festmachen",
         "icon": "anchor-down",
         "category": "anchor",
     },
     "anchor_up": {
-        "label": "Anker auf",
+        "label": "Ablegen",
         "icon": "anchor-up",
         "category": "anchor",
     },

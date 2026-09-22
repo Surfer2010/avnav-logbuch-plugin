@@ -31,7 +31,7 @@ const EVENT_TYPES = {
     },
     anchor_up: {
         icon: "⚓",
-        title: "Anker auf"
+        title: "Ablegen"
     },
     trip_start: {
         icon: "▶",
@@ -463,8 +463,7 @@ function createDaySection(day, entries) {
         event.preventDefault();
         event.stopPropagation();
         openExportDialog({
-            format: "html",
-            date: day.date
+            format: "html"
         });
     });
 
@@ -477,8 +476,7 @@ function createDaySection(day, entries) {
         event.preventDefault();
         event.stopPropagation();
         openExportDialog({
-            format: "kmz",
-            date: day.date
+            format: "kmz"
         });
     });
 
@@ -1395,9 +1393,6 @@ const exportMapOption = document.getElementById(
 const exportIncludeMap = document.getElementById(
     "export-include-map"
 );
-const exportCurrentTripButton = document.getElementById(
-    "export-current-trip"
-);
 const exportCompleteLogbookButton = document.getElementById(
     "export-complete-logbook"
 );
@@ -1634,7 +1629,6 @@ async function loadExportRangeInfo() {
     }
 
     exportRangeInfo = data;
-    exportCurrentTripButton.disabled = !data.currentTrip;
     exportCompleteLogbookButton.disabled =
         !data.completeLogbook;
 
@@ -1652,16 +1646,15 @@ async function openExportDialog(options = {}) {
         const info = await loadExportRangeInfo();
 
         if (options.format) {
+            /*
+             * Beim Öffnen eines Exports wird standardmäßig immer
+             * "Heute" verwendet:
+             * 00:00 bis aktuelle lokale Uhrzeit.
+             *
+             * Ein explizit übergebenes Datum wird weiterhin über
+             * pendingExportDate in showExportRangeStep behandelt.
+             */
             showExportRangeStep(options.format);
-
-            if (
-                !options.date &&
-                info.defaultRange &&
-                info.defaultRange.active
-            ) {
-                setExportRange(info.defaultRange);
-            }
-
             return;
         }
 
@@ -1858,22 +1851,6 @@ document.querySelectorAll("[data-export-range]").forEach(
 
             if (range === "yesterday") {
                 setTodayRange(-1);
-                return;
-            }
-
-            if (range === "trip") {
-                if (
-                    !exportRangeInfo ||
-                    !setExportRange(
-                        exportRangeInfo.currentTrip
-                    )
-                ) {
-                    setExportMessage(
-                        "Kein Törnzeitraum vorhanden.",
-                        "error"
-                    );
-                }
-
                 return;
             }
 
